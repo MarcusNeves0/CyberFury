@@ -50,14 +50,14 @@
             background-color: var(--background-dark);
         }
 
-        /* --- Tela de Seleção --- */
-        #character-selection {
+        /* --- Telas de Overlay --- */
+        .overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(10, 10, 20, 0.9);
+            background: rgba(10, 10, 20, 0.95);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -65,11 +65,10 @@
             z-index: 10;
             padding: 20px;
             box-sizing: border-box;
-            opacity: 1;
             transition: opacity 0.5s;
         }
-
-        #character-selection.hidden {
+        
+        .overlay.hidden {
             opacity: 0;
             pointer-events: none;
         }
@@ -128,6 +127,39 @@
              border-top: 1px solid var(--neon-blue);
              padding-top: 10px;
         }
+
+        /* Loading Screen */
+         #loading-screen {
+            /* Retirado o display: none para o JS controlar */
+         }
+
+        .loading-controls {
+            border: 1px solid var(--neon-blue);
+            padding: 25px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            width: 90%; 
+            box-sizing: border-box;
+        }
+        .loading-controls h3 {
+             color: var(--neon-blue);
+             text-shadow: 0 0 5px var(--neon-blue);
+             margin-top: 0;
+             font-size: 2.5rem;
+             text-align: center;
+             margin-bottom: 20px;
+        }
+        .loading-controls p {
+            margin: 10px 0;
+            font-family: sans-serif;
+            font-size: 1.2rem;
+        }
+        
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 10px 20px;
+        }
         
         /* --- HUD do Jogo --- */
         #hud {
@@ -184,20 +216,7 @@
 
         /* --- Tela de Fim de Jogo --- */
         #game-over-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(10, 10, 20, 0.8);
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 20;
-            color: var(--neon-pink);
-            font-size: 8rem;
-            text-shadow: 0 0 20px var(--neon-pink);
+             /* Escondida por padrão */
         }
         #game-over-screen button {
             font-family: 'Orbitron', sans-serif;
@@ -217,6 +236,10 @@
             color: var(--text-color);
             box-shadow: 0 0 15px var(--neon-pink);
         }
+        #win-text{
+             font-size: 8rem;
+             text-shadow: 0 0 20px var(--neon-pink);
+        }
 
     </style>
 </head>
@@ -225,7 +248,7 @@
     <div id="game-container">
         
         <!-- Tela de Seleção de Personagem -->
-        <div id="character-selection">
+        <div id="character-selection" class="overlay">
             <h1>CYBERNETIC FURY</h1>
             <div class="selection-grid">
                 <div class="character-card" id="select-titan">
@@ -251,9 +274,22 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Tela de Loading -->
+        <div id="loading-screen" class="overlay hidden">
+            <div class="loading-controls">
+                <h3>Controles</h3>
+                <div class="controls-grid">
+                    <p><strong>Movimento:</strong> W, A, S, D</p>
+                    <p><strong>Soco Básico:</strong> Seta Esquerda</p>
+                    <p><strong>Ataque Especial:</strong> Seta Direita</p>
+                    <p><strong>Soco Forte:</strong> Frente, Frente + Seta Esq.</p>
+                </div>
+            </div>
+        </div>
 
         <!-- Tela de Fim de Jogo -->
-        <div id="game-over-screen">
+        <div id="game-over-screen" class="overlay hidden">
             <span id="win-text"></span>
             <button id="restart-button">Jogar Novamente</button>
         </div>
@@ -282,6 +318,7 @@ window.onload = () => {
     const ctx = canvas.getContext('2d');
     const gameContainer = document.getElementById('game-container');
     const selectionScreen = document.getElementById('character-selection');
+    const loadingScreen = document.getElementById('loading-screen');
     const gameOverScreen = document.getElementById('game-over-screen');
     const winText = document.getElementById('win-text');
     const restartButton = document.getElementById('restart-button');
@@ -380,7 +417,7 @@ window.onload = () => {
             this.velocity = { x: 0, y: 0 };
             this.color = color;
             this.health = 200;
-            this.energy = 50; // ENERGIA INICIAL
+            this.energy = 50;
             this.isJumping = false;
             this.isAttacking = false;
             this.attackBox = { position: {x: 0, y: 0}, width: 0, height: 0, type: null, active: false, hit: false };
@@ -392,7 +429,6 @@ window.onload = () => {
             this.doubleTapped = false;
             
             this.aiVelocityX = 0;
-            // Efeito de Queimadura
             this.burnDuration = 0;
             this.burnTick = 0;
         }
@@ -434,7 +470,6 @@ window.onload = () => {
             if (this.position.x < 0) this.position.x = 0;
             if (this.position.x + this.width > canvasWidth) this.position.x = canvasWidth - this.width;
 
-            // Movimento
             this.velocity.x = 0;
             if (this.isPlayer && !this.isAttacking) {
                 if (this.keys.left) this.velocity.x = -5;
@@ -456,7 +491,6 @@ window.onload = () => {
                 this.attackBox.position.y = this.position.y + this.height / 3;
             }
             
-            // Lógica de queimadura
             if (this.burnDuration > 0) {
                 this.burnDuration--;
                 this.burnTick++;
@@ -471,7 +505,7 @@ window.onload = () => {
         takeDamage(damage, effect = {}) {
             this.health -= damage;
             if (effect.type === 'burn') {
-                this.burnDuration = 180; // 3 segundos a 60fps
+                this.burnDuration = 180;
             }
             if (this.health < 0) this.health = 0;
             
@@ -655,7 +689,7 @@ window.onload = () => {
             gameState = 'GAMEOVER';
             aiController.stop();
             cancelAnimationFrame(gameLoopId);
-            gameOverScreen.style.display = 'flex';
+            gameOverScreen.classList.remove('hidden');
             
             const winner = player1.health > 0 ? player1 : player2;
             winText.innerText = `${winner.name.toUpperCase()} WINS!`;
@@ -694,14 +728,12 @@ window.onload = () => {
     }
 
     function drawBackground() {
-        // Céu
         const skyGradient = ctx.createLinearGradient(0, 0, 0, floorY);
         skyGradient.addColorStop(0, '#1c1c2c');
         skyGradient.addColorStop(1, '#3a3a5a');
         ctx.fillStyle = skyGradient;
         ctx.fillRect(0, 0, canvasWidth, floorY);
 
-        // Edifícios de fundo
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 15; j++) {
                 ctx.fillStyle = `rgba(50, 50, 70, ${0.5 - i * 0.1})`;
@@ -711,19 +743,17 @@ window.onload = () => {
             }
         }
         
-        // Rua molhada
         ctx.fillStyle = '#333';
         ctx.fillRect(0, floorY, canvasWidth, canvasHeight - floorY);
         
-        // Portão Torii
         const gateWidth = canvasWidth * 0.3;
         const gateHeight = canvasHeight * 0.6;
         const gateX = canvasWidth / 2 - gateWidth / 2;
         const gateY = floorY - gateHeight;
         
         ctx.fillStyle = '#c0392b';
-        ctx.fillRect(gateX, gateY, 30, gateHeight); // Pilar esquerdo
-        ctx.fillRect(gateX + gateWidth - 30, gateY, 30, gateHeight); // Pilar direito
+        ctx.fillRect(gateX, gateY, 30, gateHeight);
+        ctx.fillRect(gateX + gateWidth - 30, gateY, 30, gateHeight);
         ctx.beginPath();
         ctx.moveTo(gateX - 20, gateY + 20);
         ctx.lineTo(gateX + gateWidth + 20, gateY + 20);
@@ -1104,8 +1134,10 @@ window.onload = () => {
         }
 
         selectionScreen.classList.add('hidden');
+        loadingScreen.classList.remove('hidden');
 
         setTimeout(() => {
+            loadingScreen.classList.add('hidden');
             const characters = [
                 { id: 'titan', name: 'Titan', type: 'titan', colors: { main: '#a0a0a0', shorts: 'blue', sneakers: 'blue', hat: 'red' } },
                 { id: 'spark', name: 'Spark', type: 'spark', colors: { main: '#808080', cape: 'black', sneakers: 'red', chest: '#ff4500' } },
@@ -1124,7 +1156,7 @@ window.onload = () => {
     
             gameState = 'FIGHT';
             gameLoop();
-        }, 500);
+        }, 5000);
     }
     
     function resetGame() {
@@ -1132,7 +1164,7 @@ window.onload = () => {
         cancelAnimationFrame(zoomLoopId);
         if(aiController) aiController.stop();
 
-        gameOverScreen.style.display = 'none';
+        gameOverScreen.classList.add('hidden');
         selectionScreen.classList.remove('hidden');
         
         zoomFactor = 1;
