@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cybernetic Fury</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+        :root {
+            --neon-pink: #ff00ff;
+            --neon-blue: #00ffff;
+            --neon-red: #ff1b1b;
+            --background-dark: #0a0a14;
+            --text-color: #f0f0f0;
+            --asphalt-color: #1a1a2a;
+            --reflection-color: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            background-color: var(--background-dark);
+            color: var(--text-color);
+            font-family: 'Orbitron', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 1000px;
+            aspect-ratio: 16 / 9;
+            position: relative;
+            box-shadow: 0 0 20px var(--neon-blue), 0 0 40px var(--neon-pink);
+            border: 2px solid var(--neon-blue);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background-color: var(--background-dark);
+        }
+
+        /* --- Tela de Seleção --- */
+        #character-selection {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 20, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            padding: 20px;
+            box-sizing: border-box;
+            opacity: 1;
+            transition: opacity 0.5s;
+        }
+
+        #character-selection.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #character-selection h1 {
+            font-size: 3rem;
+            color: var(--neon-pink);
+            text-shadow: 0 0 10px var(--neon-pink);
+            margin-bottom: 20px;
+        }
+
+        .selection-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            width: 95%;
+        }
+
+        .character-card {
+            border: 2px solid var(--neon-blue);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .character-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--neon-pink), 0 0 30px var(--neon-blue);
+        }
+        
+        .character-card h2 {
+            color: var(--neon-pink);
+            font-size: 2rem;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .thumbnail-canvas {
+            width: 120px;
+            height: 120px;
+            border: 2px solid var(--neon-blue);
+            background-color: var(--asphalt-color);
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+
+        .character-card .lore {
+             font-family: sans-serif;
+             font-size: 0.9rem;
+             text-align: left;
+             height: 120px;
+             overflow-y: auto;
+             margin-top: 15px;
+             border-top: 1px solid var(--neon-blue);
+             padding-top: 10px;
+        }
+        
+        /* --- HUD do Jogo --- */
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            padding: 0 20px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+
+        .player-hud {
+            width: 45%;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid var(--neon-blue);
+        }
+        #player2-hud {
+            text-align: right;
+        }
+        
+        .player-hud h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.2rem;
+        }
+
+        .health-bar-outer, .energy-bar-outer {
+            width: 100%;
+            height: 20px;
+            background-color: #333;
+            border: 1px solid #555;
+            border-radius: 5px;
+            margin-top: 5px;
+            padding: 2px;
+        }
+        
+        .health-bar-inner {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff00, #aaff00);
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        
+        .energy-bar-inner {
+             height: 100%;
+             background: linear-gradient(90deg, var(--neon-blue), #00aaff);
+             border-radius: 3px;
+             transition: width 0.3s;
+        }
+
+        /* --- Tela de Fim de Jogo --- */
+        #game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 20, 0.8);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            color: var(--neon-pink);
+            font-size: 8rem;
+            text-shadow: 0 0 20px var(--neon-pink);
+        }
+        #game-over-screen button {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            background: var(--neon-blue);
+            color: var(--background-dark);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            text-shadow: none;
+            transition: all 0.3s;
+        }
+        #game-over-screen button:hover {
+            background-color: var(--neon-pink);
+            color: var(--text-color);
+            box-shadow: 0 0 15px var(--neon-pink);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        
+        <!-- Tela de Seleção de Personagem -->
+        <div id="character-selection">
+            <h1>CYBERNETIC FURY</h1>
+            <div class="selection-grid">
+                <div class="character-card" id="select-titan">
+                    <h2>TITAN</h2>
+                    <canvas id="titan-thumbnail" class="thumbnail-canvas"></canvas>
+                    <div class="lore">
+                        <p>Titan foi um grande combatente da guerra que lutou bravamente pelo seu país e acabou perdendo muitos amigos. Sendo assim, acabou saindo, pois não estava mais gostando de ter tantas perdas. Hoje em dia, ele luta contra bandidos para proteger sua cidade.</p>
+                    </div>
+                </div>
+                <div class="character-card" id="select-spark">
+                    <h2>SPARK</h2>
+                     <canvas id="spark-thumbnail" class="thumbnail-canvas"></canvas>
+                    <div class="lore">
+                        <p>Spark é um robô que foi criado para garantir a segurança de um laboratório do governo. Porém, em um dia, uma grande explosão destruiu todos os outros robôs, fazendo com que apenas ele sobrasse e acabassem abandonando o projeto por falta de recursos. Depois de sair do laboratório, ele decidiu continuar a lutar, pois todo o seu corpo e essência eram feitos para isso.</p>
+                    </div>
+                </div>
+                 <div class="character-card" id="select-hades">
+                    <h2>HADES</h2>
+                     <canvas id="hades-thumbnail" class="thumbnail-canvas"></canvas>
+                    <div class="lore">
+                        <p>Um heroi de guerra que usava seus poderosos punhos de fogo para enfrentar o inimigo e levalos para conhecer as chamas eternas, quando foi destronado por seus aliados jurou lutar contra todos para voltar ao seu imperio.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela de Fim de Jogo -->
+        <div id="game-over-screen">
+            <span id="win-text"></span>
+            <button id="restart-button">Jogar Novamente</button>
+        </div>
+
+        <!-- HUD -->
+        <div id="hud">
+            <div id="player1-hud" class="player-hud">
+                <h3 id="p1-name">JOGADOR 1</h3>
+                <div class="health-bar-outer"><div id="p1-health" class="health-bar-inner"></div></div>
+                <div class="energy-bar-outer"><div id="p1-energy" class="energy-bar-inner"></div></div>
+            </div>
+            <div id="player2-hud" class="player-hud">
+                <h3 id="p2-name">COMPUTADOR</h3>
+                <div class="health-bar-outer"><div id="p2-health" class="health-bar-inner"></div></div>
+                <div class="energy-bar-outer"><div id="p2-energy" class="energy-bar-inner"></div></div>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+<script>
+window.onload = () => {
+    // --- Configurações Iniciais ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const gameContainer = document.getElementById('game-container');
+    const selectionScreen = document.getElementById('character-selection');
+    const gameOverScreen = document.getElementById('game-over-screen');
+    const winText = document.getElementById('win-text');
+    const restartButton = document.getElementById('restart-button');
+
+    let canvasWidth, canvasHeight;
+    let gameLoopId;
+    let gameState = 'SELECT'; // SELECT, FIGHT, GAMEOVER
+
+    // --- Entidades do Jogo ---
+    let player1, player2, particles = [], projectiles = [];
+    const gravity = 0.7;
+    let floorY;
+
+    // --- Redimensionamento do Canvas ---
+    function resizeCanvas() {
+        canvasWidth = gameContainer.clientWidth;
+        canvasHeight = gameContainer.clientHeight;
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        floorY = canvasHeight * 0.9;
+        
+        if (gameState !== 'FIGHT') {
+            drawBackground();
+        }
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    
+    // --- Áudio com Tone.js ---
+    const sounds = {
+        spark: {
+            punch: new Tone.PolySynth(Tone.Synth, { maxPolyphony: 4, options: { volume: -12, oscillator: { type: 'fmsquare' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 } } }).toDestination(),
+            strong_punch: new Tone.PolySynth(Tone.Synth, { maxPolyphony: 4, options: { oscillator: { type: 'fmsquare' }, volume: -10, envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.2 } } }).toDestination(),
+            special: new Tone.PolySynth(Tone.NoiseSynth, { maxPolyphony: 2, options: { noise: { type: 'pink' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.2 } } }).toDestination(),
+        },
+        titan: {
+            punch: new Tone.PolySynth(Tone.MetalSynth, { maxPolyphony: 4, options: { volume: -12, frequency: 100, envelope: { attack: 0.01, decay: 0.2, release: 0.1 }, harmonicity: 3.1, modulationIndex: 16, resonance: 4000, octaves: 1.5 } }).toDestination(),
+            strong_punch: new Tone.PolySynth(Tone.MetalSynth, { maxPolyphony: 4, options: { frequency: 80, volume: -10, envelope: { attack: 0.01, decay: 0.4, release: 0.2 }, harmonicity: 4.1, modulationIndex: 20, resonance: 3000, octaves: 2 } }).toDestination(),
+            special: new Tone.PolySynth(Tone.NoiseSynth, { maxPolyphony: 2, options: { volume: -10, noise: { type: 'white' }, envelope: { attack: 0.1, decay: 0.5, sustain: 0.2, release: 0.3 } } }).toDestination(),
+        },
+         hades: {
+            punch: new Tone.PolySynth(Tone.FMSynth, { maxPolyphony: 4, options: { volume: -12, harmonicity: 1.5, modulationIndex: 2, envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.1 } } }).toDestination(),
+            strong_punch: new Tone.PolySynth(Tone.FMSynth, { maxPolyphony: 4, options: { volume: -10, harmonicity: 2, modulationIndex: 5, envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.2 } } }).toDestination(),
+            special: new Tone.PolySynth(Tone.NoiseSynth, { maxPolyphony: 2, options: { noise: { type: 'brown' }, volume: -8, envelope: { attack: 0.05, decay: 0.4, sustain: 0.1, release: 0.3 } } }).toDestination(),
+        },
+    };
+    
+    // --- Classes do Jogo ---
+
+    class Projectile {
+        constructor(x, y, direction, shooter, type, damage) {
+            this.shooter = shooter;
+            this.type = type; 
+            this.damage = damage;
+            this.width = 40;
+            this.height = 40;
+            this.position = { x: x, y: y };
+            this.velocity = { x: direction * 8, y: 0 }; 
+            this.direction = direction;
+        }
+
+        draw() {
+            ctx.font = '40px sans-serif';
+            ctx.textBaseline = 'middle';
+            
+            ctx.save();
+            ctx.translate(this.position.x + this.width / 2, this.position.y + this.height / 2);
+
+            if (this.type === 'lightning') {
+                ctx.fillText('⚡️', -this.width / 2, 0);
+            } else if (this.type === 'rocket_punch') {
+                if (this.direction === -1) {
+                    ctx.scale(-1, 1);
+                }
+                ctx.fillText('🚀', -this.width / 2, 0);
+            } else if (this.type === 'fireball') {
+                 ctx.fillText('🔥', -this.width / 2, 0);
+            }
+            
+            ctx.restore();
+        }
+
+        update() {
+            this.position.x += this.velocity.x;
+        }
+    }
+    
+    class Fighter {
+        constructor(x, y, color, name, isPlayer, characterType) {
+            this.characterType = characterType;
+            this.name = name;
+            this.isPlayer = isPlayer;
+            this.width = 60;
+            this.height = 120;
+            this.position = { x, y };
+            this.velocity = { x: 0, y: 0 };
+            this.color = color;
+            this.health = 200;
+            this.energy = 50; // ENERGIA INICIAL
+            this.isJumping = false;
+            this.isAttacking = false;
+            this.attackBox = { position: {x: 0, y: 0}, width: 0, height: 0, type: null, active: false, hit: false };
+            this.attackCooldown = 0;
+            this.direction = (x < canvasWidth / 2) ? 1 : -1;
+            this.keys = { left: false, right: false, up: false, down: false };
+            
+            this.lastTap = { key: null, time: 0 };
+            this.doubleTapped = false;
+            
+            this.aiVelocityX = 0;
+            // Efeito de Queimadura
+            this.burnDuration = 0;
+            this.burnTick = 0;
+        }
+
+        draw() {
+            ctx.save();
+            ctx.translate(this.position.x, this.position.y);
+            if (this.direction === -1) {
+                ctx.scale(-1, 1);
+                ctx.translate(-this.width, 0);
+            }
+
+            if (this.characterType === 'titan') {
+                drawTitanArt(ctx, 0, 0, this.width, this.height, this.isAttacking);
+            } else if (this.characterType === 'spark') {
+                drawSparkArt(ctx, 0, 0, this.width, this.height, this.isAttacking);
+            } else if (this.characterType === 'hades') {
+                 drawHadesArt(ctx, 0, 0, this.width, this.height, this.isAttacking);
+            }
+            
+            ctx.restore();
+        }
+
+        update(opponent) {
+            this.direction = (opponent.position.x > this.position.x) ? 1 : -1;
+            
+            this.position.x += this.velocity.x;
+            this.position.y += this.velocity.y;
+
+            if (this.position.y + this.height + this.velocity.y < floorY) {
+                this.velocity.y += gravity;
+                this.isJumping = true;
+            } else {
+                this.velocity.y = 0;
+                this.position.y = floorY - this.height;
+                this.isJumping = false;
+            }
+
+            if (this.position.x < 0) this.position.x = 0;
+            if (this.position.x + this.width > canvasWidth) this.position.x = canvasWidth - this.width;
+
+            // Movimento
+            this.velocity.x = 0;
+            if (this.isPlayer && !this.isAttacking) {
+                if (this.keys.left) this.velocity.x = -5;
+                if (this.keys.right) this.velocity.x = 5;
+            } else if (!this.isPlayer) {
+                this.velocity.x = this.aiVelocityX;
+            }
+            
+            if (this.attackCooldown > 0) {
+                this.attackCooldown--;
+            } else {
+                this.isAttacking = false;
+                this.attackBox.active = false;
+                this.attackBox.hit = false;
+            }
+
+            if (this.attackBox.active) {
+                this.attackBox.position.x = this.position.x + (this.direction === 1 ? this.width : -this.attackBox.width);
+                this.attackBox.position.y = this.position.y + this.height / 3;
+            }
+            
+            // Lógica de queimadura
+            if (this.burnDuration > 0) {
+                this.burnDuration--;
+                this.burnTick++;
+                if (this.burnTick >= 60) {
+                    this.health -= 3;
+                    this.burnTick = 0;
+                    particles.push(new Particle(this.position.x + Math.random() * this.width, this.position.y + Math.random() * this.height, 'orange', 0));
+                }
+            }
+        }
+        
+        takeDamage(damage, effect = {}) {
+            this.health -= damage;
+            if (effect.type === 'burn') {
+                this.burnDuration = 180; // 3 segundos a 60fps
+            }
+            if (this.health < 0) this.health = 0;
+            
+            let originalColor = { ...this.color };
+            this.color.main = '#ffffff';
+            setTimeout(() => { if (this.color) this.color.main = originalColor.main; }, 100);
+        }
+
+        attack(type) {
+            if (this.attackCooldown > 0) return;
+            
+            this.isAttacking = true;
+            this.attackBox.type = type;
+
+            switch(type) {
+                case 'punch':
+                    this.attackCooldown = 20;
+                    this.attackBox.active = true;
+                    this.attackBox.width = 70;
+                    this.attackBox.height = 30;
+                    if (this.characterType === 'spark') sounds.spark.punch.triggerAttackRelease("C5", "8n");
+                    else if (this.characterType === 'titan') sounds.titan.punch.triggerAttackRelease(200, "8n");
+                    else if (this.characterType === 'hades') sounds.hades.punch.triggerAttackRelease("A2", "8n");
+                    break;
+                case 'strong_punch':
+                    this.attackCooldown = 45;
+                    this.attackBox.active = true;
+                    this.attackBox.width = 90;
+                    this.attackBox.height = 40;
+                    if (this.characterType === 'spark') sounds.spark.strong_punch.triggerAttackRelease("C4", "4n");
+                    else if (this.characterType === 'titan') sounds.titan.strong_punch.triggerAttackRelease(150, "4n");
+                    else if (this.characterType === 'hades') sounds.hades.strong_punch.triggerAttackRelease("A1", "4n");
+                    break;
+                case 'special':
+                    if (this.energy < 45) { this.isAttacking = false; return; }
+                    this.energy -= 45;
+                    this.attackCooldown = 60;
+                    const projectileY = this.position.y + this.height / 3;
+                    const projectileX = this.position.x + (this.direction === 1 ? this.width : -40);
+                    
+                    if (this.characterType === 'spark') {
+                        sounds.spark.special.triggerAttackRelease("2n");
+                        projectiles.push(new Projectile(projectileX, projectileY, this.direction, this, 'lightning', 30));
+                    } else if (this.characterType === 'titan') {
+                        sounds.titan.special.triggerAttackRelease("2n");
+                        projectiles.push(new Projectile(projectileX, projectileY, this.direction, this, 'rocket_punch', 30));
+                        createParticleEffect(this, 'special');
+                    } else if (this.characterType === 'hades') {
+                        sounds.hades.special.triggerAttackRelease("2n");
+                        projectiles.push(new Projectile(projectileX, projectileY, this.direction, this, 'fireball', 30));
+                    }
+                    break;
+            }
+        }
+    }
+
+    function createParticleEffect(fighter, type) {
+        let count = 0;
+        let color;
+        
+        if (fighter.characterType === 'spark') {
+            color = 'rgba(0, 255, 255, 0.8)';
+            count = type === 'special' ? 20 : 50;
+        } else { // Titan
+            color = 'rgba(255, 100, 0, 0.8)';
+            count = type === 'special' ? 15 : 40;
+        }
+
+        for (let i = 0; i < count; i++) {
+            particles.push(new Particle(
+                fighter.position.x + fighter.width / 2,
+                fighter.position.y + fighter.height / 2,
+                color,
+                fighter.direction
+            ));
+        }
+    }
+
+    class Particle {
+        constructor(x, y, color, direction) {
+            this.position = { x, y };
+            this.velocity = { 
+                x: (Math.random() - 0.5 + direction * 1.5) * 5, 
+                y: (Math.random() - 0.5) * 5 
+            };
+            this.radius = Math.random() * 3 + 1;
+            this.color = color;
+            this.life = 100;
+        }
+
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.fill();
+        }
+
+        update() {
+            this.position.x += this.velocity.x;
+            this.position.y += this.velocity.y;
+            this.life -= 2;
+        }
+    }
+
+    class AI {
+        constructor(fighter, opponent) {
+            this.fighter = fighter;
+            this.opponent = opponent;
+            this.state = 'IDLE';
+            this.decisionInterval = null;
+        }
+
+        start() {
+            this.decisionInterval = setInterval(() => this.makeDecision(), 500);
+        }
+
+        stop() {
+            if (this.decisionInterval) clearInterval(this.decisionInterval);
+            this.fighter.aiVelocityX = 0;
+        }
+        
+        makeDecision() {
+            if (gameState !== 'FIGHT') return;
+
+            const distance = Math.abs(this.fighter.position.x - this.opponent.position.x);
+            const canUseSpecial = this.fighter.energy >= 45;
+            
+            this.fighter.aiVelocityX = 0;
+
+            if (canUseSpecial && distance < 250 && Math.random() < 0.6) {
+                this.state = 'AGGRESSIVE';
+                this.fighter.attack('special');
+                return;
+            } else if (distance < 100 && Math.random() < 0.8) {
+                 this.state = 'AGGRESSIVE';
+                 this.fighter.attack('punch');
+                 return;
+            } else if (distance > 150) {
+                this.state = 'AGGRESSIVE';
+            } else {
+                 this.state = 'IDLE';
+            }
+
+            switch (this.state) {
+                case 'AGGRESSIVE':
+                    this.fighter.aiVelocityX = this.fighter.direction * 3;
+                    break;
+                case 'IDLE':
+                default:
+                    this.fighter.aiVelocityX = 0;
+                    break;
+            }
+        }
+    }
+
+    let aiController;
+
+    function isColliding(rect1, rect2) {
+        return (
+            rect1.position.x < rect2.position.x + rect2.width &&
+            rect1.position.x + rect1.width > rect2.position.x &&
+            rect1.position.y < rect2.position.y + rect2.height &&
+            rect1.position.y + rect1.height > rect2.position.y
+        );
+    }
+    
+    function updateHUD() {
+        if (!player1 || !player2) return;
+        document.getElementById('p1-name').innerText = player1.name;
+        document.getElementById('p1-health').style.width = (player1.health / 200) * 100 + '%';
+        document.getElementById('p1-energy').style.width = (player1.energy / 500) * 100 + '%';
+        
+        document.getElementById('p2-name').innerText = player2.name;
+        document.getElementById('p2-health').style.width = (player2.health / 200) * 100 + '%';
+        document.getElementById('p2-energy').style.width = (player2.energy / 500) * 100 + '%';
+    }
+
+    function checkGameOver() {
+        if (!player1 || !player2) return;
+        if (player1.health <= 0 || player2.health <= 0) {
+            gameState = 'GAMEOVER';
+            aiController.stop();
+            cancelAnimationFrame(gameLoopId);
+            gameOverScreen.style.display = 'flex';
+            
+            const winner = player1.health > 0 ? player1 : player2;
+            winText.innerText = `${winner.name.toUpperCase()} WINS!`;
+            
+            startWinnerZoom(winner);
+        }
+    }
+    
+    let zoomFactor = 1;
+    let winnerToZoom = null;
+    let zoomLoopId = null;
+    function startWinnerZoom(winner) {
+        winnerToZoom = winner;
+        zoomFactor = 1;
+        
+        function zoomLoop() {
+            if (zoomFactor > 2.5) {
+                 winnerToZoom = null;
+                 cancelAnimationFrame(zoomLoopId);
+                 return;
+            }
+            zoomFactor += 0.01;
+            
+            draw();
+            
+            ctx.save();
+            ctx.translate(winnerToZoom.position.x + winnerToZoom.width/2, winnerToZoom.position.y + winnerToZoom.height/2);
+            ctx.scale(zoomFactor, zoomFactor);
+            ctx.translate(-(winnerToZoom.position.x + winnerToZoom.width/2), -(winnerToZoom.position.y + winnerToZoom.height/2));
+            winnerToZoom.draw();
+            ctx.restore();
+            
+            zoomLoopId = requestAnimationFrame(zoomLoop);
+        }
+        zoomLoop();
+    }
+
+    function drawBackground() {
+        // Céu
+        const skyGradient = ctx.createLinearGradient(0, 0, 0, floorY);
+        skyGradient.addColorStop(0, '#1c1c2c');
+        skyGradient.addColorStop(1, '#3a3a5a');
+        ctx.fillStyle = skyGradient;
+        ctx.fillRect(0, 0, canvasWidth, floorY);
+
+        // Edifícios de fundo
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 15; j++) {
+                ctx.fillStyle = `rgba(50, 50, 70, ${0.5 - i * 0.1})`;
+                const x = j * (canvasWidth / 14);
+                const h = (Math.random() * 200 + 100) / (i + 1);
+                ctx.fillRect(x, floorY - h, canvasWidth / 15, h);
+            }
+        }
+        
+        // Rua molhada
+        ctx.fillStyle = '#333';
+        ctx.fillRect(0, floorY, canvasWidth, canvasHeight - floorY);
+        
+        // Portão Torii
+        const gateWidth = canvasWidth * 0.3;
+        const gateHeight = canvasHeight * 0.6;
+        const gateX = canvasWidth / 2 - gateWidth / 2;
+        const gateY = floorY - gateHeight;
+        
+        ctx.fillStyle = '#c0392b';
+        ctx.fillRect(gateX, gateY, 30, gateHeight); // Pilar esquerdo
+        ctx.fillRect(gateX + gateWidth - 30, gateY, 30, gateHeight); // Pilar direito
+        ctx.beginPath();
+        ctx.moveTo(gateX - 20, gateY + 20);
+        ctx.lineTo(gateX + gateWidth + 20, gateY + 20);
+        ctx.lineTo(gateX + gateWidth, gateY);
+        ctx.lineTo(gateX, gateY);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.fillStyle = '#333';
+        ctx.fillRect(gateX, gateY - 10, gateWidth, 10);
+    }
+    
+    // --- LÓGICA DE JOGO PRINCIPAL ---
+
+    function handleFighterCollision() {
+        if (!player1 || !player2) return;
+
+        const dx = (player1.position.x + player1.width / 2) - (player2.position.x + player2.width / 2);
+        const combinedHalfWidths = player1.width / 2 + player2.width / 2;
+        const overlapX = combinedHalfWidths - Math.abs(dx);
+
+        if (overlapX > 0) {
+            const pushback = overlapX / 2;
+            if (dx > 0) {
+                player1.position.x += pushback;
+                player2.position.x -= pushback;
+            } else {
+                player1.position.x -= pushback;
+                player2.position.x += pushback;
+            }
+        }
+    }
+    
+    function checkMeleeCollision(attacker, defender) {
+        if (!attacker.attackBox.active || attacker.attackBox.hit) return;
+
+        if (isColliding(attacker.attackBox, defender)) {
+            attacker.attackBox.hit = true; 
+            
+            let damage = 0;
+            let effect = {};
+            switch(attacker.attackBox.type) {
+                case 'punch':
+                    damage = 10;
+                    attacker.energy = Math.min(500, attacker.energy + 15);
+                    if (attacker.characterType === 'hades') {
+                        effect.type = 'burn';
+                    }
+                    break;
+                case 'strong_punch':
+                    damage = 25;
+                     if (attacker.characterType === 'hades') {
+                        effect.type = 'burn';
+                    }
+                    break;
+            }
+            if (damage > 0) {
+               defender.takeDamage(damage, effect);
+            }
+        }
+    }
+
+
+    function gameLoop() {
+        if (gameState !== 'FIGHT') return;
+
+        gameLoopId = requestAnimationFrame(gameLoop);
+        
+        // --- Atualização da Lógica ---
+        if (player1) player1.update(player2);
+        if (player2) player2.update(player1);
+        
+        handleFighterCollision(); // Adiciona colisão entre jogadores
+
+        particles.forEach((p, index) => {
+            p.update();
+            if(p.life <= 0) particles.splice(index, 1);
+        });
+
+        projectiles.forEach((projectile, index) => {
+            projectile.update();
+            const target = projectile.shooter === player1 ? player2 : player1;
+            if (isColliding(projectile, target)) {
+                target.takeDamage(projectile.damage);
+                projectiles.splice(index, 1);
+            } else if (projectile.position.x > canvasWidth + 50 || projectile.position.x < -50) {
+                projectiles.splice(index, 1);
+            }
+        });
+
+        // --- Verificação de Colisões ---
+        checkMeleeCollision(player1, player2);
+        checkMeleeCollision(player2, player1);
+
+        // --- Desenho ---
+        draw();
+        updateHUD();
+        checkGameOver();
+    }
+    
+    function draw() {
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        drawBackground();
+        if (player1) player1.draw();
+        if (player2) player2.draw();
+        particles.forEach(p => p.draw());
+        projectiles.forEach(p => p.draw());
+    }
+
+    // --- Controles de Eventos ---
+    window.addEventListener('keydown', (e) => {
+        if (gameState !== 'FIGHT' || !player1 || !player1.isPlayer) return;
+
+        const key = e.key.toLowerCase();
+        const now = Date.now();
+
+        switch (key) {
+            case 'a':
+                player1.keys.left = true;
+                if (player1.direction === -1) { 
+                    if (player1.lastTap.key === 'a' && now - player1.lastTap.time < 300) {
+                        player1.doubleTapped = true;
+                        player1.lastTap.key = null;
+                        setTimeout(() => { if(player1) player1.doubleTapped = false; }, 300);
+                    }
+                }
+                player1.lastTap = { key: 'a', time: now };
+                break;
+            case 'd':
+                player1.keys.right = true;
+                if (player1.direction === 1) {
+                    if (player1.lastTap.key === 'd' && now - player1.lastTap.time < 300) {
+                        player1.doubleTapped = true;
+                        player1.lastTap.key = null;
+                        setTimeout(() => { if(player1) player1.doubleTapped = false; }, 300);
+                    }
+                }
+                player1.lastTap = { key: 'd', time: now };
+                break;
+            case 'w':
+                if (!player1.isJumping) {
+                    player1.velocity.y = -20;
+                    player1.isJumping = true;
+                }
+                break;
+        }
+
+        switch(key) {
+            case 'arrowleft':
+                if (player1.doubleTapped) {
+                    player1.attack('strong_punch');
+                } else {
+                    player1.attack('punch');
+                }
+                player1.doubleTapped = false;
+                break;
+            case 'arrowright':
+                player1.attack('special');
+                player1.doubleTapped = false;
+                break;
+        }
+    });
+
+    window.addEventListener('keyup', (e) => {
+        if (gameState !== 'FIGHT' || !player1 || !player1.isPlayer) return;
+
+        switch (e.key.toLowerCase()) {
+            case 'a': player1.keys.left = false; break;
+            case 'd': player1.keys.right = false; break;
+        }
+    });
+    
+    function drawTitanArt(ctx, x, y, width, height, isAttacking) {
+        const pixel = height / 12;
+
+        const skinTone = '#f2d2b4';
+        const skinShadow = '#d3a180';
+        const shortsColor = '#1e90ff';
+        const shortsStripe = '#fff';
+        const capColor = '#ff4141';
+        const shoeColor = '#4169e1';
+        const robotArmColor = '#a0a0a0';
+        const robotArmDark = '#707070';
+        
+        ctx.fillStyle = shoeColor;
+        ctx.fillRect(x + pixel, y + pixel * 11, pixel * 2, pixel);
+        ctx.fillRect(x + pixel * 4, y + pixel * 11, pixel * 2, pixel);
+        
+        ctx.fillStyle = skinTone;
+        ctx.fillRect(x + pixel * 1.5, y + pixel * 7, pixel * 1.5, pixel * 4);
+        ctx.fillRect(x + pixel * 4, y + pixel * 7, pixel * 1.5, pixel * 4);
+        ctx.fillStyle = skinShadow;
+        ctx.fillRect(x + pixel * 2.5, y + pixel * 7, pixel * 0.5, pixel * 4);
+        ctx.fillRect(x + pixel * 5, y + pixel * 7, pixel * 0.5, pixel * 4);
+
+        ctx.fillStyle = shortsColor;
+        ctx.fillRect(x + pixel * 1, y + pixel * 5, pixel * 5, pixel * 3);
+        ctx.fillStyle = shortsStripe;
+        ctx.fillRect(x + pixel * 1, y + pixel * 5, pixel * 0.5, pixel * 3);
+
+        ctx.fillStyle = skinTone;
+        ctx.fillRect(x + pixel * 0.5, y + pixel * 3, pixel * 1.5, pixel * 3);
+        ctx.fillStyle = skinShadow;
+        ctx.fillRect(x + pixel * 1.5, y + pixel * 3, pixel * 0.5, pixel * 3);
+
+        ctx.fillStyle = skinTone;
+        ctx.fillRect(x + pixel * 2, y + pixel * 2, pixel * 3, pixel * 4);
+        ctx.fillStyle = skinShadow;
+        ctx.fillRect(x + pixel * 2.8, y + pixel * 2, pixel * 0.4, pixel * 4);
+        ctx.fillRect(x + pixel * 2, y + pixel * 3, pixel * 3, pixel * 0.4);
+        ctx.fillRect(x + pixel * 2, y + pixel * 4, pixel * 3, pixel * 0.4);
+        ctx.fillRect(x + pixel * 2, y + pixel * 5, pixel * 3, pixel * 0.4);
+        
+        ctx.fillStyle = robotArmColor;
+        if(isAttacking && player1.attackBox.type !== 'special') {
+            ctx.fillRect(x + pixel * 5, y + pixel * 3.5, pixel * 3, pixel * 2);
+        } else {
+            ctx.fillRect(x + pixel * 5, y + pixel * 3, pixel * 2, pixel * 4);
+        }
+        ctx.fillStyle = robotArmDark;
+        ctx.fillRect(x + pixel * 5, y + pixel * 4, pixel * 2, pixel * 0.5);
+        ctx.fillRect(x + pixel * 5, y + pixel * 6, pixel * 2, pixel * 0.5);
+         
+        ctx.fillStyle = skinTone;
+        ctx.fillRect(x + pixel * 2, y, pixel * 3, pixel * 2.5);
+        ctx.fillStyle = capColor;
+        ctx.fillRect(x + pixel * 1.5, y - pixel * 0.5, pixel * 4, pixel);
+        ctx.fillRect(x + pixel * 4, y, pixel * 1.5, pixel * 1.5);
+    }
+    
+    function drawSparkArt(ctx, x, y, width, height, isAttacking) {
+        const pixel = height / 12;
+
+        const darkGrey = '#555';
+        const lightGrey = '#808080';
+        const capeColor = '#222';
+        const shoeColor = '#D92626';
+        const shoeSole = '#FFF';
+        const chestOrange = '#ff8c00';
+        const chestYellow = '#ffae42';
+        const eyeColor = '#ff4500';
+
+        ctx.fillStyle = capeColor;
+        ctx.beginPath();
+        ctx.moveTo(x + pixel * 3, y + pixel * 2);
+        ctx.lineTo(x, y + pixel * 11);
+        ctx.lineTo(x + pixel * 2, y + pixel * 11.5);
+        ctx.lineTo(x + pixel * 5, y + pixel * 3);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = shoeColor;
+        ctx.fillRect(x + pixel * 0.5, y + pixel * 11, pixel * 2, pixel);
+        ctx.fillRect(x + pixel * 3.5, y + pixel * 11, pixel * 2, pixel);
+        ctx.fillStyle = shoeSole;
+        ctx.fillRect(x + pixel * 0.5, y + pixel * 11.7, pixel * 2, pixel * 0.3);
+        ctx.fillRect(x + pixel * 3.5, y + pixel * 11.7, pixel * 2, pixel * 0.3);
+        
+        ctx.fillStyle = lightGrey;
+        ctx.fillRect(x + pixel, y + pixel * 7, pixel, pixel * 4);
+        ctx.fillRect(x + pixel * 4, y + pixel * 7, pixel, pixel * 4);
+        ctx.fillStyle = darkGrey;
+        ctx.fillRect(x + pixel, y + pixel * 9, pixel, pixel * 0.5);
+        ctx.fillRect(x + pixel * 4, y + pixel * 9, pixel, pixel * 0.5);
+        
+        ctx.fillStyle = lightGrey;
+        ctx.fillRect(x + pixel * 2, y + pixel * 4, pixel * 2, pixel * 3);
+        ctx.fillStyle = darkGrey;
+        ctx.fillRect(x + pixel * 2, y + pixel * 5, pixel * 2, pixel * 0.3);
+        ctx.fillRect(x + pixel * 2, y + pixel * 6, pixel * 2, pixel * 0.3);
+
+        ctx.fillStyle = chestOrange;
+        ctx.beginPath();
+        ctx.arc(x + pixel * 3, y + pixel * 4.5, pixel * 1.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = chestYellow;
+        ctx.beginPath();
+        ctx.arc(x + pixel * 3, y + pixel * 4.5, pixel * 0.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = lightGrey;
+        ctx.fillRect(x + pixel, y + pixel * 4, pixel, pixel * 3);
+        ctx.fillStyle = darkGrey;
+        ctx.fillRect(x + pixel, y + pixel * 5.5, pixel, pixel * 0.5);
+        
+        ctx.fillStyle = lightGrey;
+        if(isAttacking) {
+             ctx.fillRect(x + pixel * 4, y + pixel * 4, pixel * 2.5, pixel);
+        } else {
+             ctx.fillRect(x + pixel * 4, y + pixel * 4, pixel, pixel * 3);
+        }
+        ctx.fillStyle = darkGrey;
+        ctx.fillRect(x + pixel * 4, y + pixel * 5.5, pixel, pixel * 0.5);
+        
+        ctx.fillStyle = capeColor;
+        ctx.fillRect(x + pixel, y, pixel * 4, pixel * 2.5);
+        ctx.fillStyle = lightGrey;
+        ctx.fillRect(x + pixel * 2, y + pixel, pixel * 2, pixel * 2);
+        ctx.fillStyle = eyeColor;
+        ctx.fillRect(x + pixel * 2.2, y + pixel * 1.5, pixel * 1.6, pixel * 0.5);
+    }
+
+    function drawHadesArt(ctx, x, y, width, height, isAttacking) {
+        const pixel = height / 12;
+
+        const skinTone = '#8d5524';
+        const skinShadow = '#653d1b';
+        const pantsColor = '#404040';
+        const beltColor = '#202020';
+        
+        // Calças
+        ctx.fillStyle = pantsColor;
+        ctx.fillRect(x + pixel * 1.5, y + pixel * 7, pixel * 1.5, pixel * 5); // Esquerda
+        ctx.fillRect(x + pixel * 4, y + pixel * 7, pixel * 1.5, pixel * 5); // Direita
+        
+        // Torso
+        ctx.fillStyle = skinTone;
+        ctx.fillRect(x + pixel, y + pixel * 2, pixel * 5, pixel * 5);
+        ctx.fillStyle = skinShadow;
+        ctx.fillRect(x + pixel*2.8, y + pixel * 2, pixel * 0.4, pixel*5);
+        ctx.fillRect(x + pixel, y + pixel * 3, pixel * 5, pixel * 0.4);
+        ctx.fillRect(x + pixel, y + pixel * 4.5, pixel * 5, pixel * 0.4);
+        
+        // Cinto
+        ctx.fillStyle = beltColor;
+        ctx.fillRect(x + pixel, y + pixel * 6.5, pixel * 5, pixel);
+
+        // Punhos de fogo
+        ctx.fillStyle = 'orange';
+        if (isAttacking) {
+             ctx.fillRect(x + pixel * 5, y + pixel * 3, pixel * 2, pixel * 2);
+             ctx.fillStyle = 'red';
+             ctx.fillRect(x + pixel * 5.5, y + pixel * 3.5, pixel, pixel);
+        } else {
+             ctx.fillRect(x + pixel * 0.5, y + pixel * 3, pixel, pixel);
+             ctx.fillRect(x + pixel * 5.5, y + pixel * 3, pixel, pixel);
+        }
+
+        // Braços
+        ctx.fillStyle = skinTone;
+        ctx.fillRect(x + pixel * 0.5, y + pixel * 4, pixel, pixel*2);
+        ctx.fillRect(x + pixel * 5.5, y + pixel * 4, pixel, pixel*2);
+
+        // Cabeça
+        ctx.fillStyle = skinTone;
+        ctx.fillRect(x + pixel * 2, y, pixel * 3, pixel * 2.5);
+        ctx.fillStyle = '#000';
+        ctx.fillRect(x + pixel, y, pixel*5, pixel*0.5); // Cabelo
+    }
+    
+    function drawThumbnails(){
+        const titanCanvas = document.getElementById('titan-thumbnail');
+        const titanCtx = titanCanvas.getContext('2d');
+        titanCanvas.width = 120;
+        titanCanvas.height = 120;
+        drawTitanArt(titanCtx, 30, 0, 60, 120, false);
+        
+        const sparkCanvas = document.getElementById('spark-thumbnail');
+        const sparkCtx = sparkCanvas.getContext('2d');
+        sparkCanvas.width = 120;
+        sparkCanvas.height = 120;
+        drawSparkArt(sparkCtx, 30, 0, 60, 120, false);
+
+        const hadesCanvas = document.getElementById('hades-thumbnail');
+        const hadesCtx = hadesCanvas.getContext('2d');
+        hadesCanvas.width = 120;
+        hadesCanvas.height = 120;
+        drawHadesArt(hadesCtx, 30, 0, 60, 120, false);
+    }
+
+    // --- Início do Jogo ---
+    async function startGame(playerChoice) {
+        try {
+            await Tone.start();
+            console.log("Contexto de áudio iniciado.");
+        } catch(e) {
+            console.error("Erro ao iniciar áudio", e);
+        }
+
+        selectionScreen.classList.add('hidden');
+
+        setTimeout(() => {
+            const characters = [
+                { id: 'titan', name: 'Titan', type: 'titan', colors: { main: '#a0a0a0', shorts: 'blue', sneakers: 'blue', hat: 'red' } },
+                { id: 'spark', name: 'Spark', type: 'spark', colors: { main: '#808080', cape: 'black', sneakers: 'red', chest: '#ff4500' } },
+                { id: 'hades', name: 'Hades', type: 'hades', colors: { main: '#8d5524' } }
+            ];
+
+            const playerConfig = characters.find(c => c.id === playerChoice);
+            const opponentPool = characters.filter(c => c.id !== playerChoice);
+            const opponentConfig = opponentPool[Math.floor(Math.random() * opponentPool.length)];
+
+            player1 = new Fighter(canvasWidth * 0.2, floorY - 120, playerConfig.colors, playerConfig.name, true, playerConfig.type);
+            player2 = new Fighter(canvasWidth * 0.8 - 50, floorY - 120, opponentConfig.colors, opponentConfig.name, false, opponentConfig.type);
+            
+            aiController = new AI(player2, player1);
+            aiController.start();
+    
+            gameState = 'FIGHT';
+            gameLoop();
+        }, 500);
+    }
+    
+    function resetGame() {
+        cancelAnimationFrame(gameLoopId);
+        cancelAnimationFrame(zoomLoopId);
+        if(aiController) aiController.stop();
+
+        gameOverScreen.style.display = 'none';
+        selectionScreen.classList.remove('hidden');
+        
+        zoomFactor = 1;
+        winnerToZoom = null;
+        player1 = null;
+        player2 = null;
+
+        particles = [];
+        projectiles = []; // Limpa os projéteis
+        gameState = 'SELECT';
+        ctx.clearRect(0,0,canvasWidth, canvasHeight);
+        drawBackground();
+    }
+
+    document.getElementById('select-titan').addEventListener('click', () => startGame('titan'));
+    document.getElementById('select-spark').addEventListener('click', () => startGame('spark'));
+    document.getElementById('select-hades').addEventListener('click', () => startGame('hades'));
+    restartButton.addEventListener('click', resetGame);
+
+    drawBackground();
+    drawThumbnails();
+};
+</script>
+</body>
+</html>
