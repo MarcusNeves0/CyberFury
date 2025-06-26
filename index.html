@@ -393,7 +393,7 @@ window.onload = () => {
                 if (this.direction === -1) {
                     ctx.scale(-1, 1);
                 }
-                ctx.fillText('🚀', -this.width / 2, 0);
+                ctx.fillText('�', -this.width / 2, 0);
             } else if (this.type === 'fireball') {
                  ctx.fillText('🔥', -this.width / 2, 0);
             }
@@ -416,8 +416,8 @@ window.onload = () => {
             this.position = { x, y };
             this.velocity = { x: 0, y: 0 };
             this.color = color;
-            this.health = 200;
-            this.energy = 50;
+            this.health = 1000;
+            this.energy = 50; 
             this.isJumping = false;
             this.isAttacking = false;
             this.attackBox = { position: {x: 0, y: 0}, width: 0, height: 0, type: null, active: false, hit: false };
@@ -675,11 +675,11 @@ window.onload = () => {
     function updateHUD() {
         if (!player1 || !player2) return;
         document.getElementById('p1-name').innerText = player1.name;
-        document.getElementById('p1-health').style.width = (player1.health / 200) * 100 + '%';
+        document.getElementById('p1-health').style.width = (player1.health / 1000) * 100 + '%';
         document.getElementById('p1-energy').style.width = (player1.energy / 500) * 100 + '%';
         
         document.getElementById('p2-name').innerText = player2.name;
-        document.getElementById('p2-health').style.width = (player2.health / 200) * 100 + '%';
+        document.getElementById('p2-health').style.width = (player2.health / 1000) * 100 + '%';
         document.getElementById('p2-energy').style.width = (player2.energy / 500) * 100 + '%';
     }
 
@@ -771,18 +771,24 @@ window.onload = () => {
     function handleFighterCollision() {
         if (!player1 || !player2) return;
 
-        const dx = (player1.position.x + player1.width / 2) - (player2.position.x + player2.width / 2);
-        const combinedHalfWidths = player1.width / 2 + player2.width / 2;
-        const overlapX = combinedHalfWidths - Math.abs(dx);
+        const p1Bottom = player1.position.y + player1.height;
+        const p2Bottom = player2.position.y + player2.height;
 
-        if (overlapX > 0) {
-            const pushback = overlapX / 2;
-            if (dx > 0) {
-                player1.position.x += pushback;
-                player2.position.x -= pushback;
-            } else {
-                player1.position.x -= pushback;
-                player2.position.x += pushback;
+        // Só aplica colisão horizontal se não estiver a saltar por cima
+        if (p1Bottom > player2.position.y && player1.position.y < p2Bottom) {
+             const dx = (player1.position.x + player1.width / 2) - (player2.position.x + player2.width / 2);
+            const combinedHalfWidths = player1.width / 2 + player2.width / 2;
+            const overlapX = combinedHalfWidths - Math.abs(dx);
+
+            if (overlapX > 0) {
+                const pushback = overlapX / 2;
+                if (dx > 0) {
+                    player1.position.x += pushback;
+                    player2.position.x -= pushback;
+                } else {
+                    player1.position.x -= pushback;
+                    player2.position.x += pushback;
+                }
             }
         }
     }
@@ -968,7 +974,7 @@ window.onload = () => {
         ctx.fillRect(x + pixel * 2, y + pixel * 5, pixel * 3, pixel * 0.4);
         
         ctx.fillStyle = robotArmColor;
-        if(isAttacking && player1.attackBox.type !== 'special') {
+        if(isAttacking && (player1.attackBox.type === 'punch' || player1.attackBox.type === 'strong_punch')) {
             ctx.fillRect(x + pixel * 5, y + pixel * 3.5, pixel * 3, pixel * 2);
         } else {
             ctx.fillRect(x + pixel * 5, y + pixel * 3, pixel * 2, pixel * 4);
@@ -1190,3 +1196,4 @@ window.onload = () => {
 </script>
 </body>
 </html>
+�
