@@ -83,7 +83,7 @@
 
         .selection-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 15px;
             width: 95%;
         }
@@ -104,7 +104,7 @@
         
         .character-card h2 {
             color: var(--neon-pink);
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             margin-top: 0;
             margin-bottom: 10px;
         }
@@ -198,6 +198,7 @@
             border-radius: 5px;
             margin-top: 5px;
             padding: 2px;
+            position: relative; /* Adicionado para posicionamento do texto */
         }
         
         .health-bar-inner {
@@ -212,6 +213,18 @@
              background: linear-gradient(90deg, var(--neon-blue), #00aaff);
              border-radius: 3px;
              transition: width 0.3s;
+        }
+        
+        .bar-text {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+            font-family: sans-serif;
+            font-weight: bold;
         }
 
         /* --- Tela de Fim de Jogo --- */
@@ -308,13 +321,25 @@
         <div id="hud">
             <div id="player1-hud" class="player-hud">
                 <h3 id="p1-name">JOGADOR 1</h3>
-                <div class="health-bar-outer"><div id="p1-health" class="health-bar-inner"></div></div>
-                <div class="energy-bar-outer"><div id="p1-energy" class="energy-bar-inner"></div></div>
+                <div class="health-bar-outer">
+                    <div id="p1-health" class="health-bar-inner"></div>
+                    <span id="p1-health-text" class="bar-text"></span>
+                </div>
+                <div class="energy-bar-outer">
+                    <div id="p1-energy" class="energy-bar-inner"></div>
+                    <span id="p1-energy-text" class="bar-text"></span>
+                </div>
             </div>
             <div id="player2-hud" class="player-hud">
                 <h3 id="p2-name">COMPUTADOR</h3>
-                <div class="health-bar-outer"><div id="p2-health" class="health-bar-inner"></div></div>
-                <div class="energy-bar-outer"><div id="p2-energy" class="energy-bar-inner"></div></div>
+                 <div class="health-bar-outer">
+                    <div id="p2-health" class="health-bar-inner"></div>
+                    <span id="p2-health-text" class="bar-text"></span>
+                </div>
+                <div class="energy-bar-outer">
+                    <div id="p2-energy" class="energy-bar-inner"></div>
+                    <span id="p2-energy-text" class="bar-text"></span>
+                </div>
             </div>
         </div>
 
@@ -362,7 +387,7 @@ window.onload = () => {
         spark: {
             punch: new Tone.PolySynth(Tone.Synth, { maxPolyphony: 4, options: { volume: -12, oscillator: { type: 'fmsquare' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 } } }).toDestination(),
             strong_punch: new Tone.PolySynth(Tone.Synth, { maxPolyphony: 4, options: { oscillator: { type: 'fmsquare' }, volume: -10, envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.2 } } }).toDestination(),
-            special: new Tone.PolySynth(Tone.NoiseSynth, { maxPolyphony: 2, options: { noise: { type: 'pink' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.2 } } }).toDestination(),
+            special: new Tone.NoiseSynth({ noise: {type: "pink"}, envelope: { attack: 0.005, decay: 0.1, sustain: 0.01 } }).toDestination(),
         },
         titan: {
             punch: new Tone.PolySynth(Tone.MetalSynth, { maxPolyphony: 4, options: { volume: -12, frequency: 100, envelope: { attack: 0.01, decay: 0.2, release: 0.1 }, harmonicity: 3.1, modulationIndex: 16, resonance: 4000, octaves: 1.5 } }).toDestination(),
@@ -385,9 +410,9 @@ window.onload = () => {
             special: new Tone.PolySynth(Tone.NoiseSynth, { maxPolyphony: 2, options: { noise: { type: 'white' }, volume: -6, envelope: { attack: 0.2, decay: 1.0, sustain: 0, release: 0.5 } } }).toDestination(),
         },
         defenseBreak: new Tone.PolySynth(Tone.Synth, { maxPolyphony: 1, options: { oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.5, sustain: 0, release: 0.1 } } }).toDestination(),
-
     };
-    
+    sounds.spark.special.volume.value = -15;
+
     // --- Classes do Jogo ---
 
     class Projectile {
@@ -395,23 +420,32 @@ window.onload = () => {
             this.shooter = shooter;
             this.type = type; 
             this.damage = damage;
-            this.width = 40;
-            this.height = 40;
+            
+            if(type === 'pumpkin') {
+                this.width = 120;
+                this.height = 120;
+            } else {
+                this.width = 40;
+                this.height = 40;
+            }
+
             this.position = { x: x, y: y };
             this.velocity = { x: direction * 8, y: 0 }; 
             this.direction = direction;
         }
 
         draw() {
-            ctx.font = '40px sans-serif';
+            let fontSize = 40;
+            if(this.type === 'pumpkin') {
+                fontSize = 120;
+            }
+            ctx.font = `${fontSize}px sans-serif`;
             ctx.textBaseline = 'middle';
             
             ctx.save();
             ctx.translate(this.position.x + this.width / 2, this.position.y + this.height / 2);
 
-            if (this.type === 'lightning') {
-                ctx.fillText('⚡️', -this.width / 2, 0);
-            } else if (this.type === 'rocket_punch') {
+            if (this.type === 'rocket_punch') {
                 if (this.direction === -1) {
                     ctx.scale(-1, 1);
                 }
@@ -474,6 +508,11 @@ window.onload = () => {
             this.defenseResetCooldown = 0;
             this.isParalyzed = false;
             this.paralysisTimer = 0;
+
+            // Especial do Spark
+            this.isChannelingSpecial = false;
+            this.channelingTick = 0;
+            this.channelingDamage = 1;
         }
 
         draw() {
@@ -574,8 +613,36 @@ window.onload = () => {
             }
             
             this.handleStatusEffects(opponent);
+            this.handleSparkSpecial(opponent);
         }
 
+        handleSparkSpecial(opponent) {
+            if (this.characterType !== 'spark' || !this.isChannelingSpecial) {
+                return;
+            }
+
+            if (this.energy > 0) {
+                this.channelingTick++;
+                
+                // Custo de energia
+                if (this.channelingTick % 15 === 0) { // Gasta 4 de energia por segundo
+                    this.energy -= 1;
+                }
+                
+                // Dano e aumento do multiplicador
+                if (this.channelingTick % 60 === 0) {
+                    opponent.takeDamage(this.channelingDamage);
+                    this.channelingDamage *= 2;
+                }
+                 sounds.spark.special.triggerAttackRelease("8n");
+
+            } else {
+                this.isChannelingSpecial = false;
+                this.channelingDamage = 1;
+                this.channelingTick = 0;
+            }
+        }
+        
         handleStatusEffects(opponent){
             // Queimadura (Hades)
             if (this.burnDuration > 0) {
@@ -617,12 +684,8 @@ window.onload = () => {
         
         takeDamage(damage, effect = {}) {
             if (this.isDefending) {
-                let defenseDamage = damage;
-                if(this.characterType === 'spark' || this.characterType === 'titan'){
-                    defenseDamage = damage * 0.5;
-                }
-                this.defenseHealth -= defenseDamage;
-
+                const effectiveDamage = (this.characterType === 'spark' || this.characterType === 'titan') ? damage * 0.5 : damage; 
+                this.defenseHealth -= effectiveDamage;
                 this.position.x -= this.direction * 15;
                 if (this.defenseHealth <= 0) {
                     this.isDefending = false;
@@ -677,16 +740,17 @@ window.onload = () => {
                     else if (this.characterType === 'genji') sounds.genji.strong_punch.triggerAttackRelease("G3", "4n");
                     break;
                 case 'special':
+                    if (this.characterType === 'spark') {
+                        // Lógica de segurar já é tratada no keydown/keyup
+                        return;
+                    }
                     if (this.energy < (this.characterType === 'genji' ? 100 : 45)) { this.isAttacking = false; return; }
                     this.energy -= (this.characterType === 'genji' ? 100 : 45);
                     this.attackCooldown = 60;
                     const projectileY = this.position.y + this.height / 3;
                     const projectileX = this.position.x + (this.direction === 1 ? this.width : -40);
                     
-                    if (this.characterType === 'spark') {
-                        sounds.spark.special.triggerAttackRelease("2n");
-                        projectiles.push(new Projectile(projectileX, projectileY, this.direction, this, 'lightning', 30));
-                    } else if (this.characterType === 'titan') {
+                    if (this.characterType === 'titan') {
                         sounds.titan.special.triggerAttackRelease("2n");
                         projectiles.push(new Projectile(projectileX, projectileY, this.direction, this, 'rocket_punch', 30));
                         createParticleEffect(this, 'special');
@@ -812,10 +876,14 @@ window.onload = () => {
         document.getElementById('p1-name').innerText = player1.name;
         document.getElementById('p1-health').style.width = (player1.health / 1000) * 100 + '%';
         document.getElementById('p1-energy').style.width = (player1.energy / 500) * 100 + '%';
+        document.getElementById('p1-health-text').innerText = `${Math.ceil(player1.health)} / 1000`;
+        document.getElementById('p1-energy-text').innerText = `${Math.ceil(player1.energy)} / 500`;
         
         document.getElementById('p2-name').innerText = player2.name;
         document.getElementById('p2-health').style.width = (player2.health / 1000) * 100 + '%';
         document.getElementById('p2-energy').style.width = (player2.energy / 500) * 100 + '%';
+        document.getElementById('p2-health-text').innerText = `${Math.ceil(player2.health)} / 1000`;
+        document.getElementById('p2-energy-text').innerText = `${Math.ceil(player2.energy)} / 500`;
     }
 
     function checkGameOver() {
@@ -1030,10 +1098,35 @@ window.onload = () => {
         drawBackground();
         if (player1) player1.draw();
         if (player2) player2.draw();
+        
+        if(player1 && player1.isChannelingSpecial) drawLightningChain(player1, player2);
+        if(player2 && player2.isChannelingSpecial) drawLightningChain(player2, player1);
+
         particles.forEach(p => p.draw());
         projectiles.forEach(p => p.draw());
     }
 
+    function drawLightningChain(attacker, defender) {
+        const startX = attacker.position.x + attacker.width / 2;
+        const startY = attacker.position.y + attacker.height / 2;
+        const endX = defender.position.x + defender.width / 2;
+        const endY = defender.position.y + defender.height / 2;
+
+        const dx = endX - startX;
+        const dy = endY - startY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const segments = Math.floor(distance / 20);
+
+        ctx.font = '20px sans-serif';
+
+        for(let i = 1; i < segments; i++) {
+            const t = i / segments;
+            const x = startX + dx * t + (Math.random() - 0.5) * 10;
+            const y = startY + dy * t + (Math.random() - 0.5) * 10;
+            ctx.fillText('⚡️', x, y);
+        }
+    }
+    
     // --- Controles de Eventos ---
     window.addEventListener('keydown', (e) => {
         if (gameState !== 'FIGHT' || !player1 || !player1.isPlayer) return;
@@ -1088,7 +1181,11 @@ window.onload = () => {
                 player1.doubleTapped = false;
                 break;
             case 'arrowright':
-                player1.attack('special');
+                if (player1.characterType === 'spark') {
+                    player1.isChannelingSpecial = true;
+                } else {
+                    player1.attack('special');
+                }
                 player1.doubleTapped = false;
                 break;
         }
@@ -1106,6 +1203,13 @@ window.onload = () => {
                     player1.defenseResetCooldown = 120; // 2s cooldown
                 }
                 player1.isDefending = false;
+                break;
+            case 'arrowright':
+                 if (player1.characterType === 'spark') {
+                    player1.isChannelingSpecial = false;
+                    player1.channelingDamage = 1;
+                    player1.channelingTick = 0;
+                }
                 break;
         }
     });
@@ -1325,6 +1429,7 @@ window.onload = () => {
         ctx.fillStyle = pumpkinEye;
         ctx.fillRect(x + pixel*1.7, y + pixel*1.2, pixel*0.6, pixel*0.2);
         ctx.fillRect(x + pixel*4.7, y + pixel*1.2, pixel*0.6, pixel*0.2);
+
     }
     
      function drawGenjiArt(ctx, x, y, width, height, isAttacking) {
