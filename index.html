@@ -284,7 +284,8 @@
             <div class="loading-controls">
                 <h3>Controles</h3>
                 <div class="controls-grid">
-                    <p><strong>Movimento:</strong> W, A, S, D</p>
+                    <p><strong>Movimento:</strong> W, A, D</p>
+                    <p><strong>Defesa:</strong> Segurar S (ativa após 0.5s)</p>
                     <p><strong>Soco Básico:</strong> Seta Esquerda</p>
                     <p><strong>Ataque Especial:</strong> Seta Direita</p>
                     <p><strong>Soco Forte:</strong> Frente, Frente + Seta Esq.</p>
@@ -370,7 +371,9 @@ window.onload = () => {
             punch: new Tone.PolySynth(Tone.AMSynth, { maxPolyphony: 4, options: { volume: -12, harmonicity: 1.2, envelope: { attack: 0.05, decay: 0.3, sustain: 0, release: 0.1 } } }).toDestination(),
             strong_punch: new Tone.PolySynth(Tone.AMSynth, { maxPolyphony: 4, options: { volume: -10, harmonicity: 1.5, envelope: { attack: 0.05, decay: 0.5, sustain: 0, release: 0.2 } } }).toDestination(),
             special: new Tone.PolySynth(Tone.Synth, { maxPolyphony: 2, options: { oscillator: { type: 'sawtooth' }, volume: -8, envelope: { attack: 0.1, decay: 0.5, sustain: 0.2, release: 0.4 } } }).toDestination(),
-        }
+        },
+        defenseBreak: new Tone.PolySynth(Tone.Synth, { maxPolyphony: 1, options: { oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.5, sustain: 0, release: 0.1 } } }).toDestination(),
+
     };
     
     // --- Classes do Jogo ---
@@ -444,6 +447,15 @@ window.onload = () => {
             this.curseDuration = 0;
             this.curseTick = 0;
             this.cursePunchCounter = 0;
+            
+            // Defesa
+            this.isPreparingDefense = false;
+            this.defenseActivationTimer = 0;
+            this.isDefending = false;
+            this.defenseHealth = 50; 
+            this.defenseResetCooldown = 0;
+            this.isParalyzed = false;
+            this.paralysisTimer = 0;
         }
 
         draw() {
@@ -465,11 +477,32 @@ window.onload = () => {
             }
             
             ctx.restore();
+
+             // Efeitos Visuais de Status
+            if (this.isDefending) {
+                ctx.fillStyle = 'rgba(0, 150, 255, 0.3)';
+                ctx.beginPath();
+                ctx.arc(this.position.x + this.width / 2, this.position.y + this.height / 2, this.width, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            if(this.isParalyzed) {
+                ctx.font = '40px sans-serif';
+                ctx.fillText('💫', this.position.x + this.width / 4, this.position.y - 10);
+            }
         }
 
         update(opponent) {
             this.direction = (opponent.position.x > this.position.x) ? 1 : -1;
             
+            if(this.isParalyzed){
+                this.paralysisTimer--;
+                if(this.paralysisTimer <= 0) {
+                    this.isParalyzed = false;
+                }
+                return; 
+            }
+
             this.position.x += this.velocity.x;
             this.position.y += this.velocity.y;
 
@@ -486,7 +519,7 @@ window.onload = () => {
             if (this.position.x + this.width > canvasWidth) this.position.x = canvasWidth - this.width;
 
             this.velocity.x = 0;
-            if (this.isPlayer && !this.isAttacking) {
+            if (this.isPlayer && !this.isAttacking && !this.isDefending) {
                 if (this.keys.left) this.velocity.x = -5;
                 if (this.keys.right) this.velocity.x = 5;
             } else if (!this.isPlayer) {
@@ -506,6 +539,21 @@ window.onload = () => {
                 this.attackBox.position.y = this.position.y + this.height / 3;
             }
             
+            if(this.isPreparingDefense && !this.isDefending) {
+                this.defenseActivationTimer--;
+                if(this.defenseActivationTimer <= 0) {
+                    this.isDefending = true;
+                }
+            }
+
+            if (this.defenseResetCooldown > 0) {
+                this.defenseResetCooldown--;
+                if (this.defenseResetCooldown <= 0) {
+                    this.defenseHealth = 50;
+                }
+            }
+
+
             if (this.burnDuration > 0) {
                 this.burnDuration--;
                 this.burnTick++;
@@ -529,6 +577,21 @@ window.onload = () => {
         }
         
         takeDamage(damage, effect = {}) {
+            if (this.isDefending) {
+                const effectiveDamage = (this.characterType === 'spark' || this.characterType === 'titan') ? damage : damage * 0.5; // Exemplo, dano especial ignora mais defesa
+                this.defenseHealth -= effectiveDamage;
+                this.position.x -= this.direction * 15;
+                if (this.defenseHealth <= 0) {
+                    this.isDefending = false;
+                    this.isPreparingDefense = false;
+                    this.isParalyzed = true;
+                    this.paralysisTimer = 180;
+                    this.defenseResetCooldown = 120;
+                    sounds.defenseBreak.triggerAttackRelease("C3", "8n");
+                }
+                return true;
+            }
+            
             this.health -= damage;
             if (effect.type === 'burn') {
                 this.burnDuration = 180;
@@ -538,13 +601,11 @@ window.onload = () => {
             }
             if (this.health < 0) this.health = 0;
             
-            let originalColor = { ...this.color };
-            this.color.main = '#ffffff';
-            setTimeout(() => { if (this.color) this.color.main = originalColor.main; }, 100);
+            return false;
         }
 
         attack(type) {
-            if (this.attackCooldown > 0) return;
+            if (this.attackCooldown > 0 || this.isParalyzed || this.isDefending) return;
             
             this.isAttacking = true;
             this.attackBox.type = type;
@@ -662,35 +723,27 @@ window.onload = () => {
         }
         
         makeDecision() {
-            if (gameState !== 'FIGHT') return;
+            if (gameState !== 'FIGHT' || this.fighter.isParalyzed) return;
 
             const distance = Math.abs(this.fighter.position.x - this.opponent.position.x);
             const canUseSpecial = this.fighter.energy >= 45;
             
             this.fighter.aiVelocityX = 0;
+            this.fighter.isDefending = false;
+
+            if (this.opponent.isAttacking && distance < 150 && Math.random() < 0.7 && this.fighter.defenseResetCooldown <= 0) {
+                this.fighter.isDefending = true;
+                return;
+            }
 
             if (canUseSpecial && distance > 100 && distance < 300 && Math.random() < 0.6) {
-                this.state = 'AGGRESSIVE';
                 this.fighter.attack('special');
                 return;
             } else if (distance < 100 && Math.random() < 0.8) {
-                 this.state = 'AGGRESSIVE';
                  this.fighter.attack('punch');
                  return;
             } else if (distance > 150) {
-                this.state = 'AGGRESSIVE';
-            } else {
-                 this.state = 'IDLE';
-            }
-
-            switch (this.state) {
-                case 'AGGRESSIVE':
-                    this.fighter.aiVelocityX = this.fighter.direction * 3;
-                    break;
-                case 'IDLE':
-                default:
-                    this.fighter.aiVelocityX = 0;
-                    break;
+                this.fighter.aiVelocityX = this.fighter.direction * 3;
             }
         }
     }
@@ -828,14 +881,11 @@ window.onload = () => {
         if (!attacker.attackBox.active || attacker.attackBox.hit) return;
 
         if (isColliding(attacker.attackBox, defender)) {
-            attacker.attackBox.hit = true; 
-            
             let damage = 0;
             let effect = {};
             switch(attacker.attackBox.type) {
                 case 'punch':
                     damage = 10;
-                    attacker.energy = Math.min(500, attacker.energy + 15);
                     if (attacker.characterType === 'hades') { effect.type = 'burn';}
                     if (attacker.characterType === 'jack') {
                         attacker.cursePunchCounter++;
@@ -851,9 +901,14 @@ window.onload = () => {
                      if (attacker.characterType === 'jack') { effect.type = 'curse'; }
                     break;
             }
-            if (damage > 0) {
-               defender.takeDamage(damage, effect);
+
+            const defended = defender.takeDamage(damage, effect);
+            if(defended) {
+                 attacker.energy = Math.min(500, attacker.energy + 7.5);
+            } else if (damage > 0) {
+                attacker.energy = Math.min(500, attacker.energy + 15);
             }
+            attacker.attackBox.hit = true; 
         }
     }
 
@@ -940,6 +995,12 @@ window.onload = () => {
                     player1.isJumping = true;
                 }
                 break;
+            case 's':
+                if(!player1.isDefending && !player1.isParalyzed && player1.defenseResetCooldown <= 0) {
+                    player1.isPreparingDefense = true;
+                    player1.defenseActivationTimer = 30; // 0.5s
+                }
+                break;
         }
 
         switch(key) {
@@ -964,6 +1025,13 @@ window.onload = () => {
         switch (e.key.toLowerCase()) {
             case 'a': player1.keys.left = false; break;
             case 'd': player1.keys.right = false; break;
+            case 's':
+                player1.isPreparingDefense = false;
+                if(player1.isDefending) {
+                    player1.defenseResetCooldown = 120; // 2s cooldown
+                }
+                player1.isDefending = false;
+                break;
         }
     });
     
