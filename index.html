@@ -82,15 +82,15 @@
 
         .selection-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
             width: 95%;
         }
 
         .character-card {
             border: 2px solid var(--neon-blue);
             border-radius: 10px;
-            padding: 20px;
+            padding: 15px;
             text-align: center;
             cursor: pointer;
             transition: transform 0.3s, box-shadow 0.3s;
@@ -103,34 +103,33 @@
         
         .character-card h2 {
             color: var(--neon-pink);
-            font-size: 2rem;
+            font-size: 1.8rem;
             margin-top: 0;
             margin-bottom: 10px;
         }
         
         .thumbnail-canvas {
-            width: 120px;
-            height: 120px;
+            width: 100px;
+            height: 100px;
             border: 2px solid var(--neon-blue);
             background-color: var(--asphalt-color);
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             border-radius: 5px;
         }
 
         .character-card .lore {
              font-family: sans-serif;
-             font-size: 0.9rem;
+             font-size: 0.8rem;
              text-align: left;
-             height: 120px;
+             height: 130px;
              overflow-y: auto;
-             margin-top: 15px;
+             margin-top: 10px;
              border-top: 1px solid var(--neon-blue);
              padding-top: 10px;
         }
 
         /* Loading Screen */
          #loading-screen {
-            /* Retirado o display: none para o JS controlar */
          }
 
         .loading-controls {
@@ -216,7 +215,6 @@
 
         /* --- Tela de Fim de Jogo --- */
         #game-over-screen {
-             /* Escondida por padrão */
         }
         #game-over-screen button {
             font-family: 'Orbitron', sans-serif;
@@ -247,7 +245,6 @@
 
     <div id="game-container">
         
-        <!-- Tela de Seleção de Personagem -->
         <div id="character-selection" class="overlay">
             <h1>CYBERNETIC FURY</h1>
             <div class="selection-grid">
@@ -272,10 +269,16 @@
                         <p>Um heroi de guerra que usava seus poderosos punhos de fogo para enfrentar o inimigo e levalos para conhecer as chamas eternas, quando foi destronado por seus aliados jurou lutar contra todos para voltar ao seu imperio.</p>
                     </div>
                 </div>
+                <div class="character-card" id="select-jack">
+                    <h2>JACK</h2>
+                     <canvas id="jack-thumbnail" class="thumbnail-canvas"></canvas>
+                    <div class="lore">
+                        <p>Jack ja foi um homem, porem em uma noite de halloween ele acabou caindo em uma maldição que fez sua fantasia de terror ser eternamente grudada ao seu corpo e sendo obrigado a continuar o espirito de dia das bruxas para assustar todos que entrarem em seu caminho.</p>
+                    </div>
+                </div>
             </div>
         </div>
         
-        <!-- Tela de Loading -->
         <div id="loading-screen" class="overlay hidden">
             <div class="loading-controls">
                 <h3>Controles</h3>
@@ -288,13 +291,11 @@
             </div>
         </div>
 
-        <!-- Tela de Fim de Jogo -->
         <div id="game-over-screen" class="overlay hidden">
             <span id="win-text"></span>
             <button id="restart-button">Jogar Novamente</button>
         </div>
 
-        <!-- HUD -->
         <div id="hud">
             <div id="player1-hud" class="player-hud">
                 <h3 id="p1-name">JOGADOR 1</h3>
@@ -364,6 +365,11 @@ window.onload = () => {
             strong_punch: new Tone.PolySynth(Tone.FMSynth, { maxPolyphony: 4, options: { volume: -10, harmonicity: 2, modulationIndex: 5, envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.2 } } }).toDestination(),
             special: new Tone.PolySynth(Tone.NoiseSynth, { maxPolyphony: 2, options: { noise: { type: 'brown' }, volume: -8, envelope: { attack: 0.05, decay: 0.4, sustain: 0.1, release: 0.3 } } }).toDestination(),
         },
+        jack: {
+            punch: new Tone.PolySynth(Tone.AMSynth, { maxPolyphony: 4, options: { volume: -12, harmonicity: 1.2, envelope: { attack: 0.05, decay: 0.3, sustain: 0, release: 0.1 } } }).toDestination(),
+            strong_punch: new Tone.PolySynth(Tone.AMSynth, { maxPolyphony: 4, options: { volume: -10, harmonicity: 1.5, envelope: { attack: 0.05, decay: 0.5, sustain: 0, release: 0.2 } } }).toDestination(),
+            special: new Tone.PolySynth(Tone.Synth, { maxPolyphony: 2, options: { oscillator: { type: 'sawtooth' }, volume: -8, envelope: { attack: 0.1, decay: 0.5, sustain: 0.2, release: 0.4 } } }).toDestination(),
+        }
     };
     
     // --- Classes do Jogo ---
@@ -393,9 +399,11 @@ window.onload = () => {
                 if (this.direction === -1) {
                     ctx.scale(-1, 1);
                 }
-                ctx.fillText('�', -this.width / 2, 0);
+                ctx.fillText('🚀', -this.width / 2, 0);
             } else if (this.type === 'fireball') {
                  ctx.fillText('🔥', -this.width / 2, 0);
+            } else if (this.type === 'pumpkin') {
+                ctx.fillText('🎃', -this.width / 2, 0);
             }
             
             ctx.restore();
@@ -429,8 +437,12 @@ window.onload = () => {
             this.doubleTapped = false;
             
             this.aiVelocityX = 0;
+            // Efeitos de Status
             this.burnDuration = 0;
             this.burnTick = 0;
+            this.curseDuration = 0;
+            this.curseTick = 0;
+            this.cursePunchCounter = 0;
         }
 
         draw() {
@@ -447,6 +459,8 @@ window.onload = () => {
                 drawSparkArt(ctx, 0, 0, this.width, this.height, this.isAttacking);
             } else if (this.characterType === 'hades') {
                  drawHadesArt(ctx, 0, 0, this.width, this.height, this.isAttacking);
+            } else if (this.characterType === 'jack') {
+                 drawJackArt(ctx, 0, 0, this.width, this.height, this.isAttacking);
             }
             
             ctx.restore();
@@ -500,12 +514,26 @@ window.onload = () => {
                     particles.push(new Particle(this.position.x + Math.random() * this.width, this.position.y + Math.random() * this.height, 'orange', 0));
                 }
             }
+            
+            if (this.curseDuration > 0) {
+                this.curseDuration--;
+                this.curseTick++;
+                if(this.curseTick >= 60) {
+                    this.health -= 5;
+                    opponent.health = Math.min(1000, opponent.health + 4);
+                    this.curseTick = 0;
+                    particles.push(new Particle(this.position.x + Math.random() * this.width, this.position.y + Math.random() * this.height, 'purple', 0));
+                }
+            }
         }
         
         takeDamage(damage, effect = {}) {
             this.health -= damage;
             if (effect.type === 'burn') {
                 this.burnDuration = 180;
+            }
+            if(effect.type === 'curse'){
+                 this.curseDuration = 180;
             }
             if (this.health < 0) this.health = 0;
             
@@ -529,6 +557,7 @@ window.onload = () => {
                     if (this.characterType === 'spark') sounds.spark.punch.triggerAttackRelease("C5", "8n");
                     else if (this.characterType === 'titan') sounds.titan.punch.triggerAttackRelease(200, "8n");
                     else if (this.characterType === 'hades') sounds.hades.punch.triggerAttackRelease("A2", "8n");
+                    else if (this.characterType === 'jack') sounds.jack.punch.triggerAttackRelease("E3", "8n");
                     break;
                 case 'strong_punch':
                     this.attackCooldown = 45;
@@ -538,6 +567,7 @@ window.onload = () => {
                     if (this.characterType === 'spark') sounds.spark.strong_punch.triggerAttackRelease("C4", "4n");
                     else if (this.characterType === 'titan') sounds.titan.strong_punch.triggerAttackRelease(150, "4n");
                     else if (this.characterType === 'hades') sounds.hades.strong_punch.triggerAttackRelease("A1", "4n");
+                    else if (this.characterType === 'jack') sounds.jack.strong_punch.triggerAttackRelease("E2", "4n");
                     break;
                 case 'special':
                     if (this.energy < 45) { this.isAttacking = false; return; }
@@ -556,28 +586,31 @@ window.onload = () => {
                     } else if (this.characterType === 'hades') {
                         sounds.hades.special.triggerAttackRelease("2n");
                         projectiles.push(new Projectile(projectileX, projectileY, this.direction, this, 'fireball', 30));
+                    } else if (this.characterType === 'jack') {
+                        sounds.jack.special.triggerAttackRelease("C3", "2n");
+                        projectiles.push(new Projectile(projectileX, projectileY, this.direction, this, 'pumpkin', 30));
                     }
                     break;
             }
         }
     }
 
-    function createParticleEffect(fighter, type) {
+    function createParticleEffect(fighter, type, extraParams = {}) {
         let count = 0;
-        let color;
+        let color = extraParams.color || 'orange';
         
-        if (fighter.characterType === 'spark') {
-            color = 'rgba(0, 255, 255, 0.8)';
-            count = type === 'special' ? 20 : 50;
-        } else { // Titan
+        if (type === 'special' && fighter.characterType === 'titan') {
             color = 'rgba(255, 100, 0, 0.8)';
-            count = type === 'special' ? 15 : 40;
+            count = 15;
+        } else if (type === 'pumpkin_explosion') {
+            color = 'rgba(255, 100, 0, 0.8)';
+            count = 30;
         }
 
         for (let i = 0; i < count; i++) {
             particles.push(new Particle(
-                fighter.position.x + fighter.width / 2,
-                fighter.position.y + fighter.height / 2,
+                extraParams.x || (fighter.position.x + fighter.width / 2),
+                extraParams.y || (fighter.position.y + fighter.height / 2),
                 color,
                 fighter.direction
             ));
@@ -588,10 +621,10 @@ window.onload = () => {
         constructor(x, y, color, direction) {
             this.position = { x, y };
             this.velocity = { 
-                x: (Math.random() - 0.5 + direction * 1.5) * 5, 
-                y: (Math.random() - 0.5) * 5 
+                x: (Math.random() - 0.5) * 8, 
+                y: (Math.random() - 0.5) * 8 
             };
-            this.radius = Math.random() * 3 + 1;
+            this.radius = Math.random() * 4 + 2;
             this.color = color;
             this.life = 100;
         }
@@ -606,7 +639,7 @@ window.onload = () => {
         update() {
             this.position.x += this.velocity.x;
             this.position.y += this.velocity.y;
-            this.life -= 2;
+            this.life -= 3;
         }
     }
 
@@ -635,7 +668,7 @@ window.onload = () => {
             
             this.fighter.aiVelocityX = 0;
 
-            if (canUseSpecial && distance < 250 && Math.random() < 0.6) {
+            if (canUseSpecial && distance > 100 && distance < 300 && Math.random() < 0.6) {
                 this.state = 'AGGRESSIVE';
                 this.fighter.attack('special');
                 return;
@@ -766,15 +799,12 @@ window.onload = () => {
         ctx.fillRect(gateX, gateY - 10, gateWidth, 10);
     }
     
-    // --- LÓGICA DE JOGO PRINCIPAL ---
-
     function handleFighterCollision() {
         if (!player1 || !player2) return;
 
         const p1Bottom = player1.position.y + player1.height;
         const p2Bottom = player2.position.y + player2.height;
 
-        // Só aplica colisão horizontal se não estiver a saltar por cima
         if (p1Bottom > player2.position.y && player1.position.y < p2Bottom) {
              const dx = (player1.position.x + player1.width / 2) - (player2.position.x + player2.width / 2);
             const combinedHalfWidths = player1.width / 2 + player2.width / 2;
@@ -805,15 +835,19 @@ window.onload = () => {
                 case 'punch':
                     damage = 10;
                     attacker.energy = Math.min(500, attacker.energy + 15);
-                    if (attacker.characterType === 'hades') {
-                        effect.type = 'burn';
+                    if (attacker.characterType === 'hades') { effect.type = 'burn';}
+                    if (attacker.characterType === 'jack') {
+                        attacker.cursePunchCounter++;
+                        if (attacker.cursePunchCounter >= 2) {
+                            effect.type = 'curse';
+                            attacker.cursePunchCounter = 0;
+                        }
                     }
                     break;
                 case 'strong_punch':
                     damage = 25;
-                     if (attacker.characterType === 'hades') {
-                        effect.type = 'burn';
-                    }
+                     if (attacker.characterType === 'hades') { effect.type = 'burn'; }
+                     if (attacker.characterType === 'jack') { effect.type = 'curse'; }
                     break;
             }
             if (damage > 0) {
@@ -828,11 +862,10 @@ window.onload = () => {
 
         gameLoopId = requestAnimationFrame(gameLoop);
         
-        // --- Atualização da Lógica ---
         if (player1) player1.update(player2);
         if (player2) player2.update(player1);
         
-        handleFighterCollision(); // Adiciona colisão entre jogadores
+        handleFighterCollision(); 
 
         particles.forEach((p, index) => {
             p.update();
@@ -844,17 +877,18 @@ window.onload = () => {
             const target = projectile.shooter === player1 ? player2 : player1;
             if (isColliding(projectile, target)) {
                 target.takeDamage(projectile.damage);
+                if(projectile.type === 'pumpkin'){
+                    createParticleEffect(target, 'pumpkin_explosion', {x: projectile.position.x, y: projectile.position.y});
+                }
                 projectiles.splice(index, 1);
             } else if (projectile.position.x > canvasWidth + 50 || projectile.position.x < -50) {
                 projectiles.splice(index, 1);
             }
         });
 
-        // --- Verificação de Colisões ---
         checkMeleeCollision(player1, player2);
         checkMeleeCollision(player2, player1);
 
-        // --- Desenho ---
         draw();
         updateHUD();
         checkGameOver();
@@ -974,7 +1008,7 @@ window.onload = () => {
         ctx.fillRect(x + pixel * 2, y + pixel * 5, pixel * 3, pixel * 0.4);
         
         ctx.fillStyle = robotArmColor;
-        if(isAttacking && (player1.attackBox.type === 'punch' || player1.attackBox.type === 'strong_punch')) {
+        if(isAttacking && player1.attackBox.type !== 'special') {
             ctx.fillRect(x + pixel * 5, y + pixel * 3.5, pixel * 3, pixel * 2);
         } else {
             ctx.fillRect(x + pixel * 5, y + pixel * 3, pixel * 2, pixel * 4);
@@ -1070,12 +1104,10 @@ window.onload = () => {
         const pantsColor = '#404040';
         const beltColor = '#202020';
         
-        // Calças
         ctx.fillStyle = pantsColor;
         ctx.fillRect(x + pixel * 1.5, y + pixel * 7, pixel * 1.5, pixel * 5); // Esquerda
         ctx.fillRect(x + pixel * 4, y + pixel * 7, pixel * 1.5, pixel * 5); // Direita
         
-        // Torso
         ctx.fillStyle = skinTone;
         ctx.fillRect(x + pixel, y + pixel * 2, pixel * 5, pixel * 5);
         ctx.fillStyle = skinShadow;
@@ -1083,11 +1115,9 @@ window.onload = () => {
         ctx.fillRect(x + pixel, y + pixel * 3, pixel * 5, pixel * 0.4);
         ctx.fillRect(x + pixel, y + pixel * 4.5, pixel * 5, pixel * 0.4);
         
-        // Cinto
         ctx.fillStyle = beltColor;
         ctx.fillRect(x + pixel, y + pixel * 6.5, pixel * 5, pixel);
 
-        // Punhos de fogo
         ctx.fillStyle = 'orange';
         if (isAttacking) {
              ctx.fillRect(x + pixel * 5, y + pixel * 3, pixel * 2, pixel * 2);
@@ -1098,16 +1128,60 @@ window.onload = () => {
              ctx.fillRect(x + pixel * 5.5, y + pixel * 3, pixel, pixel);
         }
 
-        // Braços
         ctx.fillStyle = skinTone;
         ctx.fillRect(x + pixel * 0.5, y + pixel * 4, pixel, pixel*2);
         ctx.fillRect(x + pixel * 5.5, y + pixel * 4, pixel, pixel*2);
 
-        // Cabeça
         ctx.fillStyle = skinTone;
         ctx.fillRect(x + pixel * 2, y, pixel * 3, pixel * 2.5);
         ctx.fillStyle = '#000';
         ctx.fillRect(x + pixel, y, pixel*5, pixel*0.5); // Cabelo
+    }
+    
+    function drawJackArt(ctx, x, y, width, height, isAttacking) {
+        const pixel = height / 12;
+
+        const hoodieColor = '#1a1a1a';
+        const pantsColor = '#2a2a2a';
+        const shoeColor = '#e74c3c';
+        const pumpkinColor = '#f39c12';
+        const pumpkinShadow = '#e67e22';
+        const pumpkinEye = '#f1c40f';
+
+        // Pés
+        ctx.fillStyle = shoeColor;
+        ctx.fillRect(x + pixel, y + pixel * 11, pixel * 2, pixel);
+        ctx.fillRect(x + pixel * 4, y + pixel * 11, pixel * 2, pixel);
+        
+        // Calças
+        ctx.fillStyle = pantsColor;
+        ctx.fillRect(x + pixel*1.5, y + pixel * 7, pixel, pixel*4);
+        ctx.fillRect(x + pixel*4.5, y + pixel * 7, pixel, pixel*4);
+
+        // Hoodie
+        ctx.fillStyle = hoodieColor;
+        ctx.fillRect(x + pixel, y + pixel * 4, pixel * 5, pixel*4);
+        // Braços
+        ctx.fillRect(x + pixel*0.5, y + pixel*5, pixel, pixel*3);
+        if (isAttacking) {
+            ctx.fillRect(x + pixel*5.5, y + pixel*5, pixel*2, pixel);
+        } else {
+            ctx.fillRect(x + pixel*5.5, y + pixel*5, pixel, pixel*3);
+        }
+        
+        // Cabeça de Abóbora
+        ctx.fillStyle = pumpkinColor;
+        ctx.fillRect(x + pixel, y, pixel * 5, pixel*4);
+        ctx.fillStyle = pumpkinShadow;
+        ctx.fillRect(x + pixel*1.5, y + pixel, pixel, pixel*0.5); // Olho esquerdo
+        ctx.fillRect(x + pixel*4.5, y + pixel, pixel, pixel*0.5); // Olho direito
+        ctx.fillRect(x + pixel*3, y + pixel*2, pixel, pixel*0.5); // Nariz
+        ctx.fillRect(x + pixel*2, y + pixel*3, pixel*3, pixel*0.5); // Boca
+
+        ctx.fillStyle = pumpkinEye;
+        ctx.fillRect(x + pixel*1.7, y + pixel*1.2, pixel*0.6, pixel*0.2);
+        ctx.fillRect(x + pixel*4.7, y + pixel*1.2, pixel*0.6, pixel*0.2);
+
     }
     
     function drawThumbnails(){
@@ -1128,6 +1202,12 @@ window.onload = () => {
         hadesCanvas.width = 120;
         hadesCanvas.height = 120;
         drawHadesArt(hadesCtx, 30, 0, 60, 120, false);
+        
+        const jackCanvas = document.getElementById('jack-thumbnail');
+        const jackCtx = jackCanvas.getContext('2d');
+        jackCanvas.width = 120;
+        jackCanvas.height = 120;
+        drawJackArt(jackCtx, 30, 0, 60, 120, false);
     }
 
     // --- Início do Jogo ---
@@ -1147,7 +1227,8 @@ window.onload = () => {
             const characters = [
                 { id: 'titan', name: 'Titan', type: 'titan', colors: { main: '#a0a0a0', shorts: 'blue', sneakers: 'blue', hat: 'red' } },
                 { id: 'spark', name: 'Spark', type: 'spark', colors: { main: '#808080', cape: 'black', sneakers: 'red', chest: '#ff4500' } },
-                { id: 'hades', name: 'Hades', type: 'hades', colors: { main: '#8d5524' } }
+                { id: 'hades', name: 'Hades', type: 'hades', colors: { main: '#8d5524' } },
+                { id: 'jack', name: 'Jack', type: 'jack', colors: {} }
             ];
 
             const playerConfig = characters.find(c => c.id === playerChoice);
@@ -1188,6 +1269,7 @@ window.onload = () => {
     document.getElementById('select-titan').addEventListener('click', () => startGame('titan'));
     document.getElementById('select-spark').addEventListener('click', () => startGame('spark'));
     document.getElementById('select-hades').addEventListener('click', () => startGame('hades'));
+     document.getElementById('select-jack').addEventListener('click', () => startGame('jack'));
     restartButton.addEventListener('click', resetGame);
 
     drawBackground();
@@ -1196,4 +1278,3 @@ window.onload = () => {
 </script>
 </body>
 </html>
-�
