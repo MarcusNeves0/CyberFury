@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cybernetic Fury</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💢</text></svg>">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
@@ -1008,7 +1009,7 @@ window.onload = () => {
         ctx.fillRect(x + pixel * 2, y + pixel * 5, pixel * 3, pixel * 0.4);
         
         ctx.fillStyle = robotArmColor;
-        if(isAttacking && player1.attackBox.type !== 'special') {
+        if(isAttacking && (player1.attackBox.type === 'punch' || player1.attackBox.type === 'strong_punch')) {
             ctx.fillRect(x + pixel * 5, y + pixel * 3.5, pixel * 3, pixel * 2);
         } else {
             ctx.fillRect(x + pixel * 5, y + pixel * 3, pixel * 2, pixel * 4);
