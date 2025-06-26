@@ -69,9 +69,10 @@
             transition: opacity 0.5s;
         }
         
-        .overlay.hidden {
-            opacity: 0;
-            pointer-events: none;
+        .hidden {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            display: none !important;
         }
 
         #character-selection h1 {
@@ -95,6 +96,10 @@
             text-align: center;
             cursor: pointer;
             transition: transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         .character-card:hover {
@@ -118,15 +123,20 @@
             border-radius: 5px;
         }
 
-        .character-card .lore {
-             font-family: sans-serif;
-             font-size: 0.8rem;
-             text-align: left;
-             height: 130px;
-             overflow-y: auto;
-             margin-top: 10px;
-             border-top: 1px solid var(--neon-blue);
-             padding-top: 10px;
+        #lore-tooltip {
+            position: absolute;
+            display: block;
+            background-color: rgba(0, 0, 10, 0.9);
+            border: 1px solid var(--neon-blue);
+            color: var(--text-color);
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 250px;
+            font-family: sans-serif;
+            font-size: 0.9rem;
+            pointer-events: none; /* Impede que o tooltip bloqueie eventos do rato */
+            z-index: 100;
+            box-shadow: 0 0 10px var(--neon-blue);
         }
 
         /* Loading Screen */
@@ -227,6 +237,31 @@
             font-weight: bold;
         }
 
+        .status-effects {
+            min-height: 25px;
+            margin-top: 5px;
+            display: flex;
+            gap: 10px;
+        }
+
+        #player2-hud .status-effects {
+            justify-content: flex-end;
+        }
+        
+        .status-icon {
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .status-icon .stack-count {
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 1px black;
+            margin-left: 2px;
+        }
+
         /* --- Tela de Fim de Jogo --- */
         #game-over-screen {
         }
@@ -262,42 +297,28 @@
         <div id="character-selection" class="overlay">
             <h1>CYBERNETIC FURY</h1>
             <div class="selection-grid">
-                <div class="character-card" id="select-titan">
+                <div class="character-card" id="select-titan" data-lore="Titan foi um grande combatente da guerra que lutou bravamente pelo seu país e acabou perdendo muitos amigos. Sendo assim, acabou saindo, pois não estava mais gostando de ter tantas perdas. Hoje em dia, ele luta contra bandidos para proteger sua cidade.">
                     <h2>TITAN</h2>
                     <canvas id="titan-thumbnail" class="thumbnail-canvas"></canvas>
-                    <div class="lore">
-                        <p>Titan foi um grande combatente da guerra que lutou bravamente pelo seu país e acabou perdendo muitos amigos. Sendo assim, acabou saindo, pois não estava mais gostando de ter tantas perdas. Hoje em dia, ele luta contra bandidos para proteger sua cidade.</p>
-                    </div>
                 </div>
-                <div class="character-card" id="select-spark">
+                <div class="character-card" id="select-spark" data-lore="Spark é um robô que foi criado para garantir a segurança de um laboratório do governo. Porém, em um dia, uma grande explosão destruiu todos os outros robôs, fazendo com que apenas ele sobrasse e acabassem abandonando o projeto por falta de recursos. Depois de sair do laboratório, ele decidiu continuar a lutar, pois todo o seu corpo e essência eram feitos para isso.">
                     <h2>SPARK</h2>
                      <canvas id="spark-thumbnail" class="thumbnail-canvas"></canvas>
-                    <div class="lore">
-                        <p>Spark é um robô que foi criado para garantir a segurança de um laboratório do governo. Porém, em um dia, uma grande explosão destruiu todos os outros robôs, fazendo com que apenas ele sobrasse e acabassem abandonando o projeto por falta de recursos. Depois de sair do laboratório, ele decidiu continuar a lutar, pois todo o seu corpo e essência eram feitos para isso.</p>
-                    </div>
                 </div>
-                 <div class="character-card" id="select-hades">
+                 <div class="character-card" id="select-hades" data-lore="Um heroi de guerra que usava seus poderosos punhos de fogo para enfrentar o inimigo e levalos para conhecer as chamas eternas, quando foi destronado por seus aliados jurou lutar contra todos para voltar ao seu imperio.">
                     <h2>HADES</h2>
                      <canvas id="hades-thumbnail" class="thumbnail-canvas"></canvas>
-                    <div class="lore">
-                        <p>Um heroi de guerra que usava seus poderosos punhos de fogo para enfrentar o inimigo e levalos para conhecer as chamas eternas, quando foi destronado por seus aliados jurou lutar contra todos para voltar ao seu imperio.</p>
-                    </div>
                 </div>
-                <div class="character-card" id="select-jack">
+                <div class="character-card" id="select-jack" data-lore="Jack ja foi um homem, porem em uma noite de halloween ele acabou caindo em uma maldição que fez sua fantasia de terror ser eternamente grudada ao seu corpo e sendo obrigado a continuar o espirito de dia das bruxas para assustar todos que entrarem em seu caminho.">
                     <h2>JACK</h2>
                      <canvas id="jack-thumbnail" class="thumbnail-canvas"></canvas>
-                    <div class="lore">
-                        <p>Jack ja foi um homem, porem em uma noite de halloween ele acabou caindo em uma maldição que fez sua fantasia de terror ser eternamente grudada ao seu corpo e sendo obrigado a continuar o espirito de dia das bruxas para assustar todos que entrarem em seu caminho.</p>
-                    </div>
                 </div>
-                <div class="character-card" id="select-genji">
+                <div class="character-card" id="select-genji" data-lore="um lendario espadachin que teve que ver seu irmao ser morto, depois disso jurou matar todos aqueles que estiveram envolvidos no ataque e para isso esta preparado para derramar o quanto de sangue for necessário">
                     <h2>GENJI</h2>
                      <canvas id="genji-thumbnail" class="thumbnail-canvas"></canvas>
-                    <div class="lore">
-                        <p>Um lendario espadachin que teve que ver seu irmao ser morto, depois disso jurou matar todos aqueles que estiveram envolvidos no ataque ao seu irmão.</p>
-                    </div>
                 </div>
             </div>
+             <div id="lore-tooltip" class="hidden"></div>
         </div>
         
         <div id="loading-screen" class="overlay hidden">
@@ -329,6 +350,7 @@
                     <div id="p1-energy" class="energy-bar-inner"></div>
                     <span id="p1-energy-text" class="bar-text"></span>
                 </div>
+                 <div id="p1-status-effects" class="status-effects"></div>
             </div>
             <div id="player2-hud" class="player-hud">
                 <h3 id="p2-name">COMPUTADOR</h3>
@@ -340,6 +362,7 @@
                     <div id="p2-energy" class="energy-bar-inner"></div>
                     <span id="p2-energy-text" class="bar-text"></span>
                 </div>
+                 <div id="p2-status-effects" class="status-effects"></div>
             </div>
         </div>
 
@@ -410,6 +433,7 @@ window.onload = () => {
             special: new Tone.PolySynth(Tone.NoiseSynth, { maxPolyphony: 2, options: { noise: { type: 'white' }, volume: -6, envelope: { attack: 0.2, decay: 1.0, sustain: 0, release: 0.5 } } }).toDestination(),
         },
         defenseBreak: new Tone.PolySynth(Tone.Synth, { maxPolyphony: 1, options: { oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.5, sustain: 0, release: 0.1 } } }).toDestination(),
+
     };
     sounds.spark.special.volume.value = -15;
 
@@ -450,8 +474,6 @@ window.onload = () => {
                     ctx.scale(-1, 1);
                 }
                 ctx.fillText('🚀', -this.width / 2, 0);
-            } else if (this.type === 'fireball') {
-                 ctx.fillText('🔥', -this.width / 2, 0);
             } else if (this.type === 'pumpkin') {
                 ctx.fillText('🎃', -this.width / 2, 0);
             } else if (this.type === 'tornado') {
@@ -615,47 +637,18 @@ window.onload = () => {
             this.handleStatusEffects(opponent);
             this.handleSparkSpecial(opponent);
         }
-
-        handleSparkSpecial(opponent) {
-            if (this.characterType !== 'spark' || !this.isChannelingSpecial) {
-                return;
-            }
-
-            if (this.energy > 0) {
-                this.channelingTick++;
-                
-                // Custo de energia
-                if (this.channelingTick % 15 === 0) { // Gasta 4 de energia por segundo
-                    this.energy -= 1;
-                }
-                
-                // Dano e aumento do multiplicador
-                if (this.channelingTick % 60 === 0) {
-                    opponent.takeDamage(this.channelingDamage);
-                    this.channelingDamage *= 2;
-                }
-                 sounds.spark.special.triggerAttackRelease("8n");
-
-            } else {
-                this.isChannelingSpecial = false;
-                this.channelingDamage = 1;
-                this.channelingTick = 0;
-            }
-        }
         
         handleStatusEffects(opponent){
-            // Queimadura (Hades)
             if (this.burnDuration > 0) {
                 this.burnDuration--;
                 this.burnTick++;
                 if (this.burnTick >= 60) {
-                    this.health -= 3;
+                    this.health -= 9;
                     this.burnTick = 0;
                     particles.push(new Particle(this.position.x + Math.random() * this.width, this.position.y + Math.random() * this.height, 'orange', 0));
                 }
             }
             
-            // Maldição (Jack)
             if (this.curseDuration > 0) {
                 this.curseDuration--;
                 this.curseTick++;
@@ -667,7 +660,6 @@ window.onload = () => {
                 }
             }
             
-            // Sangramento (Genji)
             if (this.bleedDuration > 0) {
                 this.bleedDuration--;
                 this.bleedTick++;
@@ -679,6 +671,31 @@ window.onload = () => {
                  if(this.bleedDuration === 0) {
                     this.bleedStacks = 0;
                 }
+            }
+        }
+        
+        handleSparkSpecial(opponent) {
+            if (this.characterType !== 'spark' || !this.isChannelingSpecial) {
+                return;
+            }
+
+            if (this.energy > 0) {
+                this.channelingTick++;
+                
+                if (this.channelingTick % 15 === 0) {
+                    this.energy -= 1;
+                }
+                
+                if (this.channelingTick > 0 && this.channelingTick % 60 === 0) {
+                    opponent.takeDamage(this.channelingDamage);
+                    this.channelingDamage *= 2;
+                }
+                 sounds.spark.special.triggerAttackRelease("8n");
+
+            } else {
+                this.isChannelingSpecial = false;
+                this.channelingDamage = 1;
+                this.channelingTick = 0;
             }
         }
         
@@ -741,12 +758,12 @@ window.onload = () => {
                     break;
                 case 'special':
                     if (this.characterType === 'spark') {
-                        // Lógica de segurar já é tratada no keydown/keyup
                         return;
                     }
                     if (this.energy < (this.characterType === 'genji' ? 100 : 45)) { this.isAttacking = false; return; }
                     this.energy -= (this.characterType === 'genji' ? 100 : 45);
                     this.attackCooldown = 60;
+                    
                     const projectileY = this.position.y + this.height / 3;
                     const projectileX = this.position.x + (this.direction === 1 ? this.width : -40);
                     
@@ -756,7 +773,9 @@ window.onload = () => {
                         createParticleEffect(this, 'special');
                     } else if (this.characterType === 'hades') {
                         sounds.hades.special.triggerAttackRelease("2n");
-                        projectiles.push(new Projectile(projectileX, projectileY, this.direction, this, 'fireball', 30));
+                        const opponent = this.isPlayer ? player2 : player1;
+                        opponent.takeDamage(70, {type: 'burn'});
+                        createParticleEffect(opponent, 'ground_explosion', {x: opponent.position.x, y: opponent.position.y + opponent.height, count: 20});
                     } else if (this.characterType === 'jack') {
                         sounds.jack.special.triggerAttackRelease("C3", "2n");
                         projectiles.push(new Projectile(projectileX, projectileY, this.direction, this, 'pumpkin', 30));
@@ -779,6 +798,18 @@ window.onload = () => {
         } else if (type === 'pumpkin_explosion') {
             color = 'rgba(255, 100, 0, 0.8)';
             count = 30;
+        } else if (type === 'ground_explosion') {
+            count = extraParams.count || 20;
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle(
+                    extraParams.x + (Math.random() - 0.5) * fighter.width,
+                    extraParams.y,
+                    'hades_fire', // Cor específica para o fogo do Hades
+                    0,
+                    { x: (Math.random() - 0.5) * 2, y: - (Math.random() * 6 + 3) }
+                ));
+            }
+            return;
         }
 
         for (let i = 0; i < count; i++) {
@@ -792,9 +823,9 @@ window.onload = () => {
     }
 
     class Particle {
-        constructor(x, y, color, direction) {
+        constructor(x, y, color, direction, customVelocity) {
             this.position = { x, y };
-            this.velocity = { 
+            this.velocity = customVelocity || { 
                 x: (Math.random() - 0.5) * 8, 
                 y: (Math.random() - 0.5) * 8 
             };
@@ -804,10 +835,15 @@ window.onload = () => {
         }
 
         draw() {
-            ctx.beginPath();
-            ctx.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2);
-            ctx.fillStyle = this.color;
-            ctx.fill();
+             if(this.color === 'hades_fire') {
+                ctx.font = `${this.radius * 6}px sans-serif`;
+                ctx.fillText('🔥', this.position.x, this.position.y);
+            } else {
+                ctx.beginPath();
+                ctx.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
         }
 
         update() {
@@ -848,7 +884,7 @@ window.onload = () => {
                 return;
             }
 
-            if (canUseSpecial && distance > 100 && distance < 300 && Math.random() < 0.6) {
+            if (canUseSpecial && distance < 300 && Math.random() < 0.6) {
                 this.fighter.attack('special');
                 return;
             } else if (distance < 100 && Math.random() < 0.8) {
@@ -878,12 +914,36 @@ window.onload = () => {
         document.getElementById('p1-energy').style.width = (player1.energy / 500) * 100 + '%';
         document.getElementById('p1-health-text').innerText = `${Math.ceil(player1.health)} / 1000`;
         document.getElementById('p1-energy-text').innerText = `${Math.ceil(player1.energy)} / 500`;
+        updateStatusIcons(player1, document.getElementById('p1-status-effects'));
         
         document.getElementById('p2-name').innerText = player2.name;
         document.getElementById('p2-health').style.width = (player2.health / 1000) * 100 + '%';
         document.getElementById('p2-energy').style.width = (player2.energy / 500) * 100 + '%';
         document.getElementById('p2-health-text').innerText = `${Math.ceil(player2.health)} / 1000`;
         document.getElementById('p2-energy-text').innerText = `${Math.ceil(player2.energy)} / 500`;
+        updateStatusIcons(player2, document.getElementById('p2-status-effects'));
+    }
+
+    function updateStatusIcons(player, container) {
+        container.innerHTML = '';
+        if (player.bleedStacks > 0) {
+            const bleedIcon = document.createElement('span');
+            bleedIcon.className = 'status-icon';
+            bleedIcon.innerHTML = `🩸<span class="stack-count">${player.bleedStacks}</span>`;
+            container.appendChild(bleedIcon);
+        }
+        if (player.burnDuration > 0) {
+            const burnIcon = document.createElement('span');
+            burnIcon.className = 'status-icon';
+            burnIcon.innerText = '🌋';
+            container.appendChild(burnIcon);
+        }
+        if (player.curseDuration > 0) {
+             const curseIcon = document.createElement('span');
+            curseIcon.className = 'status-icon';
+            curseIcon.innerText = '💀';
+            container.appendChild(curseIcon);
+        }
     }
 
     function checkGameOver() {
@@ -1582,6 +1642,23 @@ window.onload = () => {
     document.getElementById('select-jack').addEventListener('click', () => startGame('jack'));
     document.getElementById('select-genji').addEventListener('click', () => startGame('genji'));
     restartButton.addEventListener('click', resetGame);
+
+    const loreTooltip = document.getElementById('lore-tooltip');
+    
+    document.querySelectorAll('.character-card').forEach(card => {
+        card.addEventListener('mouseenter', (e) => {
+            loreTooltip.innerText = e.currentTarget.dataset.lore;
+            loreTooltip.classList.remove('hidden');
+        });
+        card.addEventListener('mouseleave', () => {
+            loreTooltip.classList.add('hidden');
+        });
+         card.addEventListener('mousemove', (e) => {
+            const gameContainerRect = gameContainer.getBoundingClientRect();
+            loreTooltip.style.left = `${e.clientX - gameContainerRect.left + 15}px`;
+            loreTooltip.style.top = `${e.clientY - gameContainerRect.top + 15}px`;
+        });
+    });
 
     drawBackground();
     drawThumbnails();
