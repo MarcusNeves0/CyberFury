@@ -83,7 +83,7 @@
 
         .selection-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
             width: 95%;
         }
@@ -277,6 +277,13 @@
                         <p>Jack ja foi um homem, porem em uma noite de halloween ele acabou caindo em uma maldição que fez sua fantasia de terror ser eternamente grudada ao seu corpo e sendo obrigado a continuar o espirito de dia das bruxas para assustar todos que entrarem em seu caminho.</p>
                     </div>
                 </div>
+                <div class="character-card" id="select-genji">
+                    <h2>GENJI</h2>
+                     <canvas id="genji-thumbnail" class="thumbnail-canvas"></canvas>
+                    <div class="lore">
+                        <p>Um lendario espadachin que teve que ver seu irmao ser morto, depois disso jurou matar todos aqueles que estiveram envolvidos no ataque ao seu irmão.</p>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -372,6 +379,11 @@ window.onload = () => {
             strong_punch: new Tone.PolySynth(Tone.AMSynth, { maxPolyphony: 4, options: { volume: -10, harmonicity: 1.5, envelope: { attack: 0.05, decay: 0.5, sustain: 0, release: 0.2 } } }).toDestination(),
             special: new Tone.PolySynth(Tone.Synth, { maxPolyphony: 2, options: { oscillator: { type: 'sawtooth' }, volume: -8, envelope: { attack: 0.1, decay: 0.5, sustain: 0.2, release: 0.4 } } }).toDestination(),
         },
+        genji: {
+            punch: new Tone.PolySynth(Tone.PluckSynth, { maxPolyphony: 4, options: { volume: -10, attackNoise: 0.5, dampening: 2000, resonance: 0.9 } }).toDestination(),
+            strong_punch: new Tone.PolySynth(Tone.PluckSynth, { maxPolyphony: 4, options: { volume: -8, attackNoise: 1, dampening: 1500, resonance: 0.95 } }).toDestination(),
+            special: new Tone.PolySynth(Tone.NoiseSynth, { maxPolyphony: 2, options: { noise: { type: 'white' }, volume: -6, envelope: { attack: 0.2, decay: 1.0, sustain: 0, release: 0.5 } } }).toDestination(),
+        },
         defenseBreak: new Tone.PolySynth(Tone.Synth, { maxPolyphony: 1, options: { oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.5, sustain: 0, release: 0.1 } } }).toDestination(),
 
     };
@@ -408,6 +420,8 @@ window.onload = () => {
                  ctx.fillText('🔥', -this.width / 2, 0);
             } else if (this.type === 'pumpkin') {
                 ctx.fillText('🎃', -this.width / 2, 0);
+            } else if (this.type === 'tornado') {
+                ctx.fillText('🌪️', -this.width / 2, 0);
             }
             
             ctx.restore();
@@ -447,6 +461,10 @@ window.onload = () => {
             this.curseDuration = 0;
             this.curseTick = 0;
             this.cursePunchCounter = 0;
+            this.bleedStacks = 0;
+            this.bleedDuration = 0;
+            this.bleedTick = 0;
+            this.bleedPunchCounter = 0;
             
             // Defesa
             this.isPreparingDefense = false;
@@ -474,6 +492,8 @@ window.onload = () => {
                  drawHadesArt(ctx, 0, 0, this.width, this.height, this.isAttacking);
             } else if (this.characterType === 'jack') {
                  drawJackArt(ctx, 0, 0, this.width, this.height, this.isAttacking);
+            } else if (this.characterType === 'genji') {
+                 drawGenjiArt(ctx, 0, 0, this.width, this.height, this.isAttacking);
             }
             
             ctx.restore();
@@ -549,11 +569,15 @@ window.onload = () => {
             if (this.defenseResetCooldown > 0) {
                 this.defenseResetCooldown--;
                 if (this.defenseResetCooldown <= 0) {
-                    this.defenseHealth = 50;
+                    this.defenseHealth = 50; 
                 }
             }
+            
+            this.handleStatusEffects(opponent);
+        }
 
-
+        handleStatusEffects(opponent){
+            // Queimadura (Hades)
             if (this.burnDuration > 0) {
                 this.burnDuration--;
                 this.burnTick++;
@@ -564,6 +588,7 @@ window.onload = () => {
                 }
             }
             
+            // Maldição (Jack)
             if (this.curseDuration > 0) {
                 this.curseDuration--;
                 this.curseTick++;
@@ -574,12 +599,30 @@ window.onload = () => {
                     particles.push(new Particle(this.position.x + Math.random() * this.width, this.position.y + Math.random() * this.height, 'purple', 0));
                 }
             }
+            
+            // Sangramento (Genji)
+            if (this.bleedDuration > 0) {
+                this.bleedDuration--;
+                this.bleedTick++;
+                if (this.bleedTick >= 60) {
+                    this.health -= 8 * this.bleedStacks;
+                    this.bleedTick = 0;
+                    particles.push(new Particle(this.position.x + Math.random() * this.width, this.position.y + Math.random() * this.height, 'red', 0));
+                }
+                 if(this.bleedDuration === 0) {
+                    this.bleedStacks = 0;
+                }
+            }
         }
         
         takeDamage(damage, effect = {}) {
             if (this.isDefending) {
-                const effectiveDamage = (this.characterType === 'spark' || this.characterType === 'titan') ? damage : damage * 0.5; // Exemplo, dano especial ignora mais defesa
-                this.defenseHealth -= effectiveDamage;
+                let defenseDamage = damage;
+                if(this.characterType === 'spark' || this.characterType === 'titan'){
+                    defenseDamage = damage * 0.5;
+                }
+                this.defenseHealth -= defenseDamage;
+
                 this.position.x -= this.direction * 15;
                 if (this.defenseHealth <= 0) {
                     this.isDefending = false;
@@ -593,11 +636,11 @@ window.onload = () => {
             }
             
             this.health -= damage;
-            if (effect.type === 'burn') {
-                this.burnDuration = 180;
-            }
-            if(effect.type === 'curse'){
-                 this.curseDuration = 180;
+            if (effect.type === 'burn') { this.burnDuration = 180; }
+            if(effect.type === 'curse'){ this.curseDuration = 180; }
+            if (effect.type === 'bleed') {
+                this.bleedStacks = Math.min(3, this.bleedStacks + 1);
+                this.bleedDuration = 240; // 4 segundos
             }
             if (this.health < 0) this.health = 0;
             
@@ -620,6 +663,7 @@ window.onload = () => {
                     else if (this.characterType === 'titan') sounds.titan.punch.triggerAttackRelease(200, "8n");
                     else if (this.characterType === 'hades') sounds.hades.punch.triggerAttackRelease("A2", "8n");
                     else if (this.characterType === 'jack') sounds.jack.punch.triggerAttackRelease("E3", "8n");
+                    else if (this.characterType === 'genji') sounds.genji.punch.triggerAttackRelease("G4", "16n");
                     break;
                 case 'strong_punch':
                     this.attackCooldown = 45;
@@ -630,10 +674,11 @@ window.onload = () => {
                     else if (this.characterType === 'titan') sounds.titan.strong_punch.triggerAttackRelease(150, "4n");
                     else if (this.characterType === 'hades') sounds.hades.strong_punch.triggerAttackRelease("A1", "4n");
                     else if (this.characterType === 'jack') sounds.jack.strong_punch.triggerAttackRelease("E2", "4n");
+                    else if (this.characterType === 'genji') sounds.genji.strong_punch.triggerAttackRelease("G3", "4n");
                     break;
                 case 'special':
-                    if (this.energy < 45) { this.isAttacking = false; return; }
-                    this.energy -= 45;
+                    if (this.energy < (this.characterType === 'genji' ? 100 : 45)) { this.isAttacking = false; return; }
+                    this.energy -= (this.characterType === 'genji' ? 100 : 45);
                     this.attackCooldown = 60;
                     const projectileY = this.position.y + this.height / 3;
                     const projectileX = this.position.x + (this.direction === 1 ? this.width : -40);
@@ -651,6 +696,9 @@ window.onload = () => {
                     } else if (this.characterType === 'jack') {
                         sounds.jack.special.triggerAttackRelease("C3", "2n");
                         projectiles.push(new Projectile(projectileX, projectileY, this.direction, this, 'pumpkin', 30));
+                    } else if (this.characterType === 'genji') {
+                        sounds.genji.special.triggerAttackRelease("2n");
+                        projectiles.push(new Projectile(projectileX, projectileY, this.direction, this, 'tornado', 70));
                     }
                     break;
             }
@@ -894,6 +942,13 @@ window.onload = () => {
                             attacker.cursePunchCounter = 0;
                         }
                     }
+                     if (attacker.characterType === 'genji') {
+                        attacker.bleedPunchCounter++;
+                        if (attacker.bleedPunchCounter >= 4) {
+                            effect.type = 'bleed';
+                            attacker.bleedPunchCounter = 0;
+                        }
+                    }
                     break;
                 case 'strong_punch':
                     damage = 25;
@@ -932,7 +987,27 @@ window.onload = () => {
             projectile.update();
             const target = projectile.shooter === player1 ? player2 : player1;
             if (isColliding(projectile, target)) {
-                target.takeDamage(projectile.damage);
+                
+                if (projectile.type === 'tornado' && !target.isDefending) {
+                    projectile.shooter.isSpecialAttacking = true;
+                    target.isParalyzed = true; // Paralisa o alvo
+                    
+                    const teleportX = target.position.x - projectile.shooter.width;
+                    projectile.shooter.position.x = teleportX;
+                    
+                    projectile.shooter.velocity.y = -20;
+                    target.velocity.y = -20;
+                    
+                    setTimeout(() => {
+                        target.takeDamage(projectile.damage);
+                        projectile.shooter.isSpecialAttacking = false;
+                        target.isParalyzed = false;
+                    }, 500);
+
+                } else if (projectile.type !== 'tornado' || target.isDefending) {
+                     target.takeDamage(projectile.damage);
+                }
+               
                 if(projectile.type === 'pumpkin'){
                     createParticleEffect(target, 'pumpkin_explosion', {x: projectile.position.x, y: projectile.position.y});
                 }
@@ -1250,7 +1325,61 @@ window.onload = () => {
         ctx.fillStyle = pumpkinEye;
         ctx.fillRect(x + pixel*1.7, y + pixel*1.2, pixel*0.6, pixel*0.2);
         ctx.fillRect(x + pixel*4.7, y + pixel*1.2, pixel*0.6, pixel*0.2);
+    }
+    
+     function drawGenjiArt(ctx, x, y, width, height, isAttacking) {
+        const pixel = height / 12;
 
+        const humanColor = '#f2d2b4';
+        const robotColor = '#333';
+        const helmetColor = '#95a5a6';
+        const eyeColor = '#2ecc71';
+        const fireCircleColor = '#e67e22';
+
+        // Perna robótica (frente)
+        ctx.fillStyle = robotColor;
+        ctx.fillRect(x + pixel * 4, y + pixel * 7, pixel * 1.5, pixel * 5);
+        // Perna humana (atrás)
+        ctx.fillStyle = humanColor;
+        ctx.fillRect(x + pixel * 1.5, y + pixel * 7, pixel * 1.5, pixel * 5);
+        
+        // Torso (meio a meio)
+        ctx.fillStyle = robotColor;
+        ctx.fillRect(x + pixel * 3, y + pixel * 2, pixel * 2, pixel * 5);
+        ctx.fillStyle = humanColor;
+        ctx.fillRect(x + pixel * 1.5, y + pixel * 2, pixel * 1.5, pixel * 5);
+        
+        // Círculos de fogo
+        ctx.fillStyle = fireCircleColor;
+        ctx.beginPath();
+        ctx.arc(x + pixel * 3.5, y + pixel * 3, pixel * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x + pixel * 3.5, y + pixel * 4.5, pixel * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+         ctx.beginPath();
+        ctx.arc(x + pixel * 3.5, y + pixel * 6, pixel * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+
+
+        // Braço robótico (frente)
+        ctx.fillStyle = robotColor;
+        if(isAttacking) {
+            ctx.fillRect(x + pixel * 5, y + pixel * 3.5, pixel * 2.5, pixel);
+        } else {
+            ctx.fillRect(x + pixel * 5, y + pixel * 3, pixel * 1.5, pixel * 3);
+        }
+
+        // Braço humano (atrás)
+        ctx.fillStyle = humanColor;
+        ctx.fillRect(x + pixel * 0.5, y + pixel * 3, pixel, pixel * 3);
+
+
+        // Capacete
+        ctx.fillStyle = helmetColor;
+        ctx.fillRect(x + pixel, y, pixel * 4.5, pixel * 2.5);
+        ctx.fillStyle = eyeColor;
+        ctx.fillRect(x + pixel * 2, y + pixel, pixel * 2, pixel * 0.5);
     }
     
     function drawThumbnails(){
@@ -1277,6 +1406,12 @@ window.onload = () => {
         jackCanvas.width = 120;
         jackCanvas.height = 120;
         drawJackArt(jackCtx, 30, 0, 60, 120, false);
+        
+        const genjiCanvas = document.getElementById('genji-thumbnail');
+        const genjiCtx = genjiCanvas.getContext('2d');
+        genjiCanvas.width = 120;
+        genjiCanvas.height = 120;
+        drawGenjiArt(genjiCtx, 30, 0, 60, 120, false);
     }
 
     // --- Início do Jogo ---
@@ -1297,7 +1432,8 @@ window.onload = () => {
                 { id: 'titan', name: 'Titan', type: 'titan', colors: { main: '#a0a0a0', shorts: 'blue', sneakers: 'blue', hat: 'red' } },
                 { id: 'spark', name: 'Spark', type: 'spark', colors: { main: '#808080', cape: 'black', sneakers: 'red', chest: '#ff4500' } },
                 { id: 'hades', name: 'Hades', type: 'hades', colors: { main: '#8d5524' } },
-                { id: 'jack', name: 'Jack', type: 'jack', colors: {} }
+                { id: 'jack', name: 'Jack', type: 'jack', colors: {} },
+                { id: 'genji', name: 'Genji', type: 'genji', colors: {} }
             ];
 
             const playerConfig = characters.find(c => c.id === playerChoice);
@@ -1338,7 +1474,8 @@ window.onload = () => {
     document.getElementById('select-titan').addEventListener('click', () => startGame('titan'));
     document.getElementById('select-spark').addEventListener('click', () => startGame('spark'));
     document.getElementById('select-hades').addEventListener('click', () => startGame('hades'));
-     document.getElementById('select-jack').addEventListener('click', () => startGame('jack'));
+    document.getElementById('select-jack').addEventListener('click', () => startGame('jack'));
+    document.getElementById('select-genji').addEventListener('click', () => startGame('genji'));
     restartButton.addEventListener('click', resetGame);
 
     drawBackground();
