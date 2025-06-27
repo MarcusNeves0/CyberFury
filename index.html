@@ -317,6 +317,14 @@
                     <h2>GENJI</h2>
                      <canvas id="genji-thumbnail" class="thumbnail-canvas"></canvas>
                 </div>
+                 <div class="character-card" id="select-ryu" data-lore="não tem muita historia... ele apenas gosta de sair no soco">
+                    <h2>RYU</h2>
+                     <canvas id="ryu-thumbnail" class="thumbnail-canvas"></canvas>
+                </div>
+                 <div class="character-card" id="select-lorenzo" data-lore="ele perdeu tudo em apostas e acabou tendo que morrar na rua, porém um dia o tecnico do maior time da espanha viu ele jogando com uma bola que encontrou na rua e percebeu potencial, depois de entrar para o time se tornou o melhor atacante em menos de 1 ano">
+                    <h2>LORENZO</h2>
+                     <canvas id="lorenzo-thumbnail" class="thumbnail-canvas"></canvas>
+                </div>
             </div>
              <div id="lore-tooltip" class="hidden"></div>
         </div>
@@ -325,8 +333,9 @@
             <div class="loading-controls">
                 <h3>Controles</h3>
                 <div class="controls-grid">
-                    <p><strong>Movimento:</strong> W, A, D</p>
-                    <p><strong>Defesa:</strong> Segurar S (ativa após 0.5s)</p>
+                    <p><strong>Movimento:</strong> A, D</p>
+                     <p><strong>Pulo:</strong> Espaço</p>
+                    <p><strong>Defesa:</strong> Segurar S</p>
                     <p><strong>Soco Básico:</strong> Seta Esquerda</p>
                     <p><strong>Ataque Especial:</strong> Seta Direita</p>
                     <p><strong>Soco Forte:</strong> Frente, Frente + Seta Esq.</p>
@@ -389,6 +398,8 @@ window.onload = () => {
     let player1, player2, particles = [], projectiles = [];
     const gravity = 0.7;
     let floorY;
+    let groundFootball = null;
+    let giantBall = null;
 
     // --- Redimensionamento do Canvas ---
     function resizeCanvas() {
@@ -413,8 +424,8 @@ window.onload = () => {
             special: new Tone.NoiseSynth({ noise: {type: "pink"}, envelope: { attack: 0.005, decay: 0.1, sustain: 0.01 } }).toDestination(),
         },
         titan: {
-            punch: new Tone.PolySynth(Tone.MetalSynth, { maxPolyphony: 4, options: { volume: -12, frequency: 100, envelope: { attack: 0.01, decay: 0.2, release: 0.1 }, harmonicity: 3.1, modulationIndex: 16, resonance: 4000, octaves: 1.5 } }).toDestination(),
-            strong_punch: new Tone.PolySynth(Tone.MetalSynth, { maxPolyphony: 4, options: { frequency: 80, volume: -10, envelope: { attack: 0.01, decay: 0.4, release: 0.2 }, harmonicity: 4.1, modulationIndex: 20, resonance: 3000, octaves: 2 } }).toDestination(),
+            punch: new Tone.PolySynth(Tone.MembraneSynth, { maxPolyphony: 4, options: { volume: -10, pitchDecay: 0.05, octaves: 10, envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 1.4, attackCurve: 'exponential' } } }).toDestination(),
+            strong_punch: new Tone.PolySynth(Tone.MembraneSynth, { maxPolyphony: 4, options: { volume: -8, pitchDecay: 0.1, octaves: 8, envelope: { attack: 0.01, decay: 0.5, sustain: 0.02, release: 1.4, attackCurve: 'exponential' } } }).toDestination(),
             special: new Tone.PolySynth(Tone.NoiseSynth, { maxPolyphony: 2, options: { volume: -10, noise: { type: 'white' }, envelope: { attack: 0.1, decay: 0.5, sustain: 0.2, release: 0.3 } } }).toDestination(),
         },
          hades: {
@@ -432,6 +443,11 @@ window.onload = () => {
             strong_punch: new Tone.PolySynth(Tone.PluckSynth, { maxPolyphony: 4, options: { volume: -8, attackNoise: 1, dampening: 1500, resonance: 0.95 } }).toDestination(),
             special: new Tone.PolySynth(Tone.NoiseSynth, { maxPolyphony: 2, options: { noise: { type: 'white' }, volume: -6, envelope: { attack: 0.2, decay: 1.0, sustain: 0, release: 0.5 } } }).toDestination(),
         },
+        ryu: {
+            punch: new Tone.PolySynth(Tone.Synth, { maxPolyphony: 8, options: { volume: -14, oscillator: {type: "sine"}, envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 } } }).toDestination(),
+            strong_punch: new Tone.PolySynth(Tone.Synth, { maxPolyphony: 4, options: { volume: -10, oscillator: {type: "triangle"}, envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.2 } } }).toDestination(),
+            special: new Tone.PolySynth(Tone.NoiseSynth, { maxPolyphony: 2, options: { noise: {type: "white"}, volume: -8, envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.2 } } }).toDestination(),
+        },
         defenseBreak: new Tone.PolySynth(Tone.Synth, { maxPolyphony: 1, options: { oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.5, sustain: 0, release: 0.1 } } }).toDestination(),
 
     };
@@ -444,6 +460,7 @@ window.onload = () => {
             this.shooter = shooter;
             this.type = type; 
             this.damage = damage;
+            this.hitTargets = [];
             
             if(type === 'pumpkin') {
                 this.width = 120;
@@ -456,6 +473,7 @@ window.onload = () => {
             this.position = { x: x, y: y };
             this.velocity = { x: direction * 8, y: 0 }; 
             this.direction = direction;
+            this.isReturning = false;
         }
 
         draw() {
@@ -478,13 +496,77 @@ window.onload = () => {
                 ctx.fillText('🎃', -this.width / 2, 0);
             } else if (this.type === 'tornado') {
                 ctx.fillText('🌪️', -this.width / 2, 0);
+            } else if (this.type === 'football') {
+                ctx.fillText('⚽️', -this.width / 2, 0);
             }
             
             ctx.restore();
         }
 
         update() {
+            if (this.isReturning) {
+                const dx = this.shooter.position.x + this.shooter.width / 2 - (this.position.x + this.width / 2);
+                const dy = this.shooter.position.y + this.shooter.height / 2 - (this.position.y + this.height / 2);
+                const angle = Math.atan2(dy, dx);
+                const returnSpeed = 4; // Velocidade de retorno reduzida
+                this.velocity.x = Math.cos(angle) * returnSpeed;
+                this.velocity.y = Math.sin(angle) * returnSpeed;
+            }
             this.position.x += this.velocity.x;
+            this.position.y += this.velocity.y;
+        }
+    }
+
+     class GiantBall {
+        constructor(x, y, direction, owner) {
+            this.owner = owner;
+            this.position = { x, y };
+            this.velocity = { x: direction * 2 };
+            this.width = 120;
+            this.height = 120;
+            this.health = 4;
+            this.damageTick = 0;
+        }
+
+        update(opponent) {
+            this.position.x += this.velocity.x;
+            
+            if (this.position.x + this.width > canvasWidth || this.position.x < 0) {
+                this.velocity.x *= -1;
+            }
+            
+            if(isColliding(this, opponent)){
+                opponent.position.x += this.velocity.x;
+                this.damageTick++;
+                if(this.damageTick >= 60){
+                    opponent.takeDamage(80);
+                    this.damageTick = 0;
+                }
+                
+                if(opponent.position.x <= 0 || opponent.position.x + opponent.width >= canvasWidth){
+                    this.explode(opponent);
+                }
+            }
+        }
+
+        draw() {
+            ctx.font = '120px sans-serif';
+            ctx.fillText('⚽️', this.position.x, this.position.y);
+        }
+        
+        takeDamage(){
+            this.health--;
+            if(this.health <= 0) {
+                this.explode(null);
+            }
+        }
+
+        explode(opponent) {
+            if(opponent){
+                opponent.takeDamage(200);
+            }
+            createParticleEffect(null, 'pumpkin_explosion', {x: this.position.x + this.width / 2, y: this.position.y + this.height / 2});
+            giantBall = null;
         }
     }
     
@@ -500,6 +582,7 @@ window.onload = () => {
             this.color = color;
             this.health = 1000;
             this.energy = 50; 
+            this.maxEnergy = 1000;
             this.isJumping = false;
             this.isAttacking = false;
             this.attackBox = { position: {x: 0, y: 0}, width: 0, height: 0, type: null, active: false, hit: false };
@@ -511,7 +594,7 @@ window.onload = () => {
             this.doubleTapped = false;
             
             this.aiVelocityX = 0;
-            // Efeitos de Status
+            // Status Effects
             this.burnDuration = 0;
             this.burnTick = 0;
             this.curseDuration = 0;
@@ -522,7 +605,7 @@ window.onload = () => {
             this.bleedTick = 0;
             this.bleedPunchCounter = 0;
             
-            // Defesa
+            // Defense
             this.isPreparingDefense = false;
             this.defenseActivationTimer = 0;
             this.isDefending = false;
@@ -531,10 +614,16 @@ window.onload = () => {
             this.isParalyzed = false;
             this.paralysisTimer = 0;
 
-            // Especial do Spark
+            // Character-Specific Mechanics
             this.isChannelingSpecial = false;
             this.channelingTick = 0;
             this.channelingDamage = 1;
+            this.isDashing = false;
+            this.consecutivePunchCounter = 0;
+            this.attackSpeedMultiplier = 1;
+            this.ryuComboTimer = 0;
+            this.ballCount = (this.characterType === 'lorenzo') ? 1 : 0;
+            this.maxBallCount = 5;
         }
 
         draw() {
@@ -545,17 +634,13 @@ window.onload = () => {
                 ctx.translate(-this.width, 0);
             }
 
-            if (this.characterType === 'titan') {
-                drawTitanArt(ctx, 0, 0, this.width, this.height, this.isAttacking);
-            } else if (this.characterType === 'spark') {
-                drawSparkArt(ctx, 0, 0, this.width, this.height, this.isAttacking);
-            } else if (this.characterType === 'hades') {
-                 drawHadesArt(ctx, 0, 0, this.width, this.height, this.isAttacking);
-            } else if (this.characterType === 'jack') {
-                 drawJackArt(ctx, 0, 0, this.width, this.height, this.isAttacking);
-            } else if (this.characterType === 'genji') {
-                 drawGenjiArt(ctx, 0, 0, this.width, this.height, this.isAttacking);
-            }
+            if (this.characterType === 'titan') drawTitanArt(ctx, 0, 0, this.width, this.height, this.isAttacking);
+            else if (this.characterType === 'spark') drawSparkArt(ctx, 0, 0, this.width, this.height, this.isAttacking);
+            else if (this.characterType === 'hades') drawHadesArt(ctx, 0, 0, this.width, this.height, this.isAttacking);
+            else if (this.characterType === 'jack') drawJackArt(ctx, 0, 0, this.width, this.height, this.isAttacking);
+            else if (this.characterType === 'genji') drawGenjiArt(ctx, 0, 0, this.width, this.height, this.isAttacking);
+            else if (this.characterType === 'ryu') drawRyuArt(ctx, 0, 0, this.width, this.height, this.isAttacking);
+            else if (this.characterType === 'lorenzo') drawDonLorenzoArt(ctx, 0, 0, this.width, this.height, this.isAttacking);
             
             ctx.restore();
 
@@ -582,6 +667,22 @@ window.onload = () => {
                     this.isParalyzed = false;
                 }
                 return; 
+            }
+            
+            if(this.isDashing){
+                const dashSpeed = 20 * this.direction;
+                this.position.x += dashSpeed;
+                createParticleEffect(this, 'dash_fire');
+                if(isColliding(this, opponent)) {
+                    opponent.velocity.y = -20;
+                    opponent.takeDamage(50);
+                    createParticleEffect(opponent, 'ground_explosion', {x: opponent.position.x, y: opponent.position.y + opponent.height, count: 20, color: 'orange'});
+                    this.isDashing = false;
+                }
+                if(Math.abs(this.position.x - this.dashStartX) >= canvasWidth / 2) {
+                    this.isDashing = false;
+                }
+                return;
             }
 
             this.position.x += this.velocity.x;
@@ -634,8 +735,21 @@ window.onload = () => {
                 }
             }
             
+            if (this.characterType === 'ryu' && this.ryuComboTimer > 0) {
+                this.ryuComboTimer--;
+                if (this.ryuComboTimer <= 0) {
+                    this.consecutivePunchCounter = 0;
+                    this.attackSpeedMultiplier = 1;
+                }
+            }
+            
             this.handleStatusEffects(opponent);
-            this.handleSparkSpecial(opponent);
+            if(this.characterType === 'spark') {
+                this.handleSparkSpecial(opponent);
+            }
+            
+            // Regeneração de energia
+            this.energy = Math.min(this.maxEnergy, this.energy + 0.5);
         }
         
         handleStatusEffects(opponent){
@@ -675,7 +789,7 @@ window.onload = () => {
         }
         
         handleSparkSpecial(opponent) {
-            if (this.characterType !== 'spark' || !this.isChannelingSpecial) {
+            if (!this.isChannelingSpecial) {
                 return;
             }
 
@@ -728,14 +842,16 @@ window.onload = () => {
         }
 
         attack(type) {
-            if (this.attackCooldown > 0 || this.isParalyzed || this.isDefending) return;
+            if (this.attackCooldown > 0 || this.isParalyzed || this.isDefending || this.isDashing) return;
             
             this.isAttacking = true;
             this.attackBox.type = type;
 
             switch(type) {
                 case 'punch':
-                    this.attackCooldown = 20;
+                    if (this.characterType === 'lorenzo' && this.ballCount <= 0) { this.isAttacking = false; return; }
+                    
+                    this.attackCooldown = 20 / this.attackSpeedMultiplier;
                     this.attackBox.active = true;
                     this.attackBox.width = 70;
                     this.attackBox.height = 30;
@@ -744,6 +860,13 @@ window.onload = () => {
                     else if (this.characterType === 'hades') sounds.hades.punch.triggerAttackRelease("A2", "8n");
                     else if (this.characterType === 'jack') sounds.jack.punch.triggerAttackRelease("E3", "8n");
                     else if (this.characterType === 'genji') sounds.genji.punch.triggerAttackRelease("G4", "16n");
+                    else if (this.characterType === 'ryu') sounds.ryu.punch.triggerAttackRelease("C4", "16n");
+                    else if (this.characterType === 'lorenzo') {
+                        this.ballCount--;
+                        const projectileY = this.position.y + this.height / 2;
+                        const projectileX = this.position.x + (this.direction === 1 ? this.width : -40);
+                        projectiles.push(new Projectile(projectileX, projectileY, this.direction, this, 'football', 10));
+                    }
                     break;
                 case 'strong_punch':
                     this.attackCooldown = 45;
@@ -755,13 +878,15 @@ window.onload = () => {
                     else if (this.characterType === 'hades') sounds.hades.strong_punch.triggerAttackRelease("A1", "4n");
                     else if (this.characterType === 'jack') sounds.jack.strong_punch.triggerAttackRelease("E2", "4n");
                     else if (this.characterType === 'genji') sounds.genji.strong_punch.triggerAttackRelease("G3", "4n");
+                     else if (this.characterType === 'ryu') sounds.ryu.strong_punch.triggerAttackRelease("C3", "4n");
                     break;
                 case 'special':
                     if (this.characterType === 'spark') {
                         return;
                     }
-                    if (this.energy < (this.characterType === 'genji' ? 100 : 45)) { this.isAttacking = false; return; }
-                    this.energy -= (this.characterType === 'genji' ? 100 : 45);
+                    const energyCost = (this.characterType === 'lorenzo') ? 400 : (this.characterType === 'genji' || this.characterType === 'ryu' ? 100 : 45);
+                    if (this.energy < energyCost) { this.isAttacking = false; return; }
+                    this.energy -= energyCost;
                     this.attackCooldown = 60;
                     
                     const projectileY = this.position.y + this.height / 3;
@@ -782,6 +907,15 @@ window.onload = () => {
                     } else if (this.characterType === 'genji') {
                         sounds.genji.special.triggerAttackRelease("2n");
                         projectiles.push(new Projectile(projectileX, projectileY, this.direction, this, 'tornado', 70));
+                    } else if (this.characterType === 'ryu') {
+                         sounds.ryu.special.triggerAttackRelease("1n");
+                         this.isDashing = true;
+                         this.dashStartX = this.position.x;
+                    } else if (this.characterType === 'lorenzo') {
+                        if(this.ballCount < this.maxBallCount) {
+                             this.ballCount++;
+                        }
+                        this.isAttacking = false;
                     }
                     break;
             }
@@ -792,7 +926,7 @@ window.onload = () => {
         let count = 0;
         let color = extraParams.color || 'orange';
         
-        if (type === 'special' && fighter.characterType === 'titan') {
+        if (type === 'special' && fighter && fighter.characterType === 'titan') {
             color = 'rgba(255, 100, 0, 0.8)';
             count = 15;
         } else if (type === 'pumpkin_explosion') {
@@ -802,14 +936,23 @@ window.onload = () => {
             count = extraParams.count || 20;
             for (let i = 0; i < count; i++) {
                 particles.push(new Particle(
-                    extraParams.x + (Math.random() - 0.5) * fighter.width,
+                    extraParams.x + (Math.random() - 0.5) * (fighter ? fighter.width : 50),
                     extraParams.y,
-                    'hades_fire', // Cor específica para o fogo do Hades
+                    'hades_fire', 
                     0,
                     { x: (Math.random() - 0.5) * 2, y: - (Math.random() * 6 + 3) }
                 ));
             }
             return;
+        } else if (type === 'dash_fire') {
+            particles.push(new Particle(fighter.position.x + fighter.width/2, fighter.position.y + fighter.height/2, 'red', 0, { x: -fighter.direction * 3, y: (Math.random() - 0.5) * 2 }));
+            return;
+        } else if (type === 'ryu_punch') {
+            count = extraParams.count || 1;
+             for (let i = 0; i < count; i++) {
+                particles.push(new Particle( extraParams.x, extraParams.y, 'ryu_star', 0, { x: (Math.random() - 0.5) * 5, y: (Math.random() - 0.5) * 5 }));
+             }
+             return;
         }
 
         for (let i = 0; i < count; i++) {
@@ -838,7 +981,11 @@ window.onload = () => {
              if(this.color === 'hades_fire') {
                 ctx.font = `${this.radius * 6}px sans-serif`;
                 ctx.fillText('🔥', this.position.x, this.position.y);
-            } else {
+            } else if(this.color === 'ryu_star') {
+                ctx.font = `${this.radius * 4}px sans-serif`;
+                ctx.fillText('✨', this.position.x, this.position.y);
+            }
+            else {
                 ctx.beginPath();
                 ctx.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2);
                 ctx.fillStyle = this.color;
@@ -911,16 +1058,16 @@ window.onload = () => {
         if (!player1 || !player2) return;
         document.getElementById('p1-name').innerText = player1.name;
         document.getElementById('p1-health').style.width = (player1.health / 1000) * 100 + '%';
-        document.getElementById('p1-energy').style.width = (player1.energy / 500) * 100 + '%';
+        document.getElementById('p1-energy').style.width = (player1.energy / 1000) * 100 + '%';
         document.getElementById('p1-health-text').innerText = `${Math.ceil(player1.health)} / 1000`;
-        document.getElementById('p1-energy-text').innerText = `${Math.ceil(player1.energy)} / 500`;
+        document.getElementById('p1-energy-text').innerText = `${Math.ceil(player1.energy)} / 1000`;
         updateStatusIcons(player1, document.getElementById('p1-status-effects'));
         
         document.getElementById('p2-name').innerText = player2.name;
         document.getElementById('p2-health').style.width = (player2.health / 1000) * 100 + '%';
-        document.getElementById('p2-energy').style.width = (player2.energy / 500) * 100 + '%';
+        document.getElementById('p2-energy').style.width = (player2.energy / 1000) * 100 + '%';
         document.getElementById('p2-health-text').innerText = `${Math.ceil(player2.health)} / 1000`;
-        document.getElementById('p2-energy-text').innerText = `${Math.ceil(player2.energy)} / 500`;
+        document.getElementById('p2-energy-text').innerText = `${Math.ceil(player2.energy)} / 1000`;
         updateStatusIcons(player2, document.getElementById('p2-status-effects'));
     }
 
@@ -943,6 +1090,18 @@ window.onload = () => {
             curseIcon.className = 'status-icon';
             curseIcon.innerText = '💀';
             container.appendChild(curseIcon);
+        }
+         if (player.characterType === 'ryu' && player.attackSpeedMultiplier > 1) {
+            const speedIcon = document.createElement('span');
+            speedIcon.className = 'status-icon';
+            speedIcon.innerHTML = `✨<span class="stack-count">x${player.attackSpeedMultiplier.toFixed(1)}</span>`;
+            container.appendChild(speedIcon);
+        }
+        if (player.characterType === 'lorenzo') {
+            const ballIcon = document.createElement('span');
+            ballIcon.className = 'status-icon';
+            ballIcon.innerHTML = `⚽️<span class="stack-count">${player.ballCount}</span>`;
+            container.appendChild(ballIcon);
         }
     }
 
@@ -1077,6 +1236,12 @@ window.onload = () => {
                             attacker.bleedPunchCounter = 0;
                         }
                     }
+                    if (attacker.characterType === 'ryu') {
+                         attacker.consecutivePunchCounter++;
+                         attacker.attackSpeedMultiplier = Math.min(7, 1 + (attacker.consecutivePunchCounter-1));
+                         attacker.ryuComboTimer = 120; // 2 segundos
+                         createParticleEffect(defender, 'ryu_punch', {x: defender.position.x + defender.width/2, y: defender.position.y + defender.height/2, count: attacker.consecutivePunchCounter});
+                    }
                     break;
                 case 'strong_punch':
                     damage = 25;
@@ -1087,9 +1252,9 @@ window.onload = () => {
 
             const defended = defender.takeDamage(damage, effect);
             if(defended) {
-                 attacker.energy = Math.min(500, attacker.energy + 7.5);
+                 attacker.energy = Math.min(1000, attacker.energy + 7.5);
             } else if (damage > 0) {
-                attacker.energy = Math.min(500, attacker.energy + 15);
+                attacker.energy = Math.min(1000, attacker.energy + 15);
             }
             attacker.attackBox.hit = true; 
         }
@@ -1104,7 +1269,9 @@ window.onload = () => {
         if (player1) player1.update(player2);
         if (player2) player2.update(player1);
         
-        handleFighterCollision(); 
+        if (!giantBall) {
+            handleFighterCollision(); 
+        }
 
         particles.forEach((p, index) => {
             p.update();
@@ -1114,11 +1281,12 @@ window.onload = () => {
         projectiles.forEach((projectile, index) => {
             projectile.update();
             const target = projectile.shooter === player1 ? player2 : player1;
-            if (isColliding(projectile, target)) {
+            
+            if (!projectile.hitTargets.includes(target) && isColliding(projectile, target)) {
                 
                 if (projectile.type === 'tornado' && !target.isDefending) {
                     projectile.shooter.isSpecialAttacking = true;
-                    target.isParalyzed = true; // Paralisa o alvo
+                    target.isParalyzed = true; 
                     
                     const teleportX = target.position.x - projectile.shooter.width;
                     projectile.shooter.position.x = teleportX;
@@ -1131,6 +1299,8 @@ window.onload = () => {
                         projectile.shooter.isSpecialAttacking = false;
                         target.isParalyzed = false;
                     }, 500);
+                    projectiles.splice(index, 1);
+                    return;
 
                 } else if (projectile.type !== 'tornado' || target.isDefending) {
                      target.takeDamage(projectile.damage);
@@ -1138,16 +1308,55 @@ window.onload = () => {
                
                 if(projectile.type === 'pumpkin'){
                     createParticleEffect(target, 'pumpkin_explosion', {x: projectile.position.x, y: projectile.position.y});
+                } else if (projectile.type === 'football') {
+                     projectile.velocity.x *= -0.7; 
+                     projectile.isReturning = true;
+                     projectile.hitTargets.push(target);
                 }
+                
+                if(projectile.type !== 'football'){
+                    projectiles.splice(index, 1);
+                }
+                return;
+            }
+            
+            if (projectile.type === 'football' && projectile.isReturning && isColliding(projectile, projectile.shooter)) {
+                projectile.shooter.ballCount++;
                 projectiles.splice(index, 1);
-            } else if (projectile.position.x > canvasWidth + 50 || projectile.position.x < -50) {
-                projectiles.splice(index, 1);
+                return;
+            }
+
+             if (projectile.position.x + projectile.width > canvasWidth || projectile.position.x < 0) {
+                if (projectile.type === 'football') {
+                    if (!projectile.isReturning) {
+                        groundFootball = { position: { ...projectile.position }, width: projectile.width, height: projectile.height };
+                        projectiles.splice(index, 1);
+                    } else {
+                        projectile.velocity.x *= -1; // Ricocheteia ao voltar
+                    }
+                } else {
+                    projectiles.splice(index, 1);
+                }
             }
         });
+
+        if (groundFootball && isColliding(player1, groundFootball)) {
+            player1.ballCount++;
+            groundFootball = null;
+        }
 
         checkMeleeCollision(player1, player2);
         checkMeleeCollision(player2, player1);
 
+        if(giantBall) {
+            const opponent = giantBall.owner === player1 ? player2 : player1;
+            giantBall.update(opponent);
+            if(giantBall && opponent.attackBox.active && !opponent.attackBox.hit && isColliding(opponent.attackBox, giantBall)) {
+                giantBall.takeDamage();
+                opponent.attackBox.hit = true;
+            }
+        }
+        
         draw();
         updateHUD();
         checkGameOver();
@@ -1164,6 +1373,11 @@ window.onload = () => {
 
         particles.forEach(p => p.draw());
         projectiles.forEach(p => p.draw());
+        if(giantBall) giantBall.draw();
+        if(groundFootball) {
+            ctx.font = `40px sans-serif`;
+            ctx.fillText('⚽️', groundFootball.position.x, groundFootball.position.y + groundFootball.height);
+        }
     }
 
     function drawLightningChain(attacker, defender) {
@@ -1217,7 +1431,7 @@ window.onload = () => {
                 }
                 player1.lastTap = { key: 'd', time: now };
                 break;
-            case 'w':
+            case ' ': // Espaço para pular
                 if (!player1.isJumping) {
                     player1.velocity.y = -20;
                     player1.isJumping = true;
@@ -1500,6 +1714,7 @@ window.onload = () => {
         const helmetColor = '#95a5a6';
         const eyeColor = '#2ecc71';
         const fireCircleColor = '#e67e22';
+        const bladeColor = '#7fffd4';
 
         // Perna robótica (frente)
         ctx.fillStyle = robotColor;
@@ -1527,10 +1742,15 @@ window.onload = () => {
         ctx.fill();
 
 
-        // Braço robótico (frente)
+        // Braço robótico (frente) & Espada
         ctx.fillStyle = robotColor;
         if(isAttacking) {
-            ctx.fillRect(x + pixel * 5, y + pixel * 3.5, pixel * 2.5, pixel);
+            ctx.fillRect(x + pixel * 5, y + pixel * 3.5, pixel * 1.5, pixel * 1.5); // Punho
+            ctx.fillStyle = bladeColor;
+            ctx.shadowColor = bladeColor;
+            ctx.shadowBlur = 10;
+            ctx.fillRect(x + pixel * 6.5, y + pixel * 4, pixel * 4, pixel * 0.5);
+            ctx.shadowBlur = 0;
         } else {
             ctx.fillRect(x + pixel * 5, y + pixel * 3, pixel * 1.5, pixel * 3);
         }
@@ -1545,6 +1765,95 @@ window.onload = () => {
         ctx.fillRect(x + pixel, y, pixel * 4.5, pixel * 2.5);
         ctx.fillStyle = eyeColor;
         ctx.fillRect(x + pixel * 2, y + pixel, pixel * 2, pixel * 0.5);
+    }
+
+    function drawRyuArt(ctx, x, y, width, height, isAttacking) {
+        const pixel = height / 12;
+
+        const skinTone = '#f2d2b4';
+        const skinShadow = '#d3a180';
+        const kimonoColor = '#ffffff';
+        const kimonoShadow = '#e0e0e0';
+        const bandColor = '#ff0000';
+        
+        // Pés
+        ctx.fillStyle = skinTone;
+        ctx.fillRect(x + pixel * 1.5, y + pixel * 11, pixel * 1.5, pixel);
+        ctx.fillRect(x + pixel * 4, y + pixel * 11, pixel * 1.5, pixel);
+
+        // Pernas
+        ctx.fillStyle = kimonoColor;
+        ctx.fillRect(x + pixel * 1.5, y + pixel * 7, pixel * 1.5, pixel * 4); // Esquerda
+        ctx.fillRect(x + pixel * 4, y + pixel * 7, pixel * 1.5, pixel * 4); // Direita
+        
+        // Torso
+        ctx.fillStyle = kimonoColor;
+        ctx.fillRect(x + pixel, y + pixel * 2, pixel * 5, pixel * 5);
+        ctx.fillStyle = kimonoShadow;
+        ctx.fillRect(x + pixel * 2.8, y + pixel * 2, pixel * 0.4, pixel * 5);
+        
+        // Faixa da cintura
+        ctx.fillStyle = bandColor;
+        ctx.fillRect(x + pixel, y + pixel * 6.5, pixel * 5, pixel);
+
+        // Braços
+        ctx.fillStyle = skinTone;
+        if (isAttacking) {
+            ctx.fillRect(x + pixel * 5, y + pixel * 3, pixel * 2, pixel * 1.5);
+        } else {
+            ctx.fillRect(x + pixel * 5.5, y + pixel * 4, pixel, pixel*2);
+        }
+        ctx.fillRect(x + pixel * 0.5, y + pixel * 4, pixel, pixel*2);
+
+
+        // Cabeça
+        ctx.fillStyle = skinTone;
+        ctx.fillRect(x + pixel * 2, y, pixel * 3, pixel * 2.5);
+        ctx.fillStyle = bandColor;
+        ctx.fillRect(x + pixel, y + pixel*0.5, pixel * 5, pixel * 0.5);
+    }
+    
+    function drawDonLorenzoArt(ctx, x, y, width, height, isAttacking) {
+        const pixel = height / 12;
+        
+        const uniformColor = '#ffffff';
+        const skinTone = '#f2d2b4';
+        const shoeColor = '#000000';
+        const roseColor = '#3498db';
+
+        // Pés
+        ctx.fillStyle = shoeColor;
+        ctx.fillRect(x + pixel * 1.5, y + pixel * 11, pixel * 2, pixel);
+        ctx.fillRect(x + pixel * 4.5, y + pixel * 11, pixel * 2, pixel);
+
+        // Pernas
+        ctx.fillStyle = uniformColor;
+        ctx.fillRect(x + pixel * 2, y + pixel * 7, pixel, pixel*4);
+        ctx.fillRect(x + pixel * 4, y + pixel * 7, pixel, pixel*4);
+
+        // Camisa
+        ctx.fillRect(x + pixel * 1.5, y + pixel * 3, pixel*4, pixel*4);
+        
+        // Rosa
+        ctx.fillStyle = roseColor;
+        ctx.beginPath();
+        ctx.arc(x + pixel * 2.5, y + pixel * 4, pixel*0.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Braços
+        ctx.fillStyle = skinTone;
+        if(isAttacking) {
+            ctx.fillRect(x + pixel * 5.5, y + pixel * 4, pixel * 2, pixel);
+        } else {
+            ctx.fillRect(x + pixel * 5.5, y + pixel * 4, pixel, pixel*3);
+        }
+        ctx.fillRect(x + pixel, y + pixel * 4, pixel, pixel*3);
+        
+        // Cabeça
+        ctx.fillStyle = skinTone;
+        ctx.fillRect(x + pixel*2, y, pixel * 3, pixel*3);
+        ctx.fillStyle = '#000'; // Cabelo
+        ctx.fillRect(x+pixel*2, y, pixel*3, pixel);
     }
     
     function drawThumbnails(){
@@ -1577,6 +1886,18 @@ window.onload = () => {
         genjiCanvas.width = 120;
         genjiCanvas.height = 120;
         drawGenjiArt(genjiCtx, 30, 0, 60, 120, false);
+
+        const ryuCanvas = document.getElementById('ryu-thumbnail');
+        const ryuCtx = ryuCanvas.getContext('2d');
+        ryuCanvas.width = 120;
+        ryuCanvas.height = 120;
+        drawRyuArt(ryuCtx, 30, 0, 60, 120, false);
+        
+        const lorenzoCanvas = document.getElementById('lorenzo-thumbnail');
+        const lorenzoCtx = lorenzoCanvas.getContext('2d');
+        lorenzoCanvas.width = 120;
+        lorenzoCanvas.height = 120;
+        drawDonLorenzoArt(lorenzoCtx, 30, 0, 60, 120, false);
     }
 
     // --- Início do Jogo ---
@@ -1598,7 +1919,9 @@ window.onload = () => {
                 { id: 'spark', name: 'Spark', type: 'spark', colors: { main: '#808080', cape: 'black', sneakers: 'red', chest: '#ff4500' } },
                 { id: 'hades', name: 'Hades', type: 'hades', colors: { main: '#8d5524' } },
                 { id: 'jack', name: 'Jack', type: 'jack', colors: {} },
-                { id: 'genji', name: 'Genji', type: 'genji', colors: {} }
+                { id: 'genji', name: 'Genji', type: 'genji', colors: {} },
+                { id: 'ryu', name: 'Ryu', type: 'ryu', colors: {} },
+                { id: 'lorenzo', name: 'Don Lorenzo', type: 'lorenzo', colors: {} }
             ];
 
             const playerConfig = characters.find(c => c.id === playerChoice);
@@ -1631,6 +1954,7 @@ window.onload = () => {
 
         particles = [];
         projectiles = []; // Limpa os projéteis
+        giantBall = null; // Limpa a bola gigante
         gameState = 'SELECT';
         ctx.clearRect(0,0,canvasWidth, canvasHeight);
         drawBackground();
@@ -1641,6 +1965,8 @@ window.onload = () => {
     document.getElementById('select-hades').addEventListener('click', () => startGame('hades'));
     document.getElementById('select-jack').addEventListener('click', () => startGame('jack'));
     document.getElementById('select-genji').addEventListener('click', () => startGame('genji'));
+    document.getElementById('select-ryu').addEventListener('click', () => startGame('ryu'));
+    document.getElementById('select-lorenzo').addEventListener('click', () => startGame('lorenzo'));
     restartButton.addEventListener('click', resetGame);
 
     const loreTooltip = document.getElementById('lore-tooltip');
@@ -1649,9 +1975,11 @@ window.onload = () => {
         card.addEventListener('mouseenter', (e) => {
             loreTooltip.innerText = e.currentTarget.dataset.lore;
             loreTooltip.classList.remove('hidden');
+            loreTooltip.style.display = 'block';
         });
         card.addEventListener('mouseleave', () => {
             loreTooltip.classList.add('hidden');
+             loreTooltip.style.display = 'none';
         });
          card.addEventListener('mousemove', (e) => {
             const gameContainerRect = gameContainer.getBoundingClientRect();
