@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cybernetic Fury</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💢💢</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💢</text></svg>">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
@@ -24,7 +24,8 @@
             color: var(--text-color);
             font-family: 'Orbitron', sans-serif;
             margin: 0;
-            padding: 0;
+            padding: 1rem;
+            box-sizing: border-box;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -35,7 +36,7 @@
 
         #game-container {
             width: 100%;
-            max-width: 1000px;
+            max-width: 1280px;
             aspect-ratio: 16 / 9;
             position: relative;
             box-shadow: 0 0 20px var(--neon-blue), 0 0 40px var(--neon-pink);
@@ -43,12 +44,28 @@
             border-radius: 10px;
             overflow: hidden;
         }
+        
+        #background-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://raw.githubusercontent.com/MarcusNeves0/CyberFury/refs/heads/main/background.png');
+            background-size: cover;
+            background-position: center;
+            z-index: 0; 
+            display: none; /* Escondido por defeito */
+        }
+
 
         #gameCanvas {
             width: 100%;
             height: 100%;
             display: block;
             background-color: var(--background-dark);
+            position: relative;
+            z-index: 1;
         }
 
         /* --- Telas de Overlay --- */
@@ -67,6 +84,7 @@
             padding: 20px;
             box-sizing: border-box;
             transition: opacity 0.5s;
+            overflow-y: auto;
         }
         
         .hidden {
@@ -105,6 +123,10 @@
         .character-card:hover {
             transform: scale(1.05);
             box-shadow: 0 0 15px var(--neon-pink), 0 0 30px var(--neon-blue);
+        }
+        
+        #select-maliketh {
+            border-color: var(--neon-red);
         }
         
         .character-card h2 {
@@ -182,6 +204,7 @@
             display: flex;
             justify-content: space-between;
             pointer-events: none;
+            z-index: 5;
         }
 
         .player-hud {
@@ -293,7 +316,7 @@
 <body>
 
     <div id="game-container">
-        
+        <div id="background-layer"></div>
         <div id="character-selection" class="overlay">
             <h1>CYBERNETIC FURY</h1>
             <div class="selection-grid">
@@ -328,6 +351,10 @@
                  <div class="character-card" id="select-malenia" data-lore="A espada de miquela, ela nunca conheceu a derrota">
                     <h2>MALENIA</h2>
                      <canvas id="malenia-thumbnail" class="thumbnail-canvas"></canvas>
+                </div>
+                 <div class="character-card" id="select-maliketh" data-lore="Maliketh é a leal Besta Presa nas Sombras e meio-irmão da Rainha Marika, a Eterna, uma Empírea de ascendência Numen, que se tornaria o recipiente do Elden Ring">
+                    <h2>MALIKETH</h2>
+                     <canvas id="maliketh-thumbnail" class="thumbnail-canvas"></canvas>
                 </div>
             </div>
              <div id="lore-tooltip" class="hidden"></div>
@@ -812,6 +839,48 @@
         ctx.fillStyle = '#000';
         ctx.fillRect(x + pixel * 2, y + pixel, pixel * 3, pixel * 0.5); // Visor
     }
+
+    function drawMalikethArt(ctx, x, y, width, height, fighter) {
+        const pixel = height / 12;
+        const isAttacking = fighter ? fighter.isAttacking : false;
+        const isTransformed = fighter ? fighter.isTransformed : false;
+
+        const armorColor = '#222';
+        const hairColor = '#fff';
+        const bladeColor = '#ff0000';
+
+        if (isTransformed) {
+            ctx.shadowColor = 'rgba(255, 0, 0, 0.8)';
+            ctx.shadowBlur = 20;
+        }
+
+        // Pés
+        ctx.fillStyle = armorColor;
+        ctx.fillRect(x, y + pixel * 11, pixel * 2, pixel);
+        ctx.fillRect(x + pixel * 5, y + pixel * 11, pixel * 2, pixel);
+
+        // Pernas
+        ctx.fillRect(x + pixel, y + pixel * 7, pixel * 1.5, pixel * 4);
+        ctx.fillRect(x + pixel * 4.5, y + pixel * 7, pixel * 1.5, pixel * 4);
+        
+        // Corpo
+        ctx.fillRect(x + pixel * 1, y + pixel * 4, pixel * 5, pixel * 4);
+
+        // Cabelo
+        ctx.fillStyle = hairColor;
+        ctx.fillRect(x, y + pixel * 2, pixel * 7, pixel * 3);
+
+        // Espada
+        ctx.fillStyle = bladeColor;
+        if(isAttacking) {
+            ctx.shadowColor = bladeColor;
+            ctx.shadowBlur = 15;
+            ctx.fillRect(x - pixel * 2, y + pixel * 2, pixel, pixel * 8);
+        } else {
+            ctx.fillRect(x + pixel * 6, y + pixel * 3, pixel, pixel * 8);
+        }
+        ctx.shadowBlur = 0;
+    }
     
     function drawThumbnails(){
         const titanCanvas = document.getElementById('titan-thumbnail');
@@ -861,6 +930,12 @@
         maleniaCanvas.width = 120;
         maleniaCanvas.height = 120;
         drawMaleniaArt(maleniaCtx, 30, 0, 60, 120, null);
+        
+        const malikethCanvas = document.getElementById('maliketh-thumbnail');
+        const malikethCtx = malikethCanvas.getContext('2d');
+        malikethCanvas.width = 120;
+        malikethCanvas.height = 120;
+        drawMalikethArt(malikethCtx, 30, 0, 60, 120, null);
     }
 
 window.onload = () => {
@@ -873,6 +948,7 @@ window.onload = () => {
     const gameOverScreen = document.getElementById('game-over-screen');
     const winText = document.getElementById('win-text');
     const restartButton = document.getElementById('restart-button');
+    const backgroundLayer = document.getElementById('background-layer');
 
     let canvasWidth, canvasHeight;
     let gameLoopId;
@@ -1129,6 +1205,7 @@ window.onload = () => {
             else if (this.characterType === 'ryu') drawRyuArt(ctx, 0, 0, this.width, this.height, this);
             else if (this.characterType === 'lorenzo') drawDonLorenzoArt(ctx, 0, 0, this.width, this.height, this);
             else if (this.characterType === 'malenia') drawMaleniaArt(ctx, 0, 0, this.width, this.height, this);
+            else if (this.characterType === 'maliketh') drawMalikethArt(ctx, 0, 0, this.width, this.height, this);
             
             ctx.restore();
 
@@ -1371,7 +1448,7 @@ window.onload = () => {
                 case 'punch':
                     if (this.characterType === 'lorenzo' && this.ballCount <= 0) { this.isAttacking = false; return; }
                     
-                    if (this.characterType === 'jack' || this.characterType === 'malenia') {
+                    if (this.characterType === 'jack' || this.characterType === 'malenia' || this.characterType === 'maliketh') {
                         this.attackCooldown = 30;
                         this.attackBox.active = true;
                         this.attackBox.width = 90; // Lâmina maior
@@ -1411,7 +1488,7 @@ window.onload = () => {
                     if (this.characterType === 'spark') {
                         return;
                     }
-                    const energyCost = (this.characterType === 'malenia') ? 300 : (this.characterType === 'lorenzo') ? 400 : (this.characterType === 'genji' || this.characterType === 'ryu' ? 100 : 45);
+                    const energyCost = (this.characterType === 'malenia' || this.characterType === 'maliketh') ? 300 : (this.characterType === 'lorenzo') ? 400 : (this.characterType === 'genji' || this.characterType === 'ryu' ? 100 : 45);
                     if (this.energy < energyCost) { this.isAttacking = false; return; }
                     this.energy -= energyCost;
                     this.attackCooldown = 60;
@@ -1447,6 +1524,21 @@ window.onload = () => {
                         this.isWaterfowlDancing = true;
                         this.waterfowlHitCount = 0;
                         this.dashStartX = this.position.x;
+                    } else if (this.characterType === 'maliketh') {
+                        this.velocity.y = -20;
+                        setTimeout(() => {
+                            for(let i=0; i<5; i++){
+                                setTimeout(() => {
+                                    const opponent = this.isPlayer ? player2 : player1;
+                                    const angle = Math.atan2(opponent.position.y - this.position.y, opponent.position.x - this.position.x);
+                                    const speed = 8;
+                                    const p = new Projectile(this.position.x, this.position.y, this.direction, this, 'maliketh_blade', 70);
+                                    p.velocity.x = Math.cos(angle) * speed;
+                                    p.velocity.y = Math.sin(angle) * speed;
+                                    projectiles.push(p);
+                                }, i * 200);
+                            }
+                        }, 500);
                     }
                     break;
             }
@@ -2067,6 +2159,8 @@ window.onload = () => {
 
         selectionScreen.classList.add('hidden');
         loadingScreen.classList.remove('hidden');
+        backgroundLayer.style.display = 'block';
+        canvas.style.backgroundColor = 'transparent';
 
         setTimeout(() => {
             loadingScreen.classList.add('hidden');
@@ -2078,7 +2172,8 @@ window.onload = () => {
                 { id: 'genji', name: 'Genji', type: 'genji' },
                 { id: 'ryu', name: 'Ryu', type: 'ryu' },
                 { id: 'lorenzo', name: 'Don Lorenzo', type: 'lorenzo' },
-                { id: 'malenia', name: 'Malenia', type: 'malenia' }
+                { id: 'malenia', name: 'Malenia', type: 'malenia' },
+                { id: 'maliketh', name: 'Maliketh', type: 'maliketh' }
             ];
 
             const playerConfig = characters.find(c => c.id === playerChoice);
@@ -2101,8 +2196,10 @@ window.onload = () => {
         cancelAnimationFrame(zoomLoopId);
         if(aiController) aiController.stop();
 
-        gameOverScreen.classList.add('hidden');
         selectionScreen.classList.remove('hidden');
+        gameOverScreen.classList.add('hidden');
+        backgroundLayer.style.display = 'none';
+        canvas.style.backgroundColor = 'var(--background-dark)';
         
         player1 = null;
         player2 = null;
