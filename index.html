@@ -1058,6 +1058,9 @@ window.onload = () => {
                 ctx.fillText('🌪️', -this.width / 2, 0);
             } else if (this.type === 'football') {
                 ctx.fillText('⚽️', -this.width / 2, 0);
+            } else if (this.type === 'maliketh_blade') {
+                ctx.font = `30px sans-serif`;
+                ctx.fillText('💥', -this.width / 2, 0);
             }
             
             ctx.restore();
