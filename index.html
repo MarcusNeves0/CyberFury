@@ -44,20 +44,6 @@
             border-radius: 10px;
             overflow: hidden;
         }
-        
-        #background-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url('https://raw.githubusercontent.com/MarcusNeves0/CyberFury/refs/heads/main/background.png');
-            background-size: cover;
-            background-position: center;
-            z-index: 0; 
-            display: none; /* Escondido por defeito */
-        }
-
 
         #gameCanvas {
             width: 100%;
@@ -163,7 +149,7 @@
 
         /* Loading Screen */
          #loading-screen {
-         }
+        }
 
         .loading-controls {
             border: 1px solid var(--neon-blue);
@@ -316,7 +302,6 @@
 <body>
 
     <div id="game-container">
-        <div id="background-layer"></div>
         <div id="character-selection" class="overlay">
             <h1>CYBERNETIC FURY</h1>
             <div class="selection-grid">
@@ -463,7 +448,7 @@
         ctx.fillStyle = robotArmDark;
         ctx.fillRect(x + pixel * 5, y + pixel * 4, pixel * 2, pixel * 0.5);
         ctx.fillRect(x + pixel * 5, y + pixel * 6, pixel * 2, pixel * 0.5);
-         
+        
         ctx.fillStyle = skinTone;
         ctx.fillRect(x + pixel * 2, y, pixel * 3, pixel * 2.5);
         ctx.fillStyle = capColor;
@@ -948,8 +933,7 @@ window.onload = () => {
     const gameOverScreen = document.getElementById('game-over-screen');
     const winText = document.getElementById('win-text');
     const restartButton = document.getElementById('restart-button');
-    const backgroundLayer = document.getElementById('background-layer');
-
+    
     let canvasWidth, canvasHeight;
     let gameLoopId;
     let gameState = 'SELECT'; // SELECT, FIGHT, GAMEOVER
@@ -1058,6 +1042,9 @@ window.onload = () => {
                 ctx.fillText('🌪️', -this.width / 2, 0);
             } else if (this.type === 'football') {
                 ctx.fillText('⚽️', -this.width / 2, 0);
+            } else if (this.type === 'maliketh_blade') {
+                ctx.font = `30px sans-serif`;
+                ctx.fillText('💥💥💥', -this.width / 2, 0);
             }
             
             ctx.restore();
@@ -2159,8 +2146,6 @@ window.onload = () => {
 
         selectionScreen.classList.add('hidden');
         loadingScreen.classList.remove('hidden');
-        backgroundLayer.style.display = 'block';
-        canvas.style.backgroundColor = 'transparent';
 
         setTimeout(() => {
             loadingScreen.classList.add('hidden');
@@ -2198,8 +2183,6 @@ window.onload = () => {
 
         selectionScreen.classList.remove('hidden');
         gameOverScreen.classList.add('hidden');
-        backgroundLayer.style.display = 'none';
-        canvas.style.backgroundColor = 'var(--background-dark)';
         
         player1 = null;
         player2 = null;
