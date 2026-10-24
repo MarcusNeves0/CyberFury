@@ -1,0 +1,289 @@
+:root {
+    --neon-pink: #ff00ff;
+    --neon-blue: #00ffff;
+    --neon-red: #ff1b1b;
+    --background-dark: #0a0a14;
+    --text-color: #f0f0f0;
+    --asphalt-color: #1a1a2a;
+    --reflection-color: rgba(255, 255, 255, 0.05);
+}
+
+body {
+    background-color: var(--background-dark);
+    color: var(--text-color);
+    font-family: 'Orbitron', sans-serif;
+    margin: 0;
+    padding: 1rem;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+    flex-direction: column;
+}
+
+#game-container {
+    width: 100%;
+    max-width: 1280px;
+    aspect-ratio: 16 / 9;
+    position: relative;
+    box-shadow: 0 0 20px var(--neon-blue), 0 0 40px var(--neon-pink);
+    border: 2px solid var(--neon-blue);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+#gameCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    background-color: var(--background-dark);
+    position: relative;
+    z-index: 1;
+}
+
+/* --- Telas de Overlay --- */
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 10, 20, 0.95);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    padding: 20px;
+    box-sizing: border-box;
+    transition: opacity 0.5s;
+    overflow-y: auto;
+}
+
+.hidden {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    display: none !important;
+}
+
+/* --- Seleção de personagem --- */
+#character-selection h1 {
+    font-size: 3rem;
+    color: var(--neon-pink);
+    text-shadow: 0 0 10px var(--neon-pink);
+    margin-bottom: 20px;
+}
+
+.selection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    width: 95%;
+}
+
+.character-card {
+    border: 2px solid var(--neon-blue);
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.character-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px var(--neon-pink), 0 0 30px var(--neon-blue);
+}
+
+#select-maliketh {
+    border-color: var(--neon-red);
+}
+
+.character-card h2 {
+    color: var(--neon-pink);
+    font-size: 1.5rem;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.thumbnail-canvas {
+    width: 100px;
+    height: 100px;
+    border: 2px solid var(--neon-blue);
+    background-color: var(--asphalt-color);
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
+
+#lore-tooltip {
+    position: absolute;
+    display: none;
+    background-color: rgba(0, 0, 10, 0.9);
+    border: 1px solid var(--neon-blue);
+    color: var(--text-color);
+    padding: 10px;
+    border-radius: 5px;
+    max-width: 250px;
+    font-family: sans-serif;
+    font-size: 0.9rem;
+    pointer-events: none; /* Impede que o tooltip bloqueie eventos do rato */
+    z-index: 100;
+    box-shadow: 0 0 10px var(--neon-blue);
+}
+
+/* --- Tela de Controles --- */
+.loading-controls {
+    border: 1px solid var(--neon-blue);
+    padding: 25px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    width: 90%;
+    box-sizing: border-box;
+}
+
+.loading-controls h3 {
+    color: var(--neon-blue);
+    text-shadow: 0 0 5px var(--neon-blue);
+    margin-top: 0;
+    font-size: 2.5rem;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.loading-controls p {
+    margin: 10px 0;
+    font-family: sans-serif;
+    font-size: 1.2rem;
+}
+
+.controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 10px 20px;
+}
+
+/* --- HUD do Jogo --- */
+#hud {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    width: 100%;
+    padding: 0 20px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.player-hud {
+    width: 45%;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid var(--neon-blue);
+}
+
+#player2-hud {
+    text-align: right;
+}
+
+.player-hud h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.2rem;
+}
+
+.health-bar-outer,
+.energy-bar-outer {
+    width: 100%;
+    height: 20px;
+    background-color: #333;
+    border: 1px solid #555;
+    border-radius: 5px;
+    margin-top: 5px;
+    padding: 2px;
+    position: relative; /* Para posicionar o texto */
+}
+
+.health-bar-inner {
+    height: 100%;
+    background: linear-gradient(90deg, #00ff00, #aaff00);
+    border-radius: 3px;
+    transition: width 0.3s;
+}
+
+.energy-bar-inner {
+    height: 100%;
+    background: linear-gradient(90deg, var(--neon-blue), #00aaff);
+    border-radius: 3px;
+    transition: width 0.3s;
+}
+
+.bar-text {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 14px;
+    color: white;
+    text-shadow: 1px 1px 2px black;
+    font-family: sans-serif;
+    font-weight: bold;
+}
+
+.status-effects {
+    min-height: 25px;
+    margin-top: 5px;
+    display: flex;
+    gap: 10px;
+}
+
+#player2-hud .status-effects {
+    justify-content: flex-end;
+}
+
+.status-icon {
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.status-icon .stack-count {
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 1px black;
+    margin-left: 2px;
+}
+
+/* --- Tela de Fim de Jogo --- */
+#game-over-screen button {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    background: var(--neon-blue);
+    color: var(--background-dark);
+    border: none;
+    padding: 15px 30px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+    text-shadow: none;
+    transition: all 0.3s;
+}
+
+#game-over-screen button:hover {
+    background-color: var(--neon-pink);
+    color: var(--text-color);
+    box-shadow: 0 0 15px var(--neon-pink);
+}
+
+#win-text {
+    font-size: 8rem;
+    text-shadow: 0 0 20px var(--neon-pink);
+}
