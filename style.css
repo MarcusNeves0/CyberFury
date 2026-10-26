@@ -68,6 +68,115 @@ body {
     display: none !important;
 }
 
+/* --- HUB (escolha de modo) --- */
+#hub-screen h1 {
+    font-size: 3rem;
+    color: var(--neon-pink);
+    text-shadow: 0 0 10px var(--neon-pink);
+    margin: 0 0 10px 0;
+}
+
+.hub-section {
+    width: 90%;
+    max-width: 760px;
+    margin-bottom: 18px;
+}
+
+.hub-section h3 {
+    color: var(--neon-blue);
+    text-shadow: 0 0 5px var(--neon-blue);
+    margin: 0 0 8px 0;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.hub-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+.hub-option {
+    font-family: 'Orbitron', sans-serif;
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(0, 255, 255, 0.4);
+    border-radius: 10px;
+    color: var(--text-color);
+    padding: 14px 10px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.hub-option:hover {
+    transform: scale(1.04);
+    border-color: var(--neon-blue);
+}
+
+.hub-option.selected {
+    border-color: var(--neon-pink);
+    box-shadow: 0 0 12px var(--neon-pink), inset 0 0 12px rgba(255, 0, 255, 0.25);
+}
+
+.hub-option-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--neon-pink);
+}
+
+.hub-option-desc {
+    font-family: sans-serif;
+    font-size: 0.85rem;
+    color: #bbb;
+}
+
+.hub-start {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.3rem;
+    background: var(--neon-blue);
+    color: var(--background-dark);
+    border: none;
+    padding: 14px 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: all 0.3s;
+}
+
+.hub-start:hover {
+    background: var(--neon-pink);
+    color: var(--text-color);
+    box-shadow: 0 0 15px var(--neon-pink);
+}
+
+.back-button {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    font-family: 'Orbitron', sans-serif;
+    background: none;
+    border: 1px solid var(--neon-blue);
+    color: var(--neon-blue);
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.back-button:hover {
+    background: rgba(0, 255, 255, 0.15);
+}
+
+.selection-title {
+    font-size: 1.3rem;
+    margin: -10px 0 15px 0;
+    color: var(--neon-blue);
+    text-shadow: 0 0 6px var(--neon-blue);
+}
+
 /* --- Seleção de personagem --- */
 #character-selection h1 {
     font-size: 3rem;
@@ -103,6 +212,13 @@ body {
 
 #select-maliketh {
     border-color: var(--neon-red);
+}
+
+/* Personagem já escolhido pelo outro jogador */
+.character-card.taken {
+    opacity: 0.3;
+    pointer-events: none;
+    filter: grayscale(1);
 }
 
 .character-card h2 {
@@ -182,21 +298,91 @@ body {
     z-index: 5;
 }
 
-.player-hud {
+.team-hud {
     width: 45%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.player-hud {
     background: rgba(0, 0, 0, 0.5);
     padding: 10px;
     border-radius: 5px;
-    border: 1px solid var(--neon-blue);
+    border: 1px solid var(--team-color);
 }
 
-#player2-hud {
+.team-0 { --team-color: #00ffff; }
+.team-1 { --team-color: #ff4dff; }
+
+.team-1 .player-hud {
     text-align: right;
 }
 
 .player-hud h3 {
     margin: 0 0 10px 0;
     font-size: 1.2rem;
+}
+
+.controller-tag {
+    font-size: 0.7rem;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: var(--team-color);
+    color: var(--background-dark);
+    vertical-align: middle;
+}
+
+.player-hud.dead {
+    opacity: 0.35;
+    filter: grayscale(1);
+}
+
+/* Placar compacto para 2v2 e 3v3: os cartões de cada time ficam lado a lado numa linha */
+#hud.hud-compact {
+    top: 8px;
+}
+
+.hud-compact .team-hud {
+    flex-direction: row;
+}
+
+.hud-compact .player-hud {
+    flex: 1;
+    min-width: 0;
+    padding: 4px 8px;
+}
+
+.hud-compact .player-hud h3 {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hud-compact .player-hud h3 {
+    font-size: 0.8rem;
+    margin: 0 0 3px 0;
+}
+
+.hud-compact .health-bar-outer,
+.hud-compact .energy-bar-outer,
+.hud-compact .transform-bar-outer {
+    height: 8px;
+    padding: 1px;
+    margin-top: 2px;
+}
+
+.hud-compact .bar-text {
+    display: none;
+}
+
+.hud-compact .status-effects {
+    min-height: 0;
+    margin-top: 2px;
+}
+
+.hud-compact .status-icon {
+    font-size: 13px;
 }
 
 .health-bar-outer,
@@ -225,6 +411,39 @@ body {
     transition: width 0.3s;
 }
 
+/* Barra de transformação do Kayn */
+.transform-bar-outer {
+    width: 100%;
+    height: 14px;
+    background-color: #333;
+    border: 1px solid #555;
+    border-radius: 5px;
+    margin-top: 5px;
+    padding: 2px;
+    position: relative;
+}
+
+.transform-bar-inner {
+    height: 100%;
+    background: linear-gradient(90deg, #6a4c9c, #b9b2d6);
+    border-radius: 3px;
+    transition: width 0.3s;
+}
+
+.transform-bar-inner.form-red {
+    background: linear-gradient(90deg, #8a1020, #ff3b4a);
+    box-shadow: 0 0 8px #ff2a3a;
+}
+
+.transform-bar-inner.form-blue {
+    background: linear-gradient(90deg, #1b4f99, #5fd0ff);
+    box-shadow: 0 0 8px #3fb8ff;
+}
+
+.transform-bar-outer .bar-text {
+    font-size: 11px;
+}
+
 .bar-text {
     position: absolute;
     left: 50%;
@@ -244,7 +463,7 @@ body {
     gap: 10px;
 }
 
-#player2-hud .status-effects {
+.team-1 .status-effects {
     justify-content: flex-end;
 }
 
@@ -277,10 +496,70 @@ body {
     transition: all 0.3s;
 }
 
+.game-over-buttons {
+    display: flex;
+    gap: 16px;
+}
+
+/* Controles na tela de carregamento (P1 vs P2 lado a lado) */
+.controls-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 10px 30px;
+}
+
+.controls-columns h4 {
+    margin: 0 0 6px 0;
+    font-size: 1.3rem;
+}
+
+.controls-p1 h4 { color: #00ffff; }
+.controls-p2 h4 { color: #ff4dff; }
+
+.controls-hint {
+    font-family: sans-serif;
+    text-align: center;
+    color: #bbb;
+    margin-top: 14px;
+}
+
 #game-over-screen button:hover {
     background-color: var(--neon-pink);
     color: var(--text-color);
     box-shadow: 0 0 15px var(--neon-pink);
+}
+
+/* --- Controle de Volume --- */
+#volume-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 6px 14px;
+    border: 1px solid var(--neon-blue);
+    border-radius: 20px;
+    background: rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
+}
+
+#volume-icon {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: 0;
+}
+
+#volume-slider {
+    width: 140px;
+    accent-color: var(--neon-pink);
+    cursor: pointer;
+}
+
+#volume-value {
+    min-width: 3.5em;
+    font-size: 0.9rem;
+    color: var(--neon-blue);
 }
 
 #win-text {

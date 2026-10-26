@@ -14,8 +14,45 @@
 <body>
 
     <div id="game-container">
-        <div id="character-selection" class="overlay">
+        <div id="hub-screen" class="overlay">
             <h1>CYBERNETIC FURY</h1>
+            <div class="hub-section">
+                <h3>Modo</h3>
+                <div class="hub-options" id="mode-options">
+                    <button class="hub-option selected" data-mode="1v1">
+                        <span class="hub-option-title">1 v 1</span>
+                        <span class="hub-option-desc">Duelo na rua neon</span>
+                    </button>
+                    <button class="hub-option" data-mode="2v2">
+                        <span class="hub-option-title">2 v 2</span>
+                        <span class="hub-option-desc">Arena com plataformas</span>
+                    </button>
+                    <button class="hub-option" data-mode="3v3">
+                        <span class="hub-option-title">3 v 3</span>
+                        <span class="hub-option-desc">Arena com plataformas</span>
+                    </button>
+                </div>
+            </div>
+            <div class="hub-section">
+                <h3>Jogadores</h3>
+                <div class="hub-options" id="vs-options">
+                    <button class="hub-option selected" data-vs="ai">
+                        <span class="hub-option-title">VOCÊ vs IA</span>
+                        <span class="hub-option-desc">Aliados e inimigos controlados pela IA</span>
+                    </button>
+                    <button class="hub-option" data-vs="pvp">
+                        <span class="hub-option-title">P1 vs P2</span>
+                        <span class="hub-option-desc">Dois jogadores no mesmo teclado</span>
+                    </button>
+                </div>
+            </div>
+            <button id="hub-start" class="hub-start">ESCOLHER LUTADORES ▶</button>
+        </div>
+
+        <div id="character-selection" class="overlay hidden">
+            <button id="back-to-hub" class="back-button">◀ Menu</button>
+            <h1>CYBERNETIC FURY</h1>
+            <p id="selection-title" class="selection-title"></p>
             <div class="selection-grid">
                 <div class="character-card" id="select-titan" data-lore="Titan foi um grande combatente da guerra que lutou bravamente pelo seu país e acabou perdendo muitos amigos. Sendo assim, acabou saindo, pois não estava mais gostando de ter tantas perdas. Hoje em dia, ele luta contra bandidos para proteger sua cidade.">
                     <h2>TITAN</h2>
@@ -53,6 +90,18 @@
                     <h2>MALIKETH</h2>
                     <canvas id="maliketh-thumbnail" class="thumbnail-canvas"></canvas>
                 </div>
+                <div class="character-card" id="select-kayn" data-lore="Um jovem assassino que encontrou Rhaast, uma foice viva que tenta dominar quem a empunha. A cada luta os dois disputam o controle: se Kayn estiver perdendo, Rhaast toma conta e ele vira uma fera vermelha; se estiver vencendo, ele domina a foice e vira o Assassino das Sombras azul.">
+                    <h2>KAYN</h2>
+                    <canvas id="kayn-thumbnail" class="thumbnail-canvas"></canvas>
+                </div>
+                <div class="character-card" id="select-celestia" data-lore="Uma guardiã que desceu das estrelas para proteger os que lutam ao seu lado. Por onde passa, flores de luz giram ao seu redor e fecham as feridas de seus aliados. Quando a batalha aperta, ela abre os braços e o círculo de cura se expande para abrigar o time inteiro.">
+                    <h2>CELESTIA</h2>
+                    <canvas id="celestia-thumbnail" class="thumbnail-canvas"></canvas>
+                </div>
+                <div class="character-card" id="select-flora" data-lore="Criada no coração de uma floresta que sobreviveu no meio da cidade de concreto, Flora aprendeu a falar com as plantas. Ela arremessa flores encantadas que voam sozinhas até o aliado mais próximo e desabrocham em cura.">
+                    <h2>FLORA</h2>
+                    <canvas id="flora-thumbnail" class="thumbnail-canvas"></canvas>
+                </div>
             </div>
             <div id="lore-tooltip" class="hidden"></div>
         </div>
@@ -60,50 +109,29 @@
         <div id="loading-screen" class="overlay hidden">
             <div class="loading-controls">
                 <h3>Controles</h3>
-                <div class="controls-grid">
-                    <p><strong>Movimento:</strong> A, D</p>
-                    <p><strong>Pulo:</strong> Espaço</p>
-                    <p><strong>Defesa:</strong> Segurar S</p>
-                    <p><strong>Soco Básico:</strong> Seta Esquerda</p>
-                    <p><strong>Ataque Especial:</strong> Seta Direita</p>
-                    <p><strong>Soco Forte:</strong> Frente, Frente + Seta Esq.</p>
-                </div>
+                <!-- Preenchido pelo jogo conforme o modo (1 jogador ou P1 vs P2) -->
+                <div id="controls-content"></div>
             </div>
         </div>
 
         <div id="game-over-screen" class="overlay hidden">
             <span id="win-text"></span>
-            <button id="restart-button">Jogar Novamente</button>
+            <div class="game-over-buttons">
+                <button id="rematch-button">Revanche</button>
+                <button id="restart-button">Menu</button>
+            </div>
         </div>
 
-        <div id="hud">
-            <div id="player1-hud" class="player-hud">
-                <h3 id="p1-name">JOGADOR 1</h3>
-                <div class="health-bar-outer">
-                    <div id="p1-health" class="health-bar-inner"></div>
-                    <span id="p1-health-text" class="bar-text"></span>
-                </div>
-                <div class="energy-bar-outer">
-                    <div id="p1-energy" class="energy-bar-inner"></div>
-                    <span id="p1-energy-text" class="bar-text"></span>
-                </div>
-                <div id="p1-status-effects" class="status-effects"></div>
-            </div>
-            <div id="player2-hud" class="player-hud">
-                <h3 id="p2-name">COMPUTADOR</h3>
-                <div class="health-bar-outer">
-                    <div id="p2-health" class="health-bar-inner"></div>
-                    <span id="p2-health-text" class="bar-text"></span>
-                </div>
-                <div class="energy-bar-outer">
-                    <div id="p2-energy" class="energy-bar-inner"></div>
-                    <span id="p2-energy-text" class="bar-text"></span>
-                </div>
-                <div id="p2-status-effects" class="status-effects"></div>
-            </div>
-        </div>
+        <!-- Placar montado pelo jogo: uma coluna por time, um cartão por lutador -->
+        <div id="hud"></div>
 
         <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <div id="volume-control">
+        <button id="volume-icon" title="Silenciar / ativar som">🔊</button>
+        <input type="range" id="volume-slider" min="0" max="100" value="70" aria-label="Volume">
+        <span id="volume-value">70%</span>
     </div>
 
     <!-- A ordem importa: personagens e áudio primeiro, lógica do jogo por último -->
