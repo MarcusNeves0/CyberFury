@@ -23,7 +23,91 @@ body {
     flex-direction: column;
 }
 
+/* Jogo + painel de controles lado a lado */
+#main-layout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    width: 100%;
+}
+
+#controls-panel {
+    flex: 0 0 270px;
+    align-self: stretch;
+    box-sizing: border-box;
+    padding: 18px;
+    border: 2px solid var(--neon-pink);
+    border-radius: 10px;
+    background: rgba(10, 10, 20, 0.85);
+    box-shadow: 0 0 14px rgba(255, 0, 255, 0.45);
+    overflow-y: auto;
+}
+
+#controls-panel h3 {
+    margin: 0 0 12px 0;
+    color: var(--neon-pink);
+    text-shadow: 0 0 8px var(--neon-pink);
+    text-align: center;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.panel-player {
+    margin-bottom: 16px;
+}
+
+.panel-player h4 {
+    margin: 0 0 8px 0;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.panel-player.p1 h4 { color: #00ffff; }
+.panel-player.p2 h4 { color: #ff4dff; }
+
+.panel-device {
+    font-family: sans-serif;
+    font-size: 0.75rem;
+    color: #bbb;
+    font-weight: normal;
+}
+
+.panel-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    font-family: sans-serif;
+    font-size: 0.85rem;
+}
+
+.panel-row .panel-key {
+    color: var(--neon-blue);
+    font-weight: bold;
+    text-align: right;
+}
+
+.panel-hint {
+    font-family: sans-serif;
+    font-size: 0.8rem;
+    color: #aaa;
+    line-height: 1.4;
+}
+
+/* Sem espaço sobrando: esconde o painel (os controles continuam na tela de carregamento) */
+@media (max-width: 1250px) {
+    #controls-panel {
+        display: none;
+    }
+}
+
 #game-container {
+    flex: 1 1 auto;
+    min-width: 0;
     width: 100%;
     max-width: 1280px;
     aspect-ratio: 16 / 9;
@@ -134,6 +218,71 @@ body {
     color: #bbb;
 }
 
+/* Item selecionado pelo controle nos menus */
+.pad-focus {
+    outline: 3px solid #fff3a0 !important;
+    outline-offset: 3px;
+    box-shadow: 0 0 18px #fff3a0 !important;
+}
+
+/* Escolha de teclado ou controle para cada jogador */
+.input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.input-label {
+    font-weight: 700;
+    width: 2.2em;
+}
+
+.input-row[data-player="p1"] .input-label { color: #00ffff; }
+.input-row[data-player="p2"] .input-label { color: #ff4dff; }
+
+.input-option {
+    font-family: 'Orbitron', sans-serif;
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(0, 255, 255, 0.4);
+    border-radius: 8px;
+    color: var(--text-color);
+    padding: 6px 14px;
+    cursor: pointer;
+}
+
+.input-option.selected {
+    border-color: var(--neon-pink);
+    box-shadow: 0 0 8px var(--neon-pink);
+}
+
+.gamepad-status {
+    font-family: sans-serif;
+    font-size: 0.9rem;
+}
+
+.gamepad-status.waiting {
+    color: #ffd23f;
+    animation: blink 1s infinite;
+}
+
+.gamepad-status.connected {
+    color: #6dff8a;
+}
+
+@keyframes blink {
+    50% { opacity: 0.35; }
+}
+
+.hub-start:disabled,
+.hub-start:disabled:hover {
+    background: #444;
+    color: #999;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
 .hub-start {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.3rem;
@@ -208,10 +357,6 @@ body {
 .character-card:hover {
     transform: scale(1.05);
     box-shadow: 0 0 15px var(--neon-pink), 0 0 30px var(--neon-blue);
-}
-
-#select-maliketh {
-    border-color: var(--neon-red);
 }
 
 /* Personagem já escolhido pelo outro jogador */

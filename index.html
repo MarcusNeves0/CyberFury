@@ -13,6 +13,7 @@
 </head>
 <body>
 
+    <div id="main-layout">
     <div id="game-container">
         <div id="hub-screen" class="overlay">
             <h1>CYBERNETIC FURY</h1>
@@ -21,15 +22,15 @@
                 <div class="hub-options" id="mode-options">
                     <button class="hub-option selected" data-mode="1v1">
                         <span class="hub-option-title">1 v 1</span>
-                        <span class="hub-option-desc">Duelo na rua neon</span>
+                        <span class="hub-option-desc">Duelo na arena menor</span>
                     </button>
                     <button class="hub-option" data-mode="2v2">
                         <span class="hub-option-title">2 v 2</span>
-                        <span class="hub-option-desc">Arena com plataformas</span>
+                        <span class="hub-option-desc">Arena neon com obstáculos</span>
                     </button>
                     <button class="hub-option" data-mode="3v3">
                         <span class="hub-option-title">3 v 3</span>
-                        <span class="hub-option-desc">Arena com plataformas</span>
+                        <span class="hub-option-desc">Arena neon com obstáculos</span>
                     </button>
                 </div>
             </div>
@@ -42,8 +43,23 @@
                     </button>
                     <button class="hub-option" data-vs="pvp">
                         <span class="hub-option-title">P1 vs P2</span>
-                        <span class="hub-option-desc">Dois jogadores no mesmo teclado</span>
+                        <span class="hub-option-desc">Dois jogadores (teclado ou controle)</span>
                     </button>
+                </div>
+            </div>
+            <div class="hub-section">
+                <h3>Controles</h3>
+                <div class="input-row" data-player="p1">
+                    <span class="input-label">P1</span>
+                    <button class="input-option selected" data-input="keyboard">⌨ Teclado</button>
+                    <button class="input-option" data-input="gamepad">🎮 Controle</button>
+                    <span class="gamepad-status"></span>
+                </div>
+                <div class="input-row hidden" data-player="p2">
+                    <span class="input-label">P2</span>
+                    <button class="input-option selected" data-input="keyboard">⌨ Teclado</button>
+                    <button class="input-option" data-input="gamepad">🎮 Controle</button>
+                    <span class="gamepad-status"></span>
                 </div>
             </div>
             <button id="hub-start" class="hub-start">ESCOLHER LUTADORES ▶</button>
@@ -102,6 +118,18 @@
                     <h2>FLORA</h2>
                     <canvas id="flora-thumbnail" class="thumbnail-canvas"></canvas>
                 </div>
+                <div class="character-card" id="select-nyx" data-lore="Nyx foi cobaia de um experimento que tentava criar soldados que se regeneram. Deu errado: ela não consegue mais se curar sozinha, só roubando a vida dos outros. Hoje usa essa maldição a favor de quem luta ao seu lado, arrancando energia vital dos inimigos com as garras e mandando para os aliados.">
+                    <h2>NYX</h2>
+                    <canvas id="nyx-thumbnail" class="thumbnail-canvas"></canvas>
+                </div>
+                <div class="character-card" id="select-viper" data-lore="Ex-atiradora de elite de uma corporação de armas químicas, Viper fugiu levando o protótipo de um rifle que dispara toxinas. Escondida atrás da máscara de gás, ela espera pacientemente o momento certo: quando a linha vermelha aparece, o alvo já está condenado.">
+                    <h2>VIPER</h2>
+                    <canvas id="viper-thumbnail" class="thumbnail-canvas"></canvas>
+                </div>
+                <div class="character-card" id="select-gear" data-lore="Gear perdeu o braço num acidente na fábrica e construiu um mecânico com sucata. Desde então, nunca mais entrou numa briga sozinho: sempre leva uma torreta montada por ele mesmo, que atira em qualquer um que se aproxime.">
+                    <h2>GEAR</h2>
+                    <canvas id="gear-thumbnail" class="thumbnail-canvas"></canvas>
+                </div>
             </div>
             <div id="lore-tooltip" class="hidden"></div>
         </div>
@@ -126,6 +154,13 @@
         <div id="hud"></div>
 
         <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <!-- Painel lateral com os controles (some em telas estreitas) -->
+    <aside id="controls-panel">
+        <h3>Controles</h3>
+        <div id="controls-panel-content"></div>
+    </aside>
     </div>
 
     <div id="volume-control">

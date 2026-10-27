@@ -92,6 +92,12 @@ const sfx = (() => {
         heal: t => { zap(t, 880, 1320, 0.15, -20, 'sine'); zap(t + 0.08, 1320, 1760, 0.18, -22, 'sine'); },
         celestia_special: t => { zap(t, 400, 1600, 0.8, -14, 'triangle'); whoosh(t, 2000, 8000, 0.8, -16, 0.5); zap(t + 0.2, 1046, 1568, 0.5, -20, 'sine'); },
         flora_special: t => { whoosh(t, 3000, 1500, 0.2, -16, 2); zap(t, 600, 900, 0.15, -20, 'sine'); },
+        nyx_special: t => { zap(t, 220, 70, 0.6, -12, 'sawtooth'); whoosh(t, 400, 3000, 0.5, -12, 1.5); zap(t + 0.1, 880, 440, 0.4, -20, 'sine'); },
+        viper_shot: t => { zap(t, 1800, 400, 0.08, -18, 'square'); whoosh(t, 7000, 2000, 0.06, -20, 1); },
+        viper_special: t => { whoosh(t, 1200, 5000, 1.0, -8, 0.6); whoosh(t + 0.15, 4000, 900, 0.8, -12, 0.8); zap(t, 180, 90, 0.6, -18, 'sawtooth'); },
+        gear_shot: t => { clang(t, 900, -24, 0.04); whoosh(t, 5000, 3000, 0.03, -22, 1); },
+        gear_special: t => { clang(t, 300, -12, 0.2); thump(t, 'E2', -10, 0.15); zap(t + 0.1, 400, 1200, 0.2, -18, 'square'); },
+        turret_shot: t => zap(t, 1400, 700, 0.05, -24, 'square'),
         kayn_transform: t => { thump(t, 'A0', -2, 1); zap(t, 100, 900, 0.8, -12, 'sawtooth'); whoosh(t, 300, 6000, 0.9, -8, 0.8); },
     };
 

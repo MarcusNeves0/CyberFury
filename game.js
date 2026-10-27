@@ -24,7 +24,11 @@ window.onload = () => {
 
     // --- Partida ---
     // mode: '1v1' | '2v2' | '3v3'; vs: 'ai' (você vs IA) | 'pvp' (P1 vs P2 no mesmo teclado)
-    const match = { mode: '1v1', vs: 'ai', picks: [] };
+    // inputs: cada humano joga no teclado ou num controle (index = qual controle o navegador detectou)
+    const match = {
+        mode: '1v1', vs: 'ai', picks: [],
+        inputs: { p1: { type: 'keyboard', index: null, name: '' }, p2: { type: 'keyboard', index: null, name: '' } },
+    };
     const teamSizeOf = mode => Number(mode[0]);
     const TEAM_COLORS = ['#00ffff', '#ff4dff'];
     const TEAM_NAMES = ['TIME CIANO', 'TIME ROSA'];
@@ -42,6 +46,9 @@ window.onload = () => {
         { id: 'kayn', name: 'Kayn' },
         { id: 'celestia', name: 'Celestia' },
         { id: 'flora', name: 'Flora' },
+        { id: 'nyx', name: 'Nyx' },
+        { id: 'viper', name: 'Viper' },
+        { id: 'gear', name: 'Gear' },
     ];
 
     // Teclas (cada ação aceita uma lista). Contra a IA o jogador pode andar com WASD ou setas;
@@ -52,9 +59,20 @@ window.onload = () => {
         p2: { up: ['arrowup'], down: ['arrowdown'], left: ['arrowleft'], right: ['arrowright'], punch: ['k'], special: ['l'], defend: ['ç', ';'] },
     };
 
+    // Botões do controle (mapeamento padrão do navegador; num PS5: 0 = ✕, 1 = ◯, 2 = □, 3 = △, 4 = L1, 5 = R1)
+    // Na luta: □ soco, △/R1 especial, ◯/L1 defesa. Nos menus: ✕ confirma, ◯ volta.
+    const PAD_BUTTONS = { punch: [2], defend: [1, 4], special: [3, 5] };
+    const PAD_CONFIRM = 0, PAD_BACK = 1;
+    const PAD_DPAD = { up: 12, down: 13, left: 14, right: 15 };
+    const STICK_DEADZONE = 0.25;
+
     // --- Entidades do Jogo ---
     let fighters = [], aiControllers = [], particles = [], projectiles = [];
     let obstacles = [], groundBalls = [];
+    let hazards = []; // áreas no chão que explodem depois de um aviso (Hades)
+    let shockwaves = []; // anéis visuais das ondas de choque do Titan
+    const TITAN_SHOCKWAVE_RADIUS = 75;
+    const TITAN_SHOCKWAVE_DAMAGE = 25;
     let arena = { left: 0, top: 0, right: WORLD_W, bottom: WORLD_H };
 
     const FIGHTER_RADIUS = 16;     // "pé" do lutador no chão (colisão)
@@ -63,23 +81,34 @@ window.onload = () => {
     const PUNCH_REACH = 46;        // alcance do soco (a partir da borda do lutador)
     const BLADE_REACH = 60;        // alcance de lâminas
     const STRONG_PUNCH_HOLD = 22;  // passos segurando o soco para sair o soco forte
-    const SPARK_CHAIN_RANGE = 300; // alcance máximo da corrente elétrica do Spark
+    const SPARK_CHAIN_RANGE = 340; // alcance máximo da corrente elétrica do Spark
+    const SPARK_CHAIN_START_DAMAGE = 4; // dano do primeiro segundo do choque (depois dobra: 4, 8, 16...)
+    const GENJI_PUNCH_DAMAGE = 20;   // corte da lâmina do Genji
+    const BLEED_DAMAGE = 14;         // sangramento: por segundo, por acúmulo (máximo 3 acúmulos)
+    const MALENIA_CUTS = 7;          // cortes da Waterfowl Dance
+    const MALENIA_CUT_DAMAGE = 25;   // dano de cada corte (175 no total)
+    const MALENIA_CUT_INTERVAL = 8;  // passos entre um corte e outro (~0,13 s)
+    const MALENIA_INTERRUPT_DAMAGE = 100; // levando isso de dano durante a dança, ela é interrompida
     const HADES_RANGE = 320;       // alcance da explosão do Hades
+    const HADES_RADIUS = 60;       // tamanho do círculo de fogo
+    const HADES_WARNING_FRAMES = 36; // 0,6 s de aviso antes de explodir
+    const HADES_DAMAGE = 90;
+    const AIM_ERROR = 0.08;        // erro aleatório da mira com previsão (radianos), para não ser perfeita
 
     // Kayn
     const KAYN_CHARGE_MAX = 200;      // barra de transformação
     const KAYN_CHARGE_ON_HIT = 4;     // ganha ao acertar
     const KAYN_CHARGE_ON_HURT = 3;    // ganha ao levar dano
-    const KAYN_ULT_COST = 150;        // energia da ultimate
-    const KAYN_ULT_COOLDOWN = 480;    // 8 segundos entre ultimates
+    const KAYN_ULT_COST = 120;        // energia da ultimate
+    const KAYN_ULT_COOLDOWN = 360;    // 6 segundos entre ultimates
     const KAYN_ULT_DURATION = 90;     // 1,5 segundo dentro do oponente
-    const KAYN_ULT_RANGE = 220;       // distância máxima para entrar no oponente
-    const KAYN_ULT_DAMAGE = 60;       // dano base da ultimate (forma vermelha: 3x)
+    const KAYN_ULT_RANGE = 260;       // distância máxima para entrar no oponente
+    const KAYN_ULT_DAMAGE = 80;       // dano base da ultimate (forma vermelha: 3x)
 
     // Healers
     const CELESTIA_AURA_RADIUS = 130;     // área de cura permanente ao redor dela
-    const CELESTIA_HEAL_ALLY = 9;         // cura por segundo em cada aliado dentro da área
-    const CELESTIA_HEAL_SELF = 5;         // cura por segundo nela mesma
+    const CELESTIA_HEAL_ALLY = 15;        // cura por segundo em cada aliado dentro da área
+    const CELESTIA_HEAL_SELF = 9;         // cura por segundo nela mesma
     const CELESTIA_ULT_MULTIPLIER = 3;    // ultimate: área 3x maior
     const CELESTIA_ULT_DURATION = 360;    // 6 segundos
     const CELESTIA_ULT_COST = 150;
@@ -87,9 +116,43 @@ window.onload = () => {
     const FLORA_FLOWER_COST = 100;        // energia por flor (~1 flor a cada 3,3 s)
     const FLORA_HEAL = 90;                // cura da flor num aliado
     const FLORA_SELF_HEAL = 40;           // cura da flor quando volta para ela (sem aliados)
+    const NYX_PUNCH_DAMAGE = 12;          // garras um pouco mais fortes que um soco comum
+    const NYX_PUNCH_HEAL = 15;            // cada acerto manda um orbe que cura isso no aliado mais ferido
+    const NYX_STRONG_HEAL = 35;           // orbe do soco forte
+    const NYX_LINK_COST = 120;            // Laço de Sangue
+    const NYX_LINK_COOLDOWN = 480;        // 8 segundos
+    const NYX_LINK_DURATION = 180;        // 3 segundos
+    const NYX_LINK_RANGE = 300;           // alcance para prender o inimigo (arrebenta um pouco além)
+    const NYX_LINK_TICK = 10;             // a cada meio segundo: inimigo perde isso, aliado recupera isso (20/s)
+    // Atiradores: o golpe básico é um tiro
+    const SHOOTERS = ['viper', 'gear'];
+    const VIPER_SHOT_DAMAGE = 22;
+    const VIPER_STRONG_DAMAGE = 45;
+    const VIPER_POISON_CHANCE = 0.2;      // 20% dos tiros envenenam
+    // Ultimate da Viper: nuvem tóxica que anda com ela e obriga quem está perto a se afastar
+    const VIPER_CLOUD_COST = 120;
+    const VIPER_CLOUD_COOLDOWN = 480;     // 8 segundos
+    const VIPER_CLOUD_DURATION = 300;     // 5 segundos
+    const VIPER_CLOUD_RADIUS = 140;
+    const VIPER_CLOUD_TICK_DAMAGE = 15;   // a cada 0,5 s (30 por segundo)
+    const POISON_MAX_STACKS = 3;
+    const POISON_DAMAGE = 6;              // por segundo, por acúmulo
+    const POISON_DURATION = 240;          // 4 segundos
+    const GEAR_NAIL_DAMAGE = 12;
+    const GEAR_TURRET_COST = 80;
+    const GEAR_TURRET_COOLDOWN = 90;      // 1,5 s entre uma torreta e outra (quem limita é a energia)
+    const GEAR_MAX_TURRETS = 3;           // a 4ª substitui a mais antiga
+    const TURRET_HP = 100;
+    const TURRET_DURATION = 720;          // 12 segundos
+    const TURRET_RANGE = 380;
+    const TURRET_DAMAGE = 8;
+    const TURRET_FIRE_INTERVAL = 30;      // um tiro a cada 0,5 s
+    let turrets = [];
+
     const MAX_HEALTH = 1000;
-    const HEALERS = ['celestia', 'flora'];
-    // TESTE: coloca pelo menos uma healer em cada time no 2v2/3v3. Mude para false para voltar ao sorteio livre.
+    const HEALERS = ['celestia', 'flora', 'nyx'];
+    let lifeOrbs = [];
+    // Regra do jogo: no 2v2 e no 3v3 todo time tem pelo menos uma healer (false = sorteio livre)
     const FORCE_HEALER_PER_TEAM = true;
     let healingFlowers = [], floatingTexts = [];
 
@@ -127,6 +190,25 @@ window.onload = () => {
         return best;
     }
 
+    // Onde o lutador vai estar daqui a alguns passos, se continuar andando igual
+    function predictPosition(fighter, steps) {
+        return {
+            x: Math.max(arena.left, Math.min(arena.right, fighter.x + (fighter.moveX + fighter.kbx) * steps)),
+            y: Math.max(arena.top, Math.min(arena.bottom, fighter.y + (fighter.moveY + fighter.kby) * steps)),
+        };
+    }
+
+    // Mira com previsão: aponta para onde o alvo vai estar quando o projétil chegar (com um pequeno erro)
+    function leadAim(shooter, speed) {
+        const target = shooter.target;
+        if (!alive(target)) return { ...shooter.aim };
+        let point = { x: target.x, y: target.y };
+        for (let i = 0; i < 2; i++) point = predictPosition(target, distance(shooter, point) / speed);
+        const dir = directionTo(shooter, point);
+        const angle = Math.atan2(dir.y, dir.x) + (Math.random() - 0.5) * 2 * AIM_ERROR;
+        return { x: Math.cos(angle), y: Math.sin(angle) };
+    }
+
     // Ponto mais próximo de um retângulo (para colisões com caixas)
     function closestPointOnRect(px, py, rect) {
         return {
@@ -145,7 +227,7 @@ window.onload = () => {
     // Posições em frações da arena, espelhadas para os dois lados ficarem justos
     const LAYOUTS = {
         duel: {
-            bounds: { left: 200, top: 130, right: 1080, bottom: 690 },
+            bounds: { left: 200, top: 165, right: 1080, bottom: 690 }, // topo mais baixo: o placar do 1v1 é maior
             trees: [[0.5, 0.18], [0.5, 0.84]],
             boxes: [[0.3, 0.42], [0.7, 0.58], [0.3, 0.7], [0.7, 0.3]],
         },
@@ -161,6 +243,10 @@ window.onload = () => {
         arena = { ...layout.bounds };
         const w = arena.right - arena.left, h = arena.bottom - arena.top;
         obstacles = [];
+        hazards = [];
+        shockwaves = [];
+        lifeOrbs = [];
+        turrets = [];
         for (const [fx, fy] of layout.trees) {
             obstacles.push({ kind: 'tree', x: arena.left + fx * w, y: arena.top + fy * h, r: 18 });
         }
@@ -193,10 +279,12 @@ window.onload = () => {
             this.y = shooter.y + direction.y * (FIGHTER_RADIUS + 6);
             this.vx = direction.x * speed;
             this.vy = direction.y * speed;
-            this.radius = { pumpkin: 22, rocket_punch: 14, tornado: 16, football: 10, maliketh_blade: 10 }[type] || 12;
-            this.life = type === 'football' ? 200 : 150;
+            this.radius = { pumpkin: 22, rocket_punch: 14, tornado: 16, football: 13, maliketh_blade: 10, viper_shot: 7, nail: 6, turret_shot: 6 }[type] || 12;
+            // Duração em passos (com a velocidade, define o alcance dos tiros)
+            this.life = { football: 200, viper_shot: 34, nail: 30, turret_shot: 34 }[type] || 150;
             this.bounces = 0;
             this.isReturning = false;
+            this.returnSpeed = 7; // bola puxada pelo especial volta mais rápido
             this.done = false;
         }
 
@@ -214,8 +302,11 @@ window.onload = () => {
             if (this.isReturning) {
                 // Volta para o Lorenzo
                 const dir = directionTo(this, this.shooter);
-                this.vx = dir.x * 7;
-                this.vy = dir.y * 7;
+                this.vx = dir.x * this.returnSpeed;
+                this.vy = dir.y * this.returnSpeed;
+                if (this.returnSpeed > 7 && this.life % 3 === 0) {
+                    particles.push(new Particle(this.x, this.y - 30, 'rgba(120, 200, 255, 0.7)', 0, { x: 0, y: 0 }));
+                }
                 if (!alive(this.shooter) || distance(this, this.shooter) < 24) {
                     if (alive(this.shooter)) this.shooter.ballCount = Math.min(this.shooter.maxBallCount, this.shooter.ballCount + 1);
                     this.done = true;
@@ -240,6 +331,25 @@ window.onload = () => {
             if (this.y > arena.bottom) { this.y = arena.bottom; this.bounceOrBreak(0, -1); }
             if (this.done) return;
 
+            // Torretas inimigas levam o tiro
+            const turret = turrets.find(t => t.team !== this.shooter.team && Math.hypot(this.x - t.x, this.y - t.y) < this.radius + t.radius);
+            if (turret) {
+                turret.takeHit(this.damage);
+                if (this.type === 'football') {
+                    // A bola do Lorenzo quica na torreta em vez de sumir (e sai de dentro dela, para não bater de novo)
+                    const away = normalize(this.x - turret.x, this.y - turret.y);
+                    this.x = turret.x + away.x * (turret.radius + this.radius + 1);
+                    this.y = turret.y + away.y * (turret.radius + this.radius + 1);
+                    const speed = Math.hypot(this.vx, this.vy);
+                    this.vx = away.x * speed;
+                    this.vy = away.y * speed;
+                    this.bounces++;
+                } else {
+                    this.done = true;
+                    return;
+                }
+            }
+
             // Obstáculos: árvores bloqueiam, caixas bloqueiam e levam dano
             for (const o of obstacles) {
                 if (!circleHitsObstacle(this.x, this.y, this.radius, o)) continue;
@@ -255,6 +365,7 @@ window.onload = () => {
                 } else {
                     this.done = true;
                     for (let i = 0; i < 6; i++) particles.push(new Particle(this.x, this.y - 30, '#ffb347', 0));
+                    if (this.type === 'rocket_punch') titanShockwave(this.x, this.y, this.shooter, null);
                 }
                 break;
             }
@@ -265,6 +376,31 @@ window.onload = () => {
         }
 
         draw() {
+            // Tiros de energia: um risco brilhante na direção do voo
+            const bolts = {
+                viper_shot: { color: '#6dff8a', length: 18, width: 3 },
+                nail: { color: '#cfd6e6', length: 10, width: 2 },
+                turret_shot: { color: '#3ff6ff', length: 12, width: 3 },
+            };
+            const bolt = bolts[this.type];
+            if (bolt) {
+                const dir = normalize(this.vx, this.vy);
+                ctx.save();
+                ctx.strokeStyle = bolt.color;
+                ctx.globalAlpha = 0.35;
+                ctx.lineWidth = bolt.width * 3;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(this.x - dir.x * bolt.length, this.y - 30 - dir.y * bolt.length);
+                ctx.lineTo(this.x, this.y - 30);
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+                ctx.lineWidth = bolt.width;
+                ctx.stroke();
+                ctx.restore();
+                return;
+            }
+
             const size = this.type === 'pumpkin' ? 44 : this.type === 'maliketh_blade' ? 22 : 30;
             ctx.save();
             ctx.translate(this.x, this.y - 30);
@@ -296,7 +432,10 @@ window.onload = () => {
             this.team = team;
             this.controller = controller;
             this.isPlayer = controller !== 'ai';
-            this.keymap = null; // definido em startGame para humanos
+            this.keymap = null; // definido em startGame para humanos no teclado
+            this.gamepadIndex = null; // definido em startGame para humanos no controle
+            this.padMove = { x: 0, y: 0 }; // analógico (pode ser menor que 1 para andar devagar)
+            this.padPressed = {}; // botões apertados no quadro anterior
             this.target = null; // inimigo atual (mais próximo, ou escolhido pela IA)
             this.isDead = false;
 
@@ -353,18 +492,21 @@ window.onload = () => {
             this.isChannelingSpecial = false;
             this.channelTarget = null;
             this.channelingTick = 0;
-            this.channelingDamage = 1;
+            this.channelingDamage = SPARK_CHAIN_START_DAMAGE;
             this.isDashing = false;
             this.dashDir = null;
             this.dashLeft = 0;
             this.consecutivePunchCounter = 0;
             this.attackSpeedMultiplier = 1;
             this.ryuComboTimer = 0;
-            this.ballCount = (this.characterType === 'lorenzo') ? 3 : 0;
+            this.ballCount = (this.characterType === 'lorenzo') ? 4 : 0;
             this.maxBallCount = 7; // máximo na mão, contando as que voltam e as que ele pega do chão
             this.isWaterfowlDancing = false;
             this.waterfowlHitCount = 0;
-            this.waterfowlHits = new Map(); // inimigo -> passos até poder cortar de novo
+            this.waterfowlLock = null;  // inimigo em que a dança grudou
+            this.waterfowlDamageTaken = 0; // dano levado durante a dança (interrompe ao passar do limite)
+            this.waterfowlAngle = 0;
+            this.waterfowlTick = 0;
             this.hitFlash = 0;
             this.specialCooldown = 0;
 
@@ -380,6 +522,94 @@ window.onload = () => {
             this.healTick = 0;
             this.celestiaUltTimer = 0;
             this.auraDisplayRadius = CELESTIA_AURA_RADIUS; // anima o crescimento da área
+
+            // Nyx
+            this.nyxLinkEnemy = null;
+            this.nyxLinkAlly = null;
+            this.nyxLinkTimer = 0;
+
+            // Veneno (Viper)
+            this.poisonStacks = 0;
+            this.poisonDuration = 0;
+            this.poisonTick = 0;
+
+            // Viper: nuvem tóxica
+            this.viperCloudTimer = 0;
+            this.viperCloudTick = 0;
+
+            // IA: torreta inimiga que está tentando quebrar (a mira vai nela em vez do lutador)
+            this.focusTurret = null;
+        }
+
+        applyPoison(stacks) {
+            this.poisonStacks = Math.min(POISON_MAX_STACKS, this.poisonStacks + stacks);
+            this.poisonDuration = POISON_DURATION;
+        }
+
+        // Atiradores: o golpe básico é um tiro com mira automática
+        shoot(strong) {
+            if (this.characterType === 'viper') {
+                projectiles.push(new Projectile(this, 'viper_shot', strong ? VIPER_STRONG_DAMAGE : VIPER_SHOT_DAMAGE, leadAim(this, 16), 16));
+                sfx.play('viper_shot');
+            } else {
+                // Gear: um prego; o tiro forte solta três em leque
+                const base = leadAim(this, 12);
+                const angles = strong ? [-0.22, 0, 0.22] : [0];
+                for (const a of angles) {
+                    const angle = Math.atan2(base.y, base.x) + a;
+                    projectiles.push(new Projectile(this, 'nail', GEAR_NAIL_DAMAGE, { x: Math.cos(angle), y: Math.sin(angle) }, 12));
+                }
+                sfx.play('gear_shot');
+            }
+        }
+
+        // Viper: solta a nuvem tóxica, que anda com ela por 5 s (ela continua podendo andar e atirar)
+        startViperCloud() {
+            this.isAttacking = false;
+            if (this.energy < VIPER_CLOUD_COST || this.specialCooldown > 0) return;
+            this.energy -= VIPER_CLOUD_COST;
+            this.specialCooldown = VIPER_CLOUD_COOLDOWN;
+            this.viperCloudTimer = VIPER_CLOUD_DURATION;
+            this.viperCloudTick = 0;
+            sfx.play('viper_special');
+        }
+
+        // A cada 0,5 s fere quem está dentro; a cada 1 s soma um acúmulo de veneno
+        updateViperCloud() {
+            if (this.viperCloudTimer <= 0) return;
+            this.viperCloudTimer--;
+            this.viperCloudTick++;
+            if (this.viperCloudTick % 30 !== 0) return;
+            for (const enemy of enemiesOf(this)) {
+                if (enemy.isInsideOpponent || distance(this, enemy) > VIPER_CLOUD_RADIUS + enemy.radius) continue;
+                const defended = enemy.takeDamage(VIPER_CLOUD_TICK_DAMAGE, { sound: 'hit' }, this);
+                if (!defended && this.viperCloudTick % 60 === 0) enemy.applyPoison(1);
+            }
+        }
+
+        // Torretas do Gear ainda de pé, da mais antiga para a mais nova
+        myTurrets() {
+            return turrets.filter(t => t.owner === this && !t.done);
+        }
+
+        // Gear: coloca uma mini-torreta um pouco à frente (até 3; a 4ª substitui a mais antiga)
+        placeTurret() {
+            this.isAttacking = false;
+            if (this.energy < GEAR_TURRET_COST || this.specialCooldown > 0) return;
+            this.energy -= GEAR_TURRET_COST;
+            this.specialCooldown = GEAR_TURRET_COOLDOWN;
+            const mine = this.myTurrets();
+            if (mine.length >= GEAR_MAX_TURRETS) mine[0].destroy(false);
+            // À frente dele; se já tiver torreta ali, procura um lugar livre girando em volta
+            const base = Math.atan2(this.aim.y, this.aim.x);
+            let x = this.x, y = this.y;
+            for (const offset of [0, 0.9, -0.9, 1.8, -1.8, Math.PI]) {
+                x = Math.max(arena.left, Math.min(arena.right, this.x + Math.cos(base + offset) * 40));
+                y = Math.max(arena.top, Math.min(arena.bottom, this.y + Math.sin(base + offset) * 40));
+                if (!turrets.some(t => !t.done && Math.hypot(t.x - x, t.y - y) < 32)) break;
+            }
+            turrets.push(new Turret(this, x, y));
+            sfx.play('gear_special');
         }
 
         // Altura do peito na tela (para projéteis, raios e efeitos)
@@ -501,10 +731,12 @@ window.onload = () => {
             this.kbx *= 0.82;
             this.kby *= 0.82;
 
-            // Mira automática no alvo
+            // Mira automática no alvo (ou na torreta que a IA está quebrando)
             const opponent = this.target;
-            if (opponent) {
-                this.aim = directionTo(this, opponent);
+            if (this.focusTurret && this.focusTurret.done) this.focusTurret = null;
+            const aimAt = this.focusTurret || opponent;
+            if (aimAt) {
+                this.aim = directionTo(this, aimAt);
                 if (Math.abs(this.aim.x) > 0.05) this.facing = this.aim.x > 0 ? 1 : -1;
             }
             this.moveX = 0;
@@ -530,7 +762,9 @@ window.onload = () => {
 
             // Movimento em 8 direções (mais lento atacando; parado defendendo)
             let move = { x: 0, y: 0 };
-            if (this.isPlayer) {
+            if (this.isPlayer && this.gamepadIndex !== null) {
+                move = this.padMove;
+            } else if (this.isPlayer) {
                 move = normalize((this.keys.right ? 1 : 0) - (this.keys.left ? 1 : 0), (this.keys.down ? 1 : 0) - (this.keys.up ? 1 : 0));
             } else {
                 move = this.aiMove;
@@ -593,26 +827,58 @@ window.onload = () => {
             this.energy = Math.min(this.maxEnergy, this.energy + 0.5);
         }
 
-        // Malenia: atravessa a arena cortando todo inimigo no caminho
+        // Malenia: corre até o alvo; ao encostar no primeiro inimigo, gruda nele e
+        // gira em volta dando os 7 cortes (Waterfowl Dance). Se não alcançar ninguém, erra.
         updateWaterfowl() {
-            const step = 13;
-            this.x += this.dashDir.x * step;
-            this.y += this.dashDir.y * step;
-            this.dashLeft -= step;
-            createParticleEffect(this, 'sword_slash');
-            for (const [enemy, wait] of this.waterfowlHits) this.waterfowlHits.set(enemy, wait - 1);
-            for (const enemy of enemiesOf(this)) {
-                if (distance(this, enemy) > this.radius + enemy.radius + 14) continue;
-                if ((this.waterfowlHits.get(enemy) || 0) > 0) continue;
-                enemy.isParalyzed = true;
-                enemy.paralysisTimer = 10;
-                enemy.takeDamage(20, { sound: 'blade_hit' }, this);
-                this.health = Math.min(MAX_HEALTH, this.health + 6);
-                this.waterfowlHitCount++;
-                this.waterfowlHits.set(enemy, 6);
+            const victim = this.waterfowlLock;
+            if (!victim) {
+                const step = 13;
+                // Persegue o alvo durante a corrida (senão quem está andando sai da frente)
+                if (alive(this.target)) this.dashDir = directionTo(this, this.target);
+                this.x += this.dashDir.x * step;
+                this.y += this.dashDir.y * step;
+                this.dashLeft -= step;
+                createParticleEffect(this, 'sword_slash');
+                const touched = enemiesOf(this).find(e => !e.isInsideOpponent && distance(this, e) <= this.radius + e.radius + 14);
+                if (touched) {
+                    this.waterfowlLock = touched;
+                    this.waterfowlAngle = Math.atan2(this.y - touched.y, this.x - touched.x);
+                    this.waterfowlTick = 0;
+                    this.waterfowlDamageTaken = 0;
+                }
+                const hitWall = this.x <= arena.left || this.x >= arena.right || this.y <= arena.top || this.y >= arena.bottom;
+                if (!touched && (this.dashLeft <= 0 || hitWall)) this.isWaterfowlDancing = false;
+                return;
             }
-            const hitWall = this.x <= arena.left || this.x >= arena.right || this.y <= arena.top || this.y >= arena.bottom;
-            if (this.waterfowlHitCount >= 7 || this.dashLeft <= 0 || hitWall) this.isWaterfowlDancing = false;
+
+            // Grudada: gira em volta do alvo e corta a cada poucos passos
+            if (!alive(victim) || victim.isInsideOpponent) { this.endWaterfowl(); return; }
+            this.waterfowlAngle += 0.45;
+            const orbit = victim.radius + this.radius + 6;
+            this.x = victim.x + Math.cos(this.waterfowlAngle) * orbit;
+            this.y = victim.y + Math.sin(this.waterfowlAngle) * orbit;
+            this.facing = victim.x > this.x ? 1 : -1;
+            // A vítima não fica atordoada: pode segurar a defesa para aparar os cortes
+            this.isAttacking = true; // faz a IA da vítima perceber o ataque e tentar defender
+            createParticleEffect(this, 'sword_slash');
+            this.waterfowlTick++;
+            if (this.waterfowlTick % MALENIA_CUT_INTERVAL === 0) {
+                const blocked = victim.takeDamage(MALENIA_CUT_DAMAGE, { sound: 'blade_hit' }, this);
+                if (!blocked) this.health = Math.min(MAX_HEALTH, this.health + 8); // corte aparado não cura
+                this.waterfowlHitCount++;
+                for (let i = 0; i < 5; i++) {
+                    particles.push(new Particle(victim.x, victim.chestY, '#ffd86b', 0, { x: (Math.random() - 0.5) * 6, y: (Math.random() - 0.5) * 6 }));
+                }
+                if (this.waterfowlHitCount >= MALENIA_CUTS) this.endWaterfowl();
+            }
+        }
+
+        endWaterfowl() {
+            this.isWaterfowlDancing = false;
+            this.waterfowlLock = null;
+            this.isAttacking = false;
+            this.x = Math.max(arena.left, Math.min(arena.right, this.x));
+            this.y = Math.max(arena.top, Math.min(arena.bottom, this.y));
         }
 
         // Ryu: avança em linha reta e explode no primeiro inimigo
@@ -625,7 +891,7 @@ window.onload = () => {
             const hit = enemiesOf(this).find(enemy => !enemy.isInsideOpponent && distance(this, enemy) < this.radius + enemy.radius + 8);
             if (hit) {
                 hit.vz = 9; // joga para cima
-                hit.takeDamage(50, {}, this);
+                hit.takeDamage(80, {}, this);
                 hit.isParalyzed = true;
                 hit.paralysisTimer = Math.max(hit.paralysisTimer, 20);
                 createParticleEffect(hit, 'ground_explosion', { x: hit.x, y: hit.y, count: 20 });
@@ -665,11 +931,22 @@ window.onload = () => {
                 }
             }
 
+            if (this.poisonDuration > 0) {
+                this.poisonDuration--;
+                this.poisonTick++;
+                if (this.poisonTick >= 60) {
+                    this.health -= POISON_DAMAGE * this.poisonStacks;
+                    this.poisonTick = 0;
+                    for (let i = 0; i < 3; i++) particles.push(new Particle(this.x + (Math.random() - 0.5) * 24, this.chestY, '#4cff7a', 0, { x: 0, y: -1.5 }));
+                }
+                if (this.poisonDuration === 0) this.poisonStacks = 0;
+            }
+
             if (this.bleedDuration > 0) {
                 this.bleedDuration--;
                 this.bleedTick++;
                 if (this.bleedTick >= 60) {
-                    this.health -= 8 * this.bleedStacks;
+                    this.health -= BLEED_DAMAGE * this.bleedStacks;
                     this.bleedTick = 0;
                     particles.push(new Particle(this.x + (Math.random() - 0.5) * 24, this.chestY, 'red', 0));
                 }
@@ -716,7 +993,7 @@ window.onload = () => {
         stopChanneling() {
             this.isChannelingSpecial = false;
             this.channelTarget = null;
-            this.channelingDamage = 1;
+            this.channelingDamage = SPARK_CHAIN_START_DAMAGE;
             this.channelingTick = 0;
         }
 
@@ -834,6 +1111,61 @@ window.onload = () => {
             }
         }
 
+        // Lorenzo: bolas paradas no chão ou quicando voltam voando até ele. Retorna se puxou alguma.
+        recallBalls() {
+            const recallSpeed = 13;
+            let recalled = 0;
+            for (const p of projectiles) {
+                if (p.type === 'football' && p.shooter === this && !p.isReturning) {
+                    p.isReturning = true;
+                    p.returnSpeed = recallSpeed;
+                    recalled++;
+                }
+            }
+            for (const ball of groundBalls) {
+                const p = new Projectile(this, 'football', 0, { x: 1, y: 0 });
+                p.x = ball.x;
+                p.y = ball.y;
+                p.isReturning = true;
+                p.returnSpeed = recallSpeed;
+                projectiles.push(p);
+                recalled++;
+            }
+            groundBalls = [];
+            if (recalled) {
+                for (let i = 0; i < 16; i++) {
+                    const angle = (i / 16) * Math.PI * 2;
+                    particles.push(new Particle(this.x, this.chestY, 'rgba(120, 200, 255, 0.8)', 0, { x: Math.cos(angle) * 3, y: Math.sin(angle) * 3 }));
+                }
+            }
+            return recalled > 0;
+        }
+
+        // Nyx: Laço de Sangue prende um inimigo a um aliado; a vida escorre de um para o outro por 3 s
+        startNyxLink() {
+            this.isAttacking = false;
+            const enemy = this.target;
+            if (!enemy || this.energy < NYX_LINK_COST || this.specialCooldown > 0 || distance(this, enemy) > NYX_LINK_RANGE) return;
+            this.energy -= NYX_LINK_COST;
+            this.specialCooldown = NYX_LINK_COOLDOWN;
+            this.nyxLinkEnemy = enemy;
+            this.nyxLinkAlly = mostHurtAlly(this);
+            this.nyxLinkTimer = NYX_LINK_DURATION;
+            sfx.play('nyx_special');
+        }
+
+        updateNyxLink() {
+            if (this.nyxLinkTimer <= 0) return;
+            this.nyxLinkTimer--;
+            const enemy = this.nyxLinkEnemy;
+            if (!alive(enemy) || distance(this, enemy) > NYX_LINK_RANGE + 80) { this.nyxLinkTimer = 0; return; }
+            if (!alive(this.nyxLinkAlly)) this.nyxLinkAlly = mostHurtAlly(this);
+            if (this.nyxLinkTimer % 30 === 0) {
+                enemy.takeDamage(NYX_LINK_TICK, { sound: 'hit' }, this);
+                if (this.nyxLinkAlly) this.nyxLinkAlly.heal(NYX_LINK_TICK, this);
+            }
+        }
+
         // Flora: joga uma flor que voa até o aliado mais próximo (ou volta para ela, se estiver sozinha)
         throwHealingFlower() {
             this.isAttacking = false;
@@ -882,6 +1214,14 @@ window.onload = () => {
             sfx.play(effect.sound || (damage >= 25 ? 'hit_heavy' : 'hit'));
             this.hitFlash = 12;
             if (this.isChannelingSpecial) this.stopChanneling(); // levar dano quebra o choque
+            // Malenia grudada: se o time da vítima bater forte nela, a dança é interrompida
+            if (this.isWaterfowlDancing && this.waterfowlLock) {
+                this.waterfowlDamageTaken += damage;
+                if (this.waterfowlDamageTaken >= MALENIA_INTERRUPT_DAMAGE) {
+                    this.endWaterfowl();
+                    floatingTexts.push(new FloatingText(this.x, this.y - this.height - 16, 'INTERROMPIDA!', '#ffd23f'));
+                }
+            }
 
             // Barra do Kayn: só golpes que causam dano de verdade contam (bloqueio e dano contínuo não)
             if (this.characterType === 'kayn') addKaynCharge(this, KAYN_CHARGE_ON_HURT);
@@ -907,13 +1247,18 @@ window.onload = () => {
 
             switch (type) {
                 case 'punch':
+                    if (SHOOTERS.includes(this.characterType)) {
+                        this.attackCooldown = this.characterType === 'viper' ? 28 : 16;
+                        this.shoot(false);
+                        break;
+                    }
                     if (this.characterType === 'lorenzo') {
                         // O "soco" do Lorenzo é um chute de bola
                         if (this.ballCount <= 0) { this.isAttacking = false; return; }
-                        this.attackCooldown = 20;
+                        this.attackCooldown = 14;
                         this.ballCount--;
                         sfx.play('lorenzo_kick');
-                        projectiles.push(new Projectile(this, 'football', 14, this.aim, 8));
+                        projectiles.push(new Projectile(this, 'football', 20, leadAim(this, 11), 11));
                         break;
                     }
                     if (this.characterType === 'jack' || this.characterType === 'malenia' || this.characterType === 'maliketh' || this.characterType === 'kayn') {
@@ -927,6 +1272,11 @@ window.onload = () => {
                     }
                     break;
                 case 'strong_punch':
+                    if (SHOOTERS.includes(this.characterType)) {
+                        this.attackCooldown = 45;
+                        this.shoot(true);
+                        break;
+                    }
                     this.attackCooldown = 45;
                     this.attackTimer = 8;
                     sfx.play(isBladeUser(this) ? 'blade_swing' : 'swing_heavy');
@@ -947,6 +1297,18 @@ window.onload = () => {
                         this.throwHealingFlower();
                         return;
                     }
+                    if (this.characterType === 'nyx') {
+                        this.startNyxLink();
+                        return;
+                    }
+                    if (this.characterType === 'viper') {
+                        this.startViperCloud();
+                        return;
+                    }
+                    if (this.characterType === 'gear') {
+                        this.placeTurret();
+                        return;
+                    }
                     const energyCost = specialCost(this.characterType);
                     if (this.energy < energyCost || this.specialCooldown > 0) { this.isAttacking = false; return; }
                     // A explosão do Hades precisa de um alvo por perto (senão não gasta energia)
@@ -959,29 +1321,30 @@ window.onload = () => {
                     sfx.play(`${this.characterType}_special`);
 
                     if (this.characterType === 'titan') {
-                        projectiles.push(new Projectile(this, 'rocket_punch', 55, this.aim, 10));
+                        projectiles.push(new Projectile(this, 'rocket_punch', 55, leadAim(this, 10), 10));
                         createParticleEffect(this, 'special');
                     } else if (this.characterType === 'hades') {
-                        const opponent = this.target;
-                        opponent.takeDamage(70, { type: 'burn' }, this);
-                        createParticleEffect(opponent, 'ground_explosion', { x: opponent.x, y: opponent.y, count: 20 });
+                        // Círculo de fogo no chão onde o alvo vai estar; explode depois do aviso
+                        const spot = predictPosition(this.target, HADES_WARNING_FRAMES * 0.6);
+                        hazards.push({ x: spot.x, y: spot.y, radius: HADES_RADIUS, timer: HADES_WARNING_FRAMES, owner: this });
                     } else if (this.characterType === 'jack') {
-                        projectiles.push(new Projectile(this, 'pumpkin', 30, this.aim, 6));
+                        projectiles.push(new Projectile(this, 'pumpkin', 30, leadAim(this, 6), 6));
                     } else if (this.characterType === 'genji') {
-                        projectiles.push(new Projectile(this, 'tornado', 70, this.aim, 8));
+                        projectiles.push(new Projectile(this, 'tornado', 90, leadAim(this, 8), 8));
                     } else if (this.characterType === 'ryu') {
                         this.isDashing = true;
-                        this.dashDir = { ...this.aim };
-                        this.dashLeft = 320;
+                        this.dashDir = leadAim(this, 16);
+                        this.dashLeft = 400;
                     } else if (this.characterType === 'lorenzo') {
-                        if (this.ballCount < this.maxBallCount) {
+                        // Bolas soltas pela arena? Puxa todas de volta. Se não houver, ganha uma bola nova.
+                        if (!this.recallBalls() && this.ballCount < this.maxBallCount) {
                             this.ballCount++;
                         }
                         this.isAttacking = false;
                     } else if (this.characterType === 'malenia') {
                         this.isWaterfowlDancing = true;
                         this.waterfowlHitCount = 0;
-                        this.waterfowlHits.clear();
+                        this.waterfowlLock = null;
                         this.dashDir = { ...this.aim };
                         this.dashLeft = 420;
                     } else if (this.characterType === 'maliketh') {
@@ -991,7 +1354,7 @@ window.onload = () => {
                                 setTimeout(() => {
                                     // Cada lâmina mira no inimigo atual (se ele ainda estiver de pé)
                                     if (gameState !== 'FIGHT' || this.isDead || !alive(this.target)) return;
-                                    projectiles.push(new Projectile(this, 'maliketh_blade', 70, directionTo(this, this.target), 8));
+                                    projectiles.push(new Projectile(this, 'maliketh_blade', 70, leadAim(this, 8), 8));
                                     sfx.play('blade_swing');
                                 }, i * 200);
                             }
@@ -1014,8 +1377,21 @@ window.onload = () => {
             return (dx * attacker.aim.x + dy * attacker.aim.y) / d > 0.25; // ~75° para cada lado
         };
 
+        // Quem está focando uma torreta acerta ela primeiro
+        const focus = attacker.focusTurret;
+        if (focus && !focus.done && inArc(focus.x, focus.y, focus.radius)) {
+            focus.takeHit(attacker.attackType === 'strong_punch' ? 35 : 15);
+            attacker.attackHit = true;
+            return;
+        }
         const defender = enemiesOf(attacker).find(e => !e.isInsideOpponent && inArc(e.x, e.y, e.radius));
         if (!defender) {
+            const turret = turrets.find(t => t.team !== attacker.team && inArc(t.x, t.y, t.radius));
+            if (turret) {
+                turret.takeHit(attacker.attackType === 'strong_punch' ? 35 : 15);
+                attacker.attackHit = true;
+                return;
+            }
             const box = obstacles.find(o => o.kind === 'box' && inArc(o.x + o.w / 2, o.y + o.h / 2, 14));
             if (box) {
                 damageBox(box, attacker.attackType === 'strong_punch' ? 25 : 10);
@@ -1029,10 +1405,10 @@ window.onload = () => {
         if (isBladeUser(attacker)) effect.sound = 'blade_hit';
         switch (attacker.attackType) {
             case 'punch':
-                damage = (attacker.characterType === 'malenia') ? 9 : 10;
+                damage = (attacker.characterType === 'malenia') ? 14 : (attacker.characterType === 'nyx') ? NYX_PUNCH_DAMAGE : (attacker.characterType === 'genji') ? GENJI_PUNCH_DAMAGE : 10;
                 if (attacker.kaynForm === 'red') damage = 12;
                 if (attacker.characterType === 'malenia') {
-                    attacker.health = Math.min(MAX_HEALTH, attacker.health + 6);
+                    attacker.health = Math.min(MAX_HEALTH, attacker.health + 8);
                 }
                 if (attacker.characterType === 'hades') { effect.type = 'burn'; }
                 if (attacker.characterType === 'jack') {
@@ -1044,7 +1420,7 @@ window.onload = () => {
                 }
                 if (attacker.characterType === 'genji') {
                     attacker.bleedPunchCounter++;
-                    if (attacker.bleedPunchCounter >= 4) {
+                    if (attacker.bleedPunchCounter >= 3) {
                         effect.type = 'bleed';
                         attacker.bleedPunchCounter = 0;
                     }
@@ -1070,6 +1446,10 @@ window.onload = () => {
         } else if (damage > 0) {
             attacker.energy = Math.min(1000, attacker.energy + 15);
             defender.push(attacker.aim, attacker.attackType === 'strong_punch' ? 4 : 1.5);
+            // Nyx: cada acerto rouba vida e manda um orbe para o aliado mais ferido
+            if (attacker.characterType === 'nyx') {
+                lifeOrbs.push(new LifeOrb(defender, attacker, attacker.attackType === 'strong_punch' ? NYX_STRONG_HEAL : NYX_PUNCH_HEAL));
+            }
         }
         attacker.attackHit = true;
     }
@@ -1130,6 +1510,200 @@ window.onload = () => {
         draw() {
             drawFlower(this.x, this.y, 8, this.spin, '#ff7ac0', '#ffe34a');
         }
+    }
+
+    // Torreta do Gear: atira sozinha no inimigo mais próximo; pode ser destruída
+    class Turret {
+        constructor(owner, x, y) {
+            this.owner = owner;
+            this.team = owner.team;
+            this.isTurret = true;
+            this.x = x;
+            this.y = y;
+            this.z = 0;
+            this.height = 30;
+            this.radius = 14;
+            this.hp = TURRET_HP;
+            this.life = TURRET_DURATION;
+            this.fireCooldown = 20;
+            this.target = null;
+            this.aim = { x: owner.aim.x, y: owner.aim.y };
+            this.hitFlash = 0;
+            this.done = false;
+        }
+
+        get chestY() { return this.y - 20; }
+
+        update() {
+            this.life--;
+            if (this.hitFlash > 0) this.hitFlash--;
+            if (this.life <= 0) { this.destroy(false); return; }
+            // Inimigo mais próximo dentro do alcance
+            let best = null, bestDistance = TURRET_RANGE;
+            for (const enemy of fighters) {
+                if (!alive(enemy) || enemy.team === this.team || enemy.isInsideOpponent) continue;
+                const d = distance(this, enemy);
+                if (d < bestDistance) { best = enemy; bestDistance = d; }
+            }
+            this.target = best;
+            if (!best) return;
+            this.aim = directionTo(this, best);
+            this.fireCooldown--;
+            if (this.fireCooldown <= 0) {
+                projectiles.push(new Projectile(this, 'turret_shot', TURRET_DAMAGE, leadAim(this, 12), 12));
+                sfx.play('turret_shot');
+                this.fireCooldown = TURRET_FIRE_INTERVAL;
+            }
+        }
+
+        takeHit(damage) {
+            this.hp -= damage;
+            this.hitFlash = 8;
+            sfx.play('block');
+            if (this.hp <= 0) this.destroy(true);
+        }
+
+        destroy(exploded) {
+            if (this.done) return;
+            this.done = true;
+            for (let i = 0; i < (exploded ? 20 : 8); i++) {
+                particles.push(new Particle(this.x, this.y - 15, i % 2 ? '#9aa3b8' : '#3ff6ff', 0));
+            }
+            if (exploded) sfx.play('hit_heavy');
+        }
+
+        draw() {
+            const color = TEAM_COLORS[this.team];
+            // Base no chão com o anel do time
+            ctx.fillStyle = 'rgba(5, 0, 15, 0.5)';
+            ctx.beginPath(); ctx.ellipse(this.x, this.y, 16, 6, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.ellipse(this.x, this.y, 18, 7, 0, 0, Math.PI * 2); ctx.stroke();
+            // Tripé
+            ctx.strokeStyle = '#5a6270';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(this.x - 10, this.y); ctx.lineTo(this.x, this.y - 14);
+            ctx.moveTo(this.x + 10, this.y); ctx.lineTo(this.x, this.y - 14);
+            ctx.moveTo(this.x, this.y + 3); ctx.lineTo(this.x, this.y - 14);
+            ctx.stroke();
+            // Cabeça girando para o alvo, com o cano
+            ctx.translate(this.x, this.y - 20);
+            ctx.fillStyle = this.hitFlash > 0 ? '#ffffff' : '#9aa3b8';
+            ctx.fillRect(-9, -7, 18, 14);
+            ctx.strokeStyle = '#1a1024';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(-9, -7, 18, 14);
+            ctx.rotate(Math.atan2(this.aim.y, this.aim.x));
+            ctx.fillStyle = '#4a5060';
+            ctx.fillRect(4, -3, 14, 6);
+            ctx.fillStyle = '#3ff6ff';
+            ctx.fillRect(-3, -3, 5, 5); // luz
+            ctx.restore();
+            // Vida e tempo restante
+            const top = this.y - 36;
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+            ctx.fillRect(this.x - 16, top, 32, 5);
+            ctx.fillStyle = color;
+            ctx.fillRect(this.x - 15, top + 1, 30 * Math.max(0, this.hp / TURRET_HP), 3);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.fillRect(this.x - 15, top + 5, 30 * (this.life / TURRET_DURATION), 1);
+        }
+    }
+
+    // Nuvem tóxica da Viper: mancha verde no chão com borda pulsando e bolhas subindo
+    function drawViperCloud(viper) {
+        const fade = Math.min(1, viper.viperCloudTimer / 30); // some aos poucos no final
+        const pulse = 1 + Math.sin(Date.now() / 120) * 0.04;
+        const r = VIPER_CLOUD_RADIUS * pulse;
+        ctx.save();
+        const gradient = ctx.createRadialGradient(viper.x, viper.y, 10, viper.x, viper.y, r);
+        gradient.addColorStop(0, `rgba(76, 255, 122, ${0.45 * fade})`);
+        gradient.addColorStop(0.75, `rgba(40, 200, 80, ${0.32 * fade})`);
+        gradient.addColorStop(1, `rgba(40, 200, 80, ${0.08 * fade})`);
+        ctx.fillStyle = gradient;
+        ctx.beginPath(); ctx.arc(viper.x, viper.y, r, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = `rgba(130, 255, 150, ${0.95 * fade})`;
+        ctx.lineWidth = 3;
+        ctx.setLineDash([10, 8]);
+        ctx.lineDashOffset = Date.now() / 50;
+        ctx.stroke();
+        ctx.restore();
+        // Bolhas tóxicas subindo de pontos aleatórios da nuvem
+        if (Math.random() < 0.5) {
+            const angle = Math.random() * Math.PI * 2, dist = Math.random() * VIPER_CLOUD_RADIUS;
+            particles.push(new Particle(viper.x + Math.cos(angle) * dist, viper.y + Math.sin(angle) * dist * 0.8, 'rgba(110, 255, 140, 0.6)', 0, { x: 0, y: -0.8 }));
+        }
+    }
+
+    // Aliado vivo com menor porcentagem de vida (contando quem pergunta); null se todos estão cheios
+    function mostHurtAlly(fighter) {
+        const team = fighters.filter(f => alive(f) && f.team === fighter.team && !f.isInsideOpponent);
+        const hurt = team.filter(f => f.health < MAX_HEALTH).sort((a, b) => a.health - b.health);
+        return hurt[0] || null;
+    }
+
+    // Orbe de sangue da Nyx: sai de quem ela acertou e voa até o aliado mais ferido
+    class LifeOrb {
+        constructor(from, owner, amount) {
+            this.owner = owner;
+            this.amount = amount;
+            this.x = from.x;
+            this.y = from.chestY;
+            this.target = mostHurtAlly(owner);
+            this.life = 120;
+            this.done = !this.target; // ninguém precisa de cura: o orbe nem sai
+        }
+
+        update() {
+            this.life--;
+            if (!alive(this.target)) this.target = mostHurtAlly(this.owner);
+            if (!this.target || this.life <= 0) { this.done = true; return; }
+            const dx = this.target.x - this.x, dy = this.target.chestY - this.y;
+            const d = Math.hypot(dx, dy);
+            if (d < 16) {
+                this.target.heal(this.amount, this.owner);
+                this.done = true;
+                return;
+            }
+            this.x += dx / d * 10;
+            this.y += dy / d * 10;
+            if (this.life % 2 === 0) particles.push(new Particle(this.x, this.y, 'rgba(255, 42, 74, 0.6)', 0, { x: 0, y: 0 }));
+        }
+
+        draw() {
+            ctx.save();
+            ctx.fillStyle = 'rgba(255, 42, 74, 0.35)';
+            ctx.beginPath(); ctx.arc(this.x, this.y, 8, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ff5a74';
+            ctx.beginPath(); ctx.arc(this.x, this.y, 4, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    // Laço de Sangue: fio vermelho pulsando inimigo -> Nyx -> aliado
+    function drawNyxLink(nyx) {
+        const pulse = 0.5 + Math.sin(Date.now() / 70) * 0.3;
+        const segment = (a, b) => {
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.chestY);
+            ctx.lineTo(b.x, b.chestY);
+            ctx.stroke();
+        };
+        ctx.save();
+        ctx.strokeStyle = `rgba(255, 42, 74, ${0.25 * pulse})`;
+        ctx.lineWidth = 9;
+        segment(nyx.nyxLinkEnemy, nyx);
+        if (nyx.nyxLinkAlly && nyx.nyxLinkAlly !== nyx) segment(nyx, nyx.nyxLinkAlly);
+        ctx.strokeStyle = `rgba(255, 90, 116, ${0.6 + pulse * 0.4})`;
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([10, 6]);
+        ctx.lineDashOffset = Date.now() / 25; // o tracejado "escorre" do inimigo para o aliado
+        segment(nyx.nyxLinkEnemy, nyx);
+        if (nyx.nyxLinkAlly && nyx.nyxLinkAlly !== nyx) segment(nyx, nyx.nyxLinkAlly);
+        ctx.restore();
     }
 
     // Número que sobe e some (ex.: "+60" verde na cura)
@@ -1207,8 +1781,9 @@ window.onload = () => {
     // Energia gasta pelo especial de cada personagem (Spark, Kayn e healers têm regras próprias)
     function specialCost(characterType) {
         return {
-            malenia: 300, maliketh: 300, lorenzo: 150, genji: 100, ryu: 100, jack: 90,
-            kayn: KAYN_ULT_COST, celestia: CELESTIA_ULT_COST, flora: FLORA_FLOWER_COST,
+            malenia: 150, maliketh: 300, lorenzo: 150, genji: 100, ryu: 100, jack: 90,
+            kayn: KAYN_ULT_COST, celestia: CELESTIA_ULT_COST, flora: FLORA_FLOWER_COST, nyx: NYX_LINK_COST,
+            viper: VIPER_CLOUD_COST, gear: GEAR_TURRET_COST,
         }[characterType] || 45;
     }
 
@@ -1417,12 +1992,27 @@ window.onload = () => {
             const d = distance(me, opponent);
             const meleeRange = (isBladeUser(me) ? BLADE_REACH : PUNCH_REACH) + me.radius + opponent.radius - 6;
             // Só tenta o especial se tiver a energia de verdade (antes tentava com 45 e perdia a vez)
-            const canUseSpecial = !['kayn', 'celestia', 'flora', 'spark'].includes(me.characterType) &&
+            const canUseSpecial = !['kayn', 'celestia', 'flora', 'spark', 'nyx', 'viper', 'gear'].includes(me.characterType) &&
                 me.energy >= specialCost(me.characterType) && me.specialCooldown <= 0;
             if (Math.random() < 0.1) this.strafeSign *= -1;
 
             me.aiMove = { x: 0, y: 0 };
             me.isDefending = false;
+
+            // Torreta inimiga perto (ou mais perto que o alvo): vai lá e quebra antes de seguir
+            me.focusTurret = null;
+            const enemyTurret = turrets
+                .filter(t => t.team !== me.team && !t.done)
+                .sort((a, b) => distance(me, a) - distance(me, b))[0];
+            if (enemyTurret && !SHOOTERS.includes(me.characterType) && !HEALERS.includes(me.characterType) && me.characterType !== 'lorenzo') {
+                const turretDistance = distance(me, enemyTurret);
+                if (turretDistance < 160 || (turretDistance < d && turretDistance < 260)) {
+                    me.focusTurret = enemyTurret;
+                    if (turretDistance > meleeRange - 10) this.moveToward(enemyTurret);
+                    else me.attack('punch'); // fica parado batendo até quebrar
+                    return;
+                }
+            }
 
             // Ação defensiva (menos provável)
             if (opponent.isAttacking && d < 120 && Math.random() < 0.5 && me.defenseResetCooldown <= 0) {
@@ -1436,6 +2026,16 @@ window.onload = () => {
                 // Joga a flor quando alguém do time (ou ela, se estiver sozinha) está abaixo de 80% de vida
                 const needsHeal = allies.length ? allies.some(a => a.health < MAX_HEALTH * 0.8) : me.health < MAX_HEALTH * 0.8;
                 if (needsHeal && me.energy >= FLORA_FLOWER_COST && me.specialCooldown <= 0) {
+                    me.attack('special');
+                    return;
+                }
+            }
+            if (me.characterType === 'nyx') {
+                // Laço quando alguém do time (ou ela, sozinha) está abaixo de 70% e há inimigo no alcance.
+                // Fora isso ela luta: é batendo que ela cura.
+                const team = [me, ...allies];
+                const needsHeal = team.some(f => f.health < MAX_HEALTH * 0.7);
+                if (needsHeal && d < NYX_LINK_RANGE * 0.9 && me.energy >= NYX_LINK_COST && me.specialCooldown <= 0) {
                     me.attack('special');
                     return;
                 }
@@ -1490,8 +2090,55 @@ window.onload = () => {
                 }
             }
 
+            // Atiradores: mantêm distância, recuam de quem chega perto e atiram de longe
+            if (SHOOTERS.includes(me.characterType)) {
+                const isViper = me.characterType === 'viper';
+                const shotRange = isViper ? 480 : 330;
+                const comfort = isViper ? 320 : 220;
+                // Viper solta a nuvem quando alguém chega perto (ou quando 2+ inimigos estão por perto)
+                if (isViper && me.energy >= VIPER_CLOUD_COST && me.specialCooldown <= 0) {
+                    const close = enemiesOf(me).filter(e => distance(me, e) < VIPER_CLOUD_RADIUS * 1.5).length;
+                    if (d < VIPER_CLOUD_RADIUS || close >= 2) {
+                        me.attack('special');
+                        return;
+                    }
+                }
+                // Com a nuvem ativa, não precisa fugir de quem está perto: fica atirando
+                if (isViper && me.viperCloudTimer > 0) {
+                    if (d < shotRange) me.attack('punch');
+                    this.strafe(opponent);
+                    return;
+                }
+                // Gear monta até 3 torretas quando há inimigo por perto
+                const myTurrets = isViper ? [] : me.myTurrets();
+                if (!isViper && myTurrets.length < GEAR_MAX_TURRETS && d < TURRET_RANGE && me.energy >= GEAR_TURRET_COST && me.specialCooldown <= 0) {
+                    me.attack('special');
+                    return;
+                }
+                if (d < shotRange) me.attack('punch');
+                // Gear com torretas: luta perto da mais nova, do lado oposto ao inimigo (quem chega perto toma tiro de todas)
+                if (myTurrets.length) {
+                    const anchor = myTurrets[myTurrets.length - 1];
+                    const away = directionTo(opponent, anchor);
+                    const spot = { x: anchor.x + away.x * 50, y: anchor.y + away.y * 50 };
+                    if (distance(me, spot) > 30) this.moveToward(spot);
+                    else this.strafe(opponent);
+                    return;
+                }
+                if (d < comfort * 0.6) this.moveAway(opponent);
+                else if (d > shotRange * 0.9) this.moveToward(opponent);
+                else this.strafe(opponent);
+                return;
+            }
+
             // Lorenzo joga de longe: chuta bola enquanto tiver, mantendo distância; o especial (bola nova) só quando faltar
             if (me.characterType === 'lorenzo') {
+                // Com poucas bolas na mão e outras soltas pela arena, puxa todas de volta
+                const ballsOut = groundBalls.length + projectiles.filter(p => p.type === 'football' && p.shooter === me && !p.isReturning).length;
+                if (me.ballCount <= 2 && ballsOut >= 2 && canUseSpecial) {
+                    me.attack('special');
+                    return;
+                }
                 if (me.ballCount > 0 && d < 320) {
                     me.attack('punch');
                     if (d < 120) this.moveAway(opponent); else this.strafe(opponent);
@@ -1602,6 +2249,7 @@ window.onload = () => {
         if (fighter.bleedStacks > 0) html += `<span class="status-icon">🩸<span class="stack-count">${fighter.bleedStacks}</span></span>`;
         if (fighter.burnDuration > 0) html += `<span class="status-icon">🌋</span>`;
         if (fighter.curseStacks > 0) html += `<span class="status-icon">💀<span class="stack-count">${fighter.curseStacks}</span></span>`;
+        if (fighter.poisonStacks > 0) html += `<span class="status-icon">🧪<span class="stack-count">${fighter.poisonStacks}</span></span>`;
         if (fighter.characterType === 'ryu' && fighter.attackSpeedMultiplier > 1) {
             html += `<span class="status-icon">✨<span class="stack-count">x${fighter.attackSpeedMultiplier.toFixed(1)}</span></span>`;
         }
@@ -1620,6 +2268,8 @@ window.onload = () => {
         fighter.isDefending = false;
         fighter.attackTimer = 0;
         if (fighter.isInsideOpponent && fighter.kaynHost) fighter.exitHost(fighter.kaynHost);
+        turrets.filter(t => t.owner === fighter).forEach(t => t.destroy(true)); // as torretas caem junto com o Gear
+        fighter.viperCloudTimer = 0;
         sfx.play('ko');
         for (let i = 0; i < 25; i++) {
             particles.push(new Particle(fighter.x, fighter.chestY, TEAM_COLORS[fighter.team], 0, { x: (Math.random() - 0.5) * 7, y: (Math.random() - 0.5) * 7 }));
@@ -1868,6 +2518,12 @@ window.onload = () => {
             }
         }
         for (const f of solid) {
+            // Torretas são sólidas
+            for (const t of turrets) {
+                const d = Math.hypot(f.x - t.x, f.y - t.y);
+                const overlap = f.radius + t.radius - d;
+                if (overlap > 0 && d > 0) { f.x += (f.x - t.x) / d * overlap; f.y += (f.y - t.y) / d * overlap; }
+            }
             for (const o of obstacles) {
                 if (o.kind === 'tree') {
                     const d = Math.hypot(f.x - o.x, f.y - o.y);
@@ -1895,6 +2551,16 @@ window.onload = () => {
             const target = enemiesOf(projectile.shooter).find(enemy =>
                 !enemy.isInsideOpponent && distance(projectile, enemy) < projectile.radius + enemy.radius + 4);
             if (!target) continue;
+            // Tiro da torreta conta como do Gear (barra do Kayn, maldição etc.)
+            const attacker = projectile.shooter.isTurret ? projectile.shooter.owner : projectile.shooter;
+
+            if (projectile.type === 'viper_shot') {
+                const defended = target.takeDamage(projectile.damage, {}, attacker);
+                // 20% de chance de envenenar
+                if (!defended && Math.random() < VIPER_POISON_CHANCE) target.applyPoison(1);
+                projectile.done = true;
+                continue;
+            }
 
             const dir = normalize(projectile.vx, projectile.vy);
             if (projectile.type === 'tornado' && !target.isDefending) {
@@ -1913,8 +2579,9 @@ window.onload = () => {
                 continue;
             }
 
-            const defended = target.takeDamage(projectile.damage, {}, projectile.shooter);
+            const defended = target.takeDamage(projectile.damage, {}, attacker);
             // Soco-foguete do Titan: empurra e atordoa por 0,3 s (se não for bloqueado)
+            if (projectile.type === 'rocket_punch') titanShockwave(target.x, target.y, projectile.shooter, target);
             if (projectile.type === 'rocket_punch' && !defended) {
                 target.push(dir, 12);
                 target.isParalyzed = true;
@@ -1940,6 +2607,75 @@ window.onload = () => {
         groundBalls = groundBalls.filter(b => !b.taken);
     }
 
+    // Onda de choque do foguete do Titan: empurra, atordoa e fere os inimigos em volta da explosão
+    // (o alvo atingido em cheio já levou o dano do foguete e não leva o da onda)
+    function titanShockwave(x, y, titan, directHit) {
+        shockwaves.push({ x, y, life: 20 });
+        for (const enemy of fighters) {
+            if (!alive(enemy) || enemy.team === titan.team || enemy === directHit || enemy.isInsideOpponent) continue;
+            const d = Math.hypot(enemy.x - x, enemy.y - y);
+            if (d > TITAN_SHOCKWAVE_RADIUS + enemy.radius) continue;
+            const defended = enemy.takeDamage(TITAN_SHOCKWAVE_DAMAGE, {}, titan);
+            if (defended) continue;
+            enemy.push(d > 0 ? { x: (enemy.x - x) / d, y: (enemy.y - y) / d } : { x: 1, y: 0 }, 9);
+            enemy.isParalyzed = true;
+            enemy.paralysisTimer = Math.max(enemy.paralysisTimer, 18);
+        }
+    }
+
+    function drawShockwaves() {
+        for (const wave of shockwaves) {
+            const progress = 1 - wave.life / 20;
+            ctx.save();
+            ctx.strokeStyle = `rgba(255, 150, 40, ${1 - progress})`;
+            ctx.lineWidth = 4 - progress * 3;
+            ctx.beginPath();
+            ctx.ellipse(wave.x, wave.y, TITAN_SHOCKWAVE_RADIUS * progress, TITAN_SHOCKWAVE_RADIUS * progress * 0.6, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+
+    // Explosão do Hades: depois do aviso, atinge todos os inimigos dentro do círculo
+    function updateHazards() {
+        for (const hazard of hazards) {
+            hazard.timer--;
+            if (hazard.timer > 0) continue;
+            for (const enemy of fighters) {
+                if (!alive(enemy) || enemy.team === hazard.owner.team || enemy.isInsideOpponent) continue;
+                if (Math.hypot(enemy.x - hazard.x, enemy.y - hazard.y) <= hazard.radius + enemy.radius) {
+                    enemy.takeDamage(HADES_DAMAGE, { type: 'burn' }, hazard.owner);
+                }
+            }
+            sfx.play('explosion');
+            createParticleEffect(null, 'ground_explosion', { x: hazard.x, y: hazard.y, count: 24 });
+        }
+        hazards = hazards.filter(h => h.timer > 0);
+    }
+
+    // Aviso no chão: círculo de fogo que vai enchendo até explodir
+    function drawHazards() {
+        for (const hazard of hazards) {
+            const progress = 1 - hazard.timer / HADES_WARNING_FRAMES;
+            ctx.save();
+            ctx.fillStyle = `rgba(255, 90, 0, ${0.12 + progress * 0.25})`;
+            ctx.beginPath();
+            ctx.arc(hazard.x, hazard.y, hazard.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255, 160, 40, 0.9)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([8, 6]);
+            ctx.lineDashOffset = -Date.now() / 40;
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = 'rgba(255, 220, 80, 0.35)';
+            ctx.beginPath();
+            ctx.arc(hazard.x, hazard.y, hazard.radius * progress, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
     // --- Laço Principal ---
     // A lógica roda sempre a 60 passos por segundo, não importa a taxa de quadros do monitor
     const STEP_MS = 1000 / 60;
@@ -1963,6 +2699,14 @@ window.onload = () => {
         }
         healingFlowers.forEach(flower => flower.update());
         healingFlowers = healingFlowers.filter(flower => !flower.done);
+        for (const f of fighters) {
+            if (alive(f) && f.characterType === 'nyx') f.updateNyxLink();
+            if (alive(f) && f.characterType === 'viper') f.updateViperCloud();
+        }
+        turrets.forEach(t => t.update());
+        turrets = turrets.filter(t => !t.done);
+        lifeOrbs.forEach(orb => orb.update());
+        lifeOrbs = lifeOrbs.filter(orb => !orb.done);
         floatingTexts.forEach(t => t.update());
         floatingTexts = floatingTexts.filter(t => t.life > 0);
 
@@ -1970,6 +2714,9 @@ window.onload = () => {
         particles = particles.filter(p => p.life > 0);
 
         updateProjectiles();
+        updateHazards();
+        shockwaves.forEach(w => w.life--);
+        shockwaves = shockwaves.filter(w => w.life > 0);
 
         for (const f of fighters) {
             if (!f.isDead && f.health <= 0) knockOut(f);
@@ -1982,6 +2729,7 @@ window.onload = () => {
         if (gameState !== 'FIGHT') return;
         gameLoopId = requestAnimationFrame(gameLoop);
 
+        pollGamepads();
         if (lastFrameTime === null) lastFrameTime = now;
         timeAccumulator += Math.min(250, now - lastFrameTime); // evita "pular" muito tempo após a aba voltar
         lastFrameTime = now;
@@ -2001,8 +2749,11 @@ window.onload = () => {
         ctx.imageSmoothingEnabled = false;
         drawArenaFloor();
 
-        // Áreas de cura e bolas no chão ficam por baixo de tudo
+        // Áreas de cura, avisos de explosão e bolas no chão ficam por baixo de tudo
         fighters.forEach(f => { if (alive(f) && f.characterType === 'celestia') drawCelestiaAura(f); });
+        drawHazards();
+        drawShockwaves();
+        fighters.forEach(f => { if (alive(f) && f.viperCloudTimer > 0) drawViperCloud(f); });
         ctx.font = '22px sans-serif';
         ctx.textAlign = 'center';
         groundBalls.forEach(ball => ctx.fillText('⚽️', ball.x, ball.y));
@@ -2012,13 +2763,16 @@ window.onload = () => {
         const drawables = [
             ...obstacles.map(o => ({ y: o.kind === 'tree' ? o.y : o.y + o.h, draw: () => o.kind === 'tree' ? drawTree(o) : drawBox(o) })),
             ...fighters.map(f => ({ y: f.y, draw: () => f.draw() })),
+            ...turrets.map(t => ({ y: t.y, draw: () => t.draw() })),
         ].sort((a, b) => a.y - b.y);
         drawables.forEach(d => d.draw());
 
         for (const f of fighters) {
             if (f.isInsideOpponent && alive(f.kaynHost)) drawKaynMark(f, f.kaynHost);
             if (alive(f) && f.isChannelingSpecial && alive(f.channelTarget)) drawLightningChain(f, f.channelTarget);
+            if (alive(f) && f.nyxLinkTimer > 0 && alive(f.nyxLinkEnemy)) drawNyxLink(f);
         }
+        lifeOrbs.forEach(orb => orb.draw());
 
         projectiles.forEach(p => p.draw());
         particles.forEach(p => p.draw());
@@ -2097,6 +2851,141 @@ window.onload = () => {
         }
     }
 
+    // --- Controles (gamepad) ---
+    function getGamepads() {
+        if (typeof navigator === 'undefined' || !navigator.getGamepads) return [];
+        return [...navigator.getGamepads()].filter(Boolean);
+    }
+
+    // Nome amigável do controle (ex.: "DualSense Wireless Controller (...)" -> "DualSense")
+    function padName(id) {
+        if (/dualsense/i.test(id)) return 'DualSense (PS5)';
+        if (/dualshock|054c/i.test(id)) return 'PlayStation';
+        if (/xbox|xinput/i.test(id)) return 'Xbox';
+        return id.split('(')[0].trim().slice(0, 24) || 'Controle';
+    }
+
+    // Lê analógico, direcional e botões de quem joga no controle; botões viram as mesmas ações do teclado
+    function pollGamepads() {
+        const pads = getGamepads();
+        for (const f of fighters) {
+            if (f.gamepadIndex === null || !alive(f)) continue;
+            const gp = pads.find(p => p.index === f.gamepadIndex);
+            if (!gp) continue;
+            const pressed = i => gp.buttons[i] && gp.buttons[i].pressed;
+
+            // Analógico esquerdo com zona morta; inclinar pouco anda devagar
+            let x = gp.axes[0] || 0, y = gp.axes[1] || 0;
+            const magnitude = Math.hypot(x, y);
+            if (magnitude < STICK_DEADZONE) {
+                // Sem analógico: usa o direcional
+                const dpad = normalize((pressed(PAD_DPAD.right) ? 1 : 0) - (pressed(PAD_DPAD.left) ? 1 : 0), (pressed(PAD_DPAD.down) ? 1 : 0) - (pressed(PAD_DPAD.up) ? 1 : 0));
+                x = dpad.x; y = dpad.y;
+            } else {
+                const strength = Math.min(1, (magnitude - STICK_DEADZONE) / (1 - STICK_DEADZONE));
+                x = x / magnitude * strength;
+                y = y / magnitude * strength;
+            }
+            f.padMove = { x, y };
+
+            for (const [action, buttons] of Object.entries(PAD_BUTTONS)) {
+                const isDown = buttons.some(pressed);
+                const wasDown = f.padPressed[action] || false;
+                if (isDown && !wasDown) handleKeyDown(f, action);
+                if (!isDown && wasDown) handleKeyUp(f, action);
+                f.padPressed[action] = isDown;
+            }
+        }
+    }
+
+    // --- Menus pelo controle ---
+    // Com um controle conectado, direcional/analógico move a seleção, ✕ confirma e ◯ volta
+    let padFocus = null;
+    let padRepeatAt = 0;
+    const padMenuPrevious = {};
+
+    function menuFocusables() {
+        const screen = [hubScreen, selectionScreen, gameOverScreen].find(s => !s.classList.contains('hidden'));
+        if (!screen) return [];
+        return [...screen.querySelectorAll('.hub-option, .input-option, .hub-start, .character-card, .back-button, button')]
+            .filter((el, i, all) => all.indexOf(el) === i && el.offsetParent !== null && !el.disabled && !el.classList.contains('taken'));
+    }
+
+    function setPadFocus(el) {
+        document.querySelectorAll('.pad-focus').forEach(e => e.classList.remove('pad-focus'));
+        padFocus = el;
+        if (el) {
+            el.classList.add('pad-focus');
+            el.scrollIntoView({ block: 'nearest' });
+        }
+    }
+
+    // Vai para o item mais próximo na direção pedida (prefere os que estão bem alinhados)
+    function moveFocus(dx, dy) {
+        const items = menuFocusables();
+        if (!items.length) return;
+        if (!items.includes(padFocus)) { setPadFocus(items.find(el => !el.classList.contains('back-button')) || items[0]); return; }
+        const r = padFocus.getBoundingClientRect();
+        const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        let best = null, bestScore = Infinity;
+        for (const el of items) {
+            if (el === padFocus) continue;
+            const b = el.getBoundingClientRect();
+            const ex = b.left + b.width / 2 - cx, ey = b.top + b.height / 2 - cy;
+            const along = ex * dx + ey * dy;
+            if (along <= 4) continue;
+            const score = along + Math.abs(ex * dy - ey * dx) * 2;
+            if (score < bestScore) { best = el; bestScore = score; }
+        }
+        if (best) setPadFocus(best);
+    }
+
+    function pollMenuGamepad() {
+        if (gameState === 'FIGHT' || !loadingScreen.classList.contains('hidden')) return;
+        const connected = Object.values(match.inputs).filter(i => i.type === 'gamepad' && i.index !== null).map(i => i.index);
+        const pads = getGamepads().filter(gp => connected.includes(gp.index));
+        if (!pads.length) return;
+
+        // Ao abrir uma tela nova, já deixa o primeiro item selecionado (sem ser o "◀ Menu")
+        const items = menuFocusables();
+        if (items.length && !items.includes(padFocus)) setPadFocus(items.find(el => !el.classList.contains('back-button')) || items[0]);
+
+        for (const gp of pads) {
+            const pressed = i => gp.buttons[i] && gp.buttons[i].pressed;
+            const previous = padMenuPrevious[gp.index];
+            if (!previous) {
+                // Primeira leitura: o botão que conectou o controle ainda pode estar apertado; só registra
+                padMenuPrevious[gp.index] = { direction: 'held', confirm: pressed(PAD_CONFIRM), back: pressed(PAD_BACK) };
+                continue;
+            }
+            const now = Date.now();
+
+            let dx = (pressed(PAD_DPAD.right) ? 1 : 0) - (pressed(PAD_DPAD.left) ? 1 : 0);
+            let dy = (pressed(PAD_DPAD.down) ? 1 : 0) - (pressed(PAD_DPAD.up) ? 1 : 0);
+            if (!dx && !dy) {
+                if (Math.abs(gp.axes[0] || 0) > 0.5) dx = Math.sign(gp.axes[0]);
+                else if (Math.abs(gp.axes[1] || 0) > 0.5) dy = Math.sign(gp.axes[1]);
+            }
+            const direction = dx || dy ? `${dx},${dy}` : '';
+            // Segurando a direção, repete depois de um tempinho
+            if (direction && (direction !== previous.direction || now >= padRepeatAt)) {
+                moveFocus(dx, dy);
+                padRepeatAt = now + (direction !== previous.direction ? 350 : 150);
+            }
+
+            const confirm = pressed(PAD_CONFIRM), back = pressed(PAD_BACK);
+            if (confirm && !previous.confirm && padFocus && menuFocusables().includes(padFocus)) {
+                padFocus.click();
+            }
+            if (back && !previous.back) {
+                if (!selectionScreen.classList.contains('hidden')) goToMenu();
+                else if (!gameOverScreen.classList.contains('hidden')) goToMenu();
+            }
+            padMenuPrevious[gp.index] = { direction, confirm, back };
+        }
+    }
+    setInterval(pollMenuGamepad, 30);
+
     window.addEventListener('keydown', (e) => {
         if (gameState !== 'FIGHT') return;
         const key = e.key.toLowerCase();
@@ -2136,13 +3025,81 @@ window.onload = () => {
             }));
         };
         bindGroup('mode-options', 'mode', value => { match.mode = value; });
-        bindGroup('vs-options', 'vs', value => { match.vs = value; });
+        bindGroup('vs-options', 'vs', value => { match.vs = value; renderInputStatus(); });
+
+        // Teclado ou controle para cada jogador
+        document.querySelectorAll('.input-row').forEach(row => {
+            const player = row.dataset.player;
+            const buttons = row.querySelectorAll('.input-option');
+            buttons.forEach(button => button.addEventListener('click', () => {
+                buttons.forEach(b => b.classList.toggle('selected', b === button));
+                // Escolher "Controle" sempre pede para apertar um botão de novo
+                match.inputs[player] = { type: button.dataset.input, index: null, name: '' };
+                button.blur();
+                renderInputStatus();
+            }));
+        });
+        window.addEventListener('gamepadconnected', renderInputStatus);
+        window.addEventListener('gamepaddisconnected', (e) => {
+            for (const input of Object.values(match.inputs)) {
+                if (input.type === 'gamepad' && input.index === e.gamepad.index) { input.index = null; input.name = ''; }
+            }
+            renderInputStatus();
+        });
+        setInterval(detectGamepads, 100);
+        renderInputStatus();
 
         document.getElementById('hub-start').addEventListener('click', () => {
+            if (waitingForGamepad()) return;
             match.picks = [];
             openSelection();
         });
         document.getElementById('back-to-hub').addEventListener('click', goToMenu);
+    }
+
+    const activePlayers = () => match.vs === 'pvp' ? ['p1', 'p2'] : ['p1'];
+    const waitingForGamepad = () => activePlayers().some(p => match.inputs[p].type === 'gamepad' && match.inputs[p].index === null);
+
+    // No menu: o primeiro controle com algum botão apertado (e que não seja do outro jogador) fica com quem está esperando
+    function detectGamepads() {
+        if (gameState !== 'MENU') return;
+        let changed = false;
+        for (const player of activePlayers()) {
+            const input = match.inputs[player];
+            if (input.type !== 'gamepad' || input.index !== null) continue;
+            const takenBy = activePlayers().filter(p => p !== player).map(p => match.inputs[p]).filter(i => i.type === 'gamepad').map(i => i.index);
+            const pad = getGamepads().find(gp => !takenBy.includes(gp.index) && gp.buttons.some(b => b.pressed));
+            if (pad) {
+                input.index = pad.index;
+                input.name = padName(pad.id);
+                sfx.play('heal');
+                changed = true;
+                break; // um controle por vez, para o mesmo aperto não conectar os dois jogadores
+            }
+        }
+        if (changed) renderInputStatus();
+    }
+
+    function renderInputStatus() {
+        document.querySelector('.input-row[data-player="p2"]').classList.toggle('hidden', match.vs !== 'pvp');
+        for (const player of ['p1', 'p2']) {
+            const input = match.inputs[player];
+            const status = document.querySelector(`.input-row[data-player="${player}"] .gamepad-status`);
+            status.classList.remove('waiting', 'connected');
+            if (input.type !== 'gamepad') {
+                status.innerText = '';
+            } else if (input.index === null) {
+                status.innerText = 'Aperte qualquer botão no controle...';
+                status.classList.add('waiting');
+            } else {
+                status.innerText = `✔ ${input.name} conectado`;
+                status.classList.add('connected');
+            }
+        }
+        renderControlsPanel();
+        const startButton = document.getElementById('hub-start');
+        startButton.disabled = waitingForGamepad();
+        startButton.innerText = waitingForGamepad() ? 'AGUARDANDO CONTROLE...' : 'ESCOLHER LUTADORES ▶';
     }
 
     // --- Lógica da Tela de Seleção ---
@@ -2198,13 +3155,54 @@ window.onload = () => {
             <p><strong>Soco Forte:</strong> segurar ${keyName(map.punch)}</p>
             <p><strong>Especial:</strong> ${keyName(map.special)}</p>
             <p><strong>Defesa:</strong> segurar ${keyName(map.defend)}</p>`;
+        const padList = `
+            <p><strong>Andar:</strong> analógico esquerdo ou direcional</p>
+            <p><strong>Soco:</strong> □ (X no Xbox)</p>
+            <p><strong>Soco Forte:</strong> segurar □</p>
+            <p><strong>Especial:</strong> △ ou R1 (Y ou RB no Xbox)</p>
+            <p><strong>Defesa:</strong> segurar ◯ ou L1 (B ou LB no Xbox)</p>`;
+        const keyboardPlayers = activePlayers().filter(p => match.inputs[p].type === 'keyboard').length;
+        const controlsFor = player => match.inputs[player].type === 'gamepad'
+            ? padList
+            : list(keyboardPlayers === 2 ? KEYMAPS[player] : KEYMAPS.solo);
         const hint = '<p class="controls-hint">A mira é automática: golpes e especiais vão no inimigo mais próximo.</p>';
         document.getElementById('controls-content').innerHTML = match.vs === 'pvp'
             ? `<div class="controls-columns">
-                   <div class="controls-p1"><h4>Jogador 1</h4>${list(KEYMAPS.p1)}</div>
-                   <div class="controls-p2"><h4>Jogador 2</h4>${list(KEYMAPS.p2)}</div>
+                   <div class="controls-p1"><h4>Jogador 1</h4>${controlsFor('p1')}</div>
+                   <div class="controls-p2"><h4>Jogador 2</h4>${controlsFor('p2')}</div>
                </div>${hint}`
-            : `<div class="controls-grid">${list(KEYMAPS.solo)}</div>${hint}`;
+            : `<div class="controls-grid">${controlsFor('p1')}</div>${hint}`;
+    }
+
+    // Painel lateral: controles de cada jogador ativo, conforme teclado/controle escolhido no HUB
+    function renderControlsPanel() {
+        const names = { arrowleft: '←', arrowright: '→', arrowup: '↑', arrowdown: '↓' };
+        const keys = list => list.map(k => names[k] || k.toUpperCase()).join(' / ');
+        const row = (action, key) => `<div class="panel-row"><span>${action}</span><span class="panel-key">${key}</span></div>`;
+        const keyboardPlayers = activePlayers().filter(p => match.inputs[p].type === 'keyboard').length;
+
+        const blocks = activePlayers().map(player => {
+            const input = match.inputs[player];
+            const title = match.vs === 'pvp' ? (player === 'p1' ? 'Jogador 1' : 'Jogador 2') : 'Você';
+            let device, rows;
+            if (input.type === 'gamepad') {
+                device = input.name || 'Controle (não conectado)';
+                rows = row('Andar', 'Analógico / Direcional') + row('Soco', '□') + row('Soco forte', 'Segurar □') +
+                    row('Especial', '△ ou R1') + row('Defesa', 'Segurar ◯ ou L1') + row('Menus', '✕ confirma, ◯ volta');
+            } else {
+                const map = keyboardPlayers === 2 ? KEYMAPS[player] : KEYMAPS.solo;
+                device = 'Teclado';
+                const walk = map === KEYMAPS.solo ? 'WASD ou setas' : map === KEYMAPS.p1 ? 'WASD' : 'Setas';
+                rows = row('Andar', walk) +
+                    row('Soco', keys(map.punch)) + row('Soco forte', `Segurar ${keys(map.punch)}`) +
+                    row('Especial', keys(map.special)) + row('Defesa', `Segurar ${keys(map.defend)}`);
+            }
+            return `<div class="panel-player ${player}"><h4>${title} <span class="panel-device">${device}</span></h4>${rows}</div>`;
+        });
+
+        document.getElementById('controls-panel-content').innerHTML = blocks.join('') +
+            '<p class="panel-hint">A mira é automática: golpes e especiais vão no inimigo mais próximo. ' +
+            'Segure o soco para carregar o soco forte.</p>';
     }
 
     // --- Início do Jogo ---
@@ -2216,7 +3214,7 @@ window.onload = () => {
         const teams = [[], []];
         teams[0].push({ char: byId(match.picks[0]), controller: 'p1' });
         if (match.vs === 'pvp') teams[1].push({ char: byId(match.picks[1]), controller: 'p2' });
-        // Modo de teste: em 2v2 e 3v3, cada time recebe pelo menos uma healer (sorteada entre as que sobraram)
+        // Em 2v2 e 3v3, cada time recebe pelo menos uma healer (sorteada entre as que sobraram)
         if (FORCE_HEALER_PER_TEAM && teamSize > 1) {
             for (const team of teams) {
                 if (team.some(m => HEALERS.includes(m.char.id))) continue;
@@ -2237,7 +3235,14 @@ window.onload = () => {
                 const y = arena.top + h * (i + 1) / (members.length + 1);
                 const f = new Fighter(x, y, member.char.name, member.char.id, team, member.controller);
                 if (member.controller !== 'ai') {
-                    f.keymap = match.vs === 'pvp' ? KEYMAPS[member.controller] : KEYMAPS.solo;
+                    const input = match.inputs[member.controller];
+                    if (input.type === 'gamepad' && input.index !== null) {
+                        f.gamepadIndex = input.index;
+                    } else {
+                        // Dois jogadores no teclado dividem as teclas; sozinho no teclado usa o esquema completo
+                        const keyboardPlayers = activePlayers().filter(p => match.inputs[p].type === 'keyboard').length;
+                        f.keymap = keyboardPlayers === 2 ? KEYMAPS[member.controller] : KEYMAPS.solo;
+                    }
                 }
                 fighters.push(f);
             });
@@ -2287,6 +3292,9 @@ window.onload = () => {
         healingFlowers = [];
         floatingTexts = [];
         groundBalls = [];
+        hazards = [];
+        lifeOrbs = [];
+        turrets = [];
         hud.innerHTML = '';
         winText.style.color = '';
     }

@@ -763,6 +763,173 @@ pixelCharacters.flora = {
     },
 };
 
+// --- Nyx: vampira cyberpunk que rouba vida para o time ---
+pixelCharacters.nyx = {
+    palette: {
+        K: OUTLINE,
+        N: '#120c1c', n: '#2a1f3a',                          // cabelo
+        S: '#e8dcef', s: '#b8a8c8',                          // pele pálida
+        E: '#ff2a4a',                                        // olhos
+        R: '#ff2a4a', r: '#8a1020',                          // vermelho neon (forro e garras)
+        C: '#1a1424', c: '#2c2238',                          // sobretudo
+        G: '#c9a46a',                                        // broche
+    },
+    idle: [
+        '............KKKKKKK',
+        '...........KNNNNNNNK',
+        '..........KNNnNNNNNNK',
+        '.........KNNnNNNNNNNNK',
+        '.........KNnSSSSSSSSK',
+        '.........KNnSSSSSESSK',
+        '.........KNnSSSSSSSSK',
+        '.........KNnsSSRSSSSK',
+        '.........KNNKsSSSSSK',
+        '........KRRKKKSSSKKKRRK',
+        '....KNNKKKKCCCRRRCCCKKKKK',
+        '....KNKCCcKCCRCCCCRCCKCCCK',
+        '....KNKCCcKCRCCGGCCRCKCCcK',
+        '....KnKCCcKCRCCCCCCRCKCCcK',
+        '....KNKSSsKCRCCCCCCRCKSSsK',
+        '....KNKRKRKCRCCCCCCRCKRKRK',
+        '....KKK...KCRCCCCCCRCK',
+        '........KCCRCCCCCCRCCK',
+        '........KCCRCCCCCCRCCK',
+        '........KCCRCCKKCCRCCK',
+        '........KCRCCK..KCCRCK',
+        '........KCRCcK..KcCRCK',
+        '.........KcccK..KcccK',
+        '.........KcccK..KcccK',
+        '.........KcccK..KcccK',
+        '.........KcccK..KcccK',
+        '.........KcccK..KcccK',
+        '.........KcccK..KcccK',
+        '.........KcccK..KcccK',
+        '.........KcccK..KcccK',
+        '........KNNNNK.KNNNNNK',
+        '........KKKKKK.KKKKKKK',
+    ],
+    // Golpe: garras vermelhas para frente
+    attack: {
+        11: '....KNKCCcKCCRCCCCRCCKKKKKKKKK',
+        12: '....KNKCCcKCRCCGGCCRCKCCCCCSSRK',
+        13: '....KnKCCcKCRCCCCCCRCKcccccSSRRK',
+        14: '....KNKSSsKCRCCCCCCRCKKKKKKKKKKK',
+        15: '....KNKRKRKCRCCCCCCRCK',
+    },
+};
+
+// --- Viper: sniper de capuz e máscara de gás, com rifle venenoso ---
+pixelCharacters.viper = {
+    palette: {
+        K: OUTLINE,
+        H: '#1f3a2a', h: '#2f5a3e',                          // capuz
+        M: '#5a6270', m: '#3a4050',                          // máscara de gás
+        L: '#6dff8a',                                        // lentes brilhando
+        C: '#26302c', c: '#18201c',                          // sobretudo
+        G: '#8a94a8', g: '#4a5060',                          // rifle
+        V: '#4cff7a',                                        // detalhes de veneno
+        Y: '#fff3a0',                                        // clarão do tiro
+        B: '#111111',                                        // botas
+    },
+    idle: [
+        '............KKKKKKK',
+        '...........KHHHHHHHK',
+        '..........KHHhHHHHHHK',
+        '..........KHhMMMMMMMHK',
+        '..........KHhMLLMLLMHK',
+        '..........KHhMMMMMMMHK',
+        '..........KHhMmMmMmMHK',
+        '...........KHMMMMMMHK',
+        '............KmMMMmK',
+        '...........KKCCCCCCKK',
+        '.......KKKKCCCCCCCCCKKKKK',
+        '......KCCcKCCCCVCCCCCKCCCK',
+        '......KCCcKCCCCCCCCCCKGGGGGGGGK',
+        '......KCCcKCCCCCCCCCCKgGGgGGGGVK',
+        '......KCCcKCCCCCCCCCCKKKKKKKKKK',
+        '......KcccKCCCCCCCCCCK',
+        '......KKKKKccccccccccK',
+        '........KCCCCCCCCCCCCK',
+        '........KCCCCCCCCCCCCK',
+        '........KCCCCCKKCCCCCK',
+        '.........KcccK..KcccK',
+        '.........KcccK..KcccK',
+        '.........KcccK..KcccK',
+        '.........KcccK..KcccK',
+        '.........KcccK..KcccK',
+        '.........KVccK..KVccK',
+        '.........KcccK..KcccK',
+        '.........KcccK..KcccK',
+        '.........KcccK..KcccK',
+        '.........KcccK..KcccK',
+        '........KBBBBK.KBBBBBK',
+        '........KKKKKK.KKKKKKK',
+    ],
+    // Tiro: clarão na ponta do rifle
+    attack: {
+        12: '......KCCcKCCCCCCCCCCKGGGGGGGGKY',
+        13: '......KCCcKCCCCCCCCCCKgGGgGGGVYY',
+        14: '......KCCcKCCCCCCCCCCKKKKKKKKKKY',
+    },
+};
+
+// --- Gear: engenheiro de macacão com braço mecânico ---
+pixelCharacters.gear = {
+    palette: {
+        K: OUTLINE,
+        O: '#ff8a1f', o: '#c4520f',                          // macacão
+        Y: '#ffd23f', y: '#c99a1a',                          // capacete
+        S: '#f2b98f', s: '#c47f5a',                          // pele
+        G: '#3ff6ff',                                        // óculos e luz da arma
+        M: '#9aa3b8', m: '#5a6270',                          // braço mecânico
+        W: '#e8e8e8',                                        // camiseta
+        B: '#3a2a1a',                                        // botas
+    },
+    idle: [
+        '............KKKKKKK',
+        '...........KYYYYYYYK',
+        '..........KYYyYYYYYYK',
+        '..........KyyyyyyyyyK',
+        '..........KSGGGKGGGSK',
+        '..........KSSSSSSKSSK',
+        '..........KsSSSSSSSSSK',
+        '..........KsSSSSSKKKSK',
+        '...........KsSSSSSSSK',
+        '............KsSSSSK',
+        '.......KKKKOOWWWWWOOKKKKK',
+        '......KSSsKOOOWWWOOOOKMMMK',
+        '......KSSsKOOOOOOOOOOKMmMK',
+        '......KSSsKOoOOOOOOoOKMmMK',
+        '......KSSsKOoOOYYOOoOKMmMK',
+        '......KSSSKOoOOOOOOoOKmMmK',
+        '......KKKKKOOOOOOOOOOKMMMK',
+        '........KOOOOOOOOOOOOK',
+        '........KOOOOOOOOOOOOK',
+        '........KOOOOOKKOOOOOK',
+        '.........KOOoK..KOOoK',
+        '.........KOOoK..KOOoK',
+        '.........KOOoK..KOOoK',
+        '.........KOOoK..KOOoK',
+        '.........KOOoK..KOOoK',
+        '.........KOOoK..KOOoK',
+        '.........KOOoK..KOOoK',
+        '.........KOOoK..KOOoK',
+        '.........KOOoK..KOOoK',
+        '.........KOOoK..KOOoK',
+        '........KBBBBK.KBBBBBK',
+        '........KKKKKK.KKKKKKK',
+    ],
+    // Tiro: braço mecânico esticado com a pistola de pregos
+    attack: {
+        11: '......KSSsKOOOWWWOOOOKKKKKKKKK',
+        12: '......KSSsKOOOOOOOOOOKMMMmmmmMK',
+        13: '......KSSsKOoOOOOOOoOKMmMMMMMGYK',
+        14: '......KSSsKOoOOYYOOoOKKKKKKKKKK',
+        15: '......KSSSKOoOOOOOOoOK',
+        16: '......KKKKKOOOOOOOOOOK',
+    },
+};
+
 // Monta a função de desenho de cada personagem (os sprites são gerados na primeira vez que aparecem)
 function makePixelArt(type) {
     const def = pixelCharacters[type];
