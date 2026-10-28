@@ -39,21 +39,21 @@ Neo-Cidade está tomada por neon, chuva e gente disposta a brigar por qualquer m
 | 🦾 | **Titan** | Ex-soldado com braço robótico | Soco-foguete com onda de choque |
 | 🔥 | **Hades** | Punhos de fogo, queima quem acerta | Círculo de fogo que explode no chão |
 | 🎃 | **Jack** | Amaldiçoado no Halloween, rouba vida | Abóbora amaldiçoada |
-| 🗡️ | **Genji** | Espadachim, cortes que fazem sangrar | Tornado que prende o inimigo no ar |
-| ✨ | **Ryu** | Combo de socos que acelera a cada acerto | Investida explosiva |
-| 🌸 | **Malenia** | Lâmina que cura a cada golpe | *Waterfowl Dance*: 7 cortes seguidos |
-| 🐺 | **Maliketh** | Fera sombria | Salta e dispara lâminas do céu |
-| 🩸 | **Kayn** | Muda de forma no meio da luta: **Rhaast** 🔴 ou **Assassino das Sombras** 🔵 | Entra no corpo do inimigo e sai rasgando |
+| 🗡️ | **Kaze** | Espadachim, cortes que fazem sangrar | Tornado que prende o inimigo no ar |
+| ✨ | **Kenji** | Combo de socos que acelera a cada acerto | Investida explosiva |
+| 🌸 | **Akane** | Lâmina carmesim que cura a cada golpe | *Dança das Sete Lâminas*: 7 cortes seguidos |
+| 🐺 | **Fenris** | Fera sombria | Salta e dispara lâminas do céu |
+| 🩸 | **Zarek** | Muda de forma no meio da luta: **Rubra** 🔴 ou **Umbral** 🔵 | Entra no corpo do inimigo e sai rasgando |
 | 🕷️ | **Weaver** | Acrobata com teia e sentido aranha | Puxão de teia e chute para cima |
 | ⚡ | **Spark** | Robô de segurança abandonado | Corrente elétrica que dobra de dano |
 
 ### Atiradores
 | | Lutador | Estilo | Ultimate |
 |---|---|---|---|
-| 🧪 | **Viper** | Rifle tóxico de longo alcance | Nuvem de veneno |
+| 🧪 | **Mamba** | Rifle tóxico de longo alcance | Nuvem de veneno |
 | 🔧 | **Gear** | Mecânico de pregos | Monta até 3 torretas |
-| 💗 | **Becca** | Duas pistolas, a adrenalina acelera os tiros | Frenesi: cada pistola escolhe um alvo |
-| ⚽ | **Don Lorenzo** | Craque que chuta bolas que voltam | Chama todas as bolas de volta |
+| 💗 | **Roxy** | Duas pistolas, a adrenalina acelera os tiros | Frenesi: cada pistola escolhe um alvo |
+| ⚽ | **El Craque** | Atacante que chuta bolas que voltam | Chama todas as bolas de volta |
 
 ### Healers
 | | Lutador | Estilo | Ultimate |
@@ -65,7 +65,7 @@ Neo-Cidade está tomada por neon, chuva e gente disposta a brigar por qualquer m
 ### Tanques
 | | Lutador | Estilo | Ultimate |
 |---|---|---|---|
-| 🛡️ | **Bastion** | 1600 de vida, o escudo segura os tiros do time | Muralha de energia |
+| 🛡️ | **Aegis** | 1600 de vida, o escudo segura os tiros do time | Muralha de energia |
 | 🦏 | **Rhino** | Ganha embalo correndo | Estouro: atropela tudo, quebra caixas e torretas |
 | ⚓ | **Anchor** | Não sai do lugar com empurrões | Gancho: a corrente arrasta ele até o inimigo e o atordoa |
 
@@ -115,7 +115,7 @@ Depois abra **http://localhost:8123** no navegador.
 
 - Começou como um jogo para **aprender HTML, CSS e JavaScript** e testar a criação de um jogo do zero.
 - Feito em **colaboração com IA** (Gemini e Claude) em todas as partes: mecânicas, personagens, arte e código. O balanceamento é testado com milhares de lutas simuladas entre IAs.
-- Alguns lutadores são **inspirados em personagens de outros jogos** (Genji, Malenia, Maliketh, Ryu, Kayn e "Don" Lorenzo) e servem para testar mecânicas.
+- Todos os lutadores são **originais**: os que começaram inspirados em personagens de outros jogos ganharam nome, história e identidade próprios.
 - Recebe atualizações sempre que o código **não quebra**. 😅
 
 <div align="center">
