@@ -12,6 +12,7 @@ window.onload = () => {
     const loadingScreen = document.getElementById('loading-screen');
     const gameOverScreen = document.getElementById('game-over-screen');
     const winText = document.getElementById('win-text');
+    const matchStatsEl = document.getElementById('match-stats');
     const restartButton = document.getElementById('restart-button');
     const rematchButton = document.getElementById('rematch-button');
     const hud = document.getElementById('hud');
@@ -89,6 +90,8 @@ window.onload = () => {
     const SPARK_CHAIN_RANGE = 340; // alcance máximo da corrente elétrica do Spark
     const SPARK_CHAIN_START_DAMAGE = 4; // dano do primeiro segundo do choque (depois dobra: 4, 8, 16...)
     const GENJI_PUNCH_DAMAGE = 20;   // corte da lâmina do Genji
+    const RYU_PUNCH_DAMAGE = 14;     // soco do Ryu (o combo acelera os socos)
+    const RYU_MAX_COMBO_SPEED = 7;   // o combo deixa os socos até 7x mais rápidos
     const BLEED_DAMAGE = 14;         // sangramento: por segundo, por acúmulo (máximo 3 acúmulos)
     const MALENIA_CUTS = 7;          // cortes da Waterfowl Dance
     const MALENIA_CUT_DAMAGE = 25;   // dano de cada corte (175 no total)
@@ -108,7 +111,11 @@ window.onload = () => {
     const KAYN_ULT_COOLDOWN = 360;    // 6 segundos entre ultimates
     const KAYN_ULT_DURATION = 90;     // 1,5 segundo dentro do oponente
     const KAYN_ULT_RANGE = 260;       // distância máxima para entrar no oponente
-    const KAYN_ULT_DAMAGE = 80;       // dano base da ultimate (forma vermelha: 3x)
+    const KAYN_ULT_DAMAGE = 120;      // dano base da ultimate (forma vermelha: 3x)
+    const KAYN_RED_ULT_HEAL = 0.5;    // Rhaast: a ultimate cura 50% do dano causado
+    const KAYN_BLUE_ULT_RANGE = 400;  // Assassino das Sombras: ultimate de mais longe
+    const KAYN_BLUE_SPEED = 1.15;     // Assassino das Sombras: 15% mais rápido
+    const KAYN_POSSESS_SLOW = 0.5;    // possuído anda na metade da velocidade (e não usa especial)
 
     // Healers
     const CELESTIA_AURA_RADIUS = 130;     // área de cura permanente ao redor dela
@@ -173,7 +180,7 @@ window.onload = () => {
     const GEAR_TURRET_COST = 80;
     const GEAR_TURRET_COOLDOWN = 90;      // 1,5 s entre uma torreta e outra (quem limita é a energia)
     const GEAR_MAX_TURRETS = 3;           // a 4ª substitui a mais antiga
-    const TURRET_HP = 100;
+    const TURRET_HP = 60;                 // 4 socos (ou 2 socos fortes) para quebrar
     const TURRET_DURATION = 720;          // 12 segundos
     const TURRET_RANGE = 380;
     const TURRET_DAMAGE = 8;
@@ -181,6 +188,12 @@ window.onload = () => {
     let turrets = [];
 
     const MAX_HEALTH = 1000;
+    // Vida máxima de cada personagem (tanques aguentam mais, quem ataca de longe aguenta menos)
+    const HEALTH_BY_CHARACTER = {
+        titan: 1200, kayn: 1200, maliketh: 1150, spark: 1100,
+        hades: 1000, jack: 1000, ryu: 1000, malenia: 950, genji: 950, lorenzo: 950, weaver: 950,
+        viper: 900, gear: 750, becca: 850, celestia: 950, nyx: 950, flora: 900,
+    };
     const HEALERS = ['celestia', 'flora', 'nyx'];
     let lifeOrbs = [];
     // Regra do jogo: no 2v2 e no 3v3 todo time tem pelo menos uma healer (false = sorteio livre)
@@ -509,7 +522,8 @@ window.onload = () => {
             this.aim = { x: team === 0 ? 1 : -1, y: 0 }; // direção da mira
             this.facing = team === 0 ? 1 : -1;            // lado para onde o sprite olha
 
-            this.health = MAX_HEALTH;
+            this.maxHealth = HEALTH_BY_CHARACTER[characterType] || MAX_HEALTH;
+            this.health = this.maxHealth;
             this.energy = 50;
             this.maxEnergy = 1000;
             this.isAttacking = false;
@@ -575,6 +589,8 @@ window.onload = () => {
 
             // Healers
             this.healedTotal = 0; // quanto este lutador já curou na partida
+            this.stats = { dealt: 0, taken: 0, kos: 0 }; // estatísticas da tela de fim de luta
+            this.lastAttacker = null; // quem bateu por último (recebe o abate e o dano contínuo)
             this.healTick = 0;
             this.celestiaUltTimer = 0;
             this.auraDisplayRadius = CELESTIA_AURA_RADIUS; // anima o crescimento da área
@@ -932,7 +948,7 @@ window.onload = () => {
             ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
             ctx.fillRect(this.x - 21, headY - 6, 42, 6);
             ctx.fillStyle = TEAM_COLORS[this.team];
-            ctx.fillRect(this.x - 20, headY - 5, 40 * (this.health / MAX_HEALTH), 4);
+            ctx.fillRect(this.x - 20, headY - 5, 40 * (this.health / this.maxHealth), 4);
 
             if (this.isPlayer) {
                 ctx.save();
@@ -1041,11 +1057,12 @@ window.onload = () => {
             } else {
                 move = this.aiMove;
             }
-            const baseSpeed = this.characterType === 'becca' ? MOVE_SPEED * BECCA_SPEED : MOVE_SPEED;
+            const baseSpeed = this.characterType === 'becca' ? MOVE_SPEED * BECCA_SPEED : this.kaynForm === 'blue' ? MOVE_SPEED * KAYN_BLUE_SPEED : MOVE_SPEED;
             // Atirando, a Becca quase não perde velocidade (ela corre e atira)
             const attackSlow = this.characterType === 'becca' ? 0.85 : 0.5;
             const webbed = this.slowTimer > 0 ? 0.5 : 1; // grudado na teia: metade da velocidade
-            const speed = this.isDefending ? 0 : (this.isAttacking ? baseSpeed * attackSlow : baseSpeed) * webbed;
+            const possessed = isPossessed(this) ? KAYN_POSSESS_SLOW : 1; // Kayn dentro do corpo: anda devagar
+            const speed = this.isDefending ? 0 : (this.isAttacking ? baseSpeed * attackSlow : baseSpeed) * webbed * possessed;
             this.moveX = move.x * speed;
             this.moveY = move.y * speed;
             this.x += this.moveX;
@@ -1154,7 +1171,7 @@ window.onload = () => {
             this.waterfowlTick++;
             if (this.waterfowlTick % MALENIA_CUT_INTERVAL === 0) {
                 const blocked = victim.takeDamage(MALENIA_CUT_DAMAGE, { sound: 'blade_hit' }, this);
-                if (!blocked) this.health = Math.min(MAX_HEALTH, this.health + 8); // corte aparado não cura
+                if (!blocked) this.health = Math.min(this.maxHealth, this.health + 8); // corte aparado não cura
                 this.waterfowlHitCount++;
                 for (let i = 0; i < 5; i++) {
                     particles.push(new Particle(victim.x, victim.chestY, '#ffd86b', 0, { x: (Math.random() - 0.5) * 6, y: (Math.random() - 0.5) * 6 }));
@@ -1191,12 +1208,23 @@ window.onload = () => {
             if (this.dashLeft <= 0 || hitWall) this.isDashing = false;
         }
 
+        // Tira vida e anota nas estatísticas (dano causado de quem bateu, dano sofrido de quem levou)
+        loseHealth(amount, attacker) {
+            const lost = Math.max(0, Math.min(amount, this.health));
+            this.health -= amount;
+            this.stats.taken += lost;
+            if (attacker && attacker !== this && attacker.stats) {
+                attacker.stats.dealt += lost;
+                this.lastAttacker = attacker;
+            }
+        }
+
         handleStatusEffects() {
             if (this.burnDuration > 0) {
                 this.burnDuration--;
                 this.burnTick++;
                 if (this.burnTick >= 60) {
-                    this.health -= 9;
+                    this.loseHealth(9, this.lastAttacker);
                     this.burnTick = 0;
                     particles.push(new Particle(this.x + (Math.random() - 0.5) * 24, this.chestY, 'orange', 0));
                 }
@@ -1207,9 +1235,9 @@ window.onload = () => {
                 this.curseTick++;
                 if (this.curseTick >= 60) {
                     if (this.cursedBy) {
-                        this.health -= 9 * this.curseStacks;
+                        this.loseHealth(9 * this.curseStacks, this.cursedBy);
                         if (alive(this.cursedBy)) {
-                            this.cursedBy.health = Math.min(MAX_HEALTH, this.cursedBy.health + (5 * this.curseStacks));
+                            this.cursedBy.health = Math.min(this.cursedBy.maxHealth, this.cursedBy.health + (5 * this.curseStacks));
                         }
                         particles.push(new Particle(this.x + (Math.random() - 0.5) * 24, this.chestY, 'purple', 0));
                     }
@@ -1225,7 +1253,7 @@ window.onload = () => {
                 this.poisonDuration--;
                 this.poisonTick++;
                 if (this.poisonTick >= 60) {
-                    this.health -= POISON_DAMAGE * this.poisonStacks;
+                    this.loseHealth(POISON_DAMAGE * this.poisonStacks, this.lastAttacker);
                     this.poisonTick = 0;
                     for (let i = 0; i < 3; i++) particles.push(new Particle(this.x + (Math.random() - 0.5) * 24, this.chestY, '#4cff7a', 0, { x: 0, y: -1.5 }));
                 }
@@ -1236,7 +1264,7 @@ window.onload = () => {
                 this.bleedDuration--;
                 this.bleedTick++;
                 if (this.bleedTick >= 60) {
-                    this.health -= BLEED_DAMAGE * this.bleedStacks;
+                    this.loseHealth(BLEED_DAMAGE * this.bleedStacks, this.lastAttacker);
                     this.bleedTick = 0;
                     particles.push(new Particle(this.x + (Math.random() - 0.5) * 24, this.chestY, 'red', 0));
                 }
@@ -1293,7 +1321,7 @@ window.onload = () => {
             const opponent = this.target;
             if (!opponent) return;
             const alreadyPossessed = fighters.some(f => f.isInsideOpponent && f.kaynHost === opponent);
-            if (this.energy < KAYN_ULT_COST || this.specialCooldown > 0 || distance(this, opponent) > KAYN_ULT_RANGE || alreadyPossessed) return;
+            if (this.energy < KAYN_ULT_COST || this.specialCooldown > 0 || distance(this, opponent) > kaynUltRange(this) || alreadyPossessed) return;
 
             this.energy -= KAYN_ULT_COST;
             this.specialCooldown = KAYN_ULT_COOLDOWN;
@@ -1339,7 +1367,9 @@ window.onload = () => {
             // A ultimate não pode ser bloqueada: ele está saindo de dentro do oponente
             const hit = { unblockable: true, sound: 'kayn_exit' };
             if (this.kaynForm === 'red') {
+                const before = opponent.health;
                 opponent.takeDamage(KAYN_ULT_DAMAGE * 3, hit, this);
+                this.heal((before - opponent.health) * KAYN_RED_ULT_HEAL);
             } else if (this.kaynForm === 'blue') {
                 opponent.takeDamage(KAYN_ULT_DAMAGE, hit, this);
                 opponent.bleedStacks = 3; // sangramento máximo
@@ -1360,7 +1390,7 @@ window.onload = () => {
         // Recupera vida (sem passar do máximo) e mostra o número verde subindo
         heal(amount, healer) {
             if (this.isDead || this.isInsideOpponent) return 0;
-            const healed = Math.min(amount, MAX_HEALTH - this.health);
+            const healed = Math.min(amount, this.maxHealth - this.health);
             if (healed <= 0) return 0;
             this.health += healed;
             if (healer) healer.healedTotal += healed;
@@ -1530,7 +1560,7 @@ window.onload = () => {
             // Barra do Kayn: só golpes que causam dano de verdade contam (bloqueio e dano contínuo não)
             if (this.characterType === 'kayn') addKaynCharge(this, KAYN_CHARGE_ON_HURT);
             if (attacker && attacker.characterType === 'kayn') addKaynCharge(attacker, KAYN_CHARGE_ON_HIT);
-            this.health -= damage;
+            this.loseHealth(damage, attacker);
             if (effect.type === 'burn') { this.burnDuration = 180; }
             if (effect.type === 'curse') { this.applyCurse(attacker); }
             if (effect.type === 'bleed') {
@@ -1599,6 +1629,8 @@ window.onload = () => {
                     sfx.play(isBladeUser(this) ? 'blade_swing' : 'swing_heavy');
                     break;
                 case 'special':
+                    // Possuído pelo Kayn: não consegue usar o especial
+                    if (isPossessed(this)) { this.isAttacking = false; return; }
                     if (this.characterType === 'spark') {
                         return;
                     }
@@ -1731,10 +1763,10 @@ window.onload = () => {
         if (isBladeUser(attacker)) effect.sound = 'blade_hit';
         switch (attacker.attackType) {
             case 'punch':
-                damage = (attacker.characterType === 'malenia') ? 14 : (attacker.characterType === 'nyx') ? NYX_PUNCH_DAMAGE : (attacker.characterType === 'genji') ? GENJI_PUNCH_DAMAGE : (attacker.characterType === 'weaver') ? WEAVER_PUNCH_DAMAGE : 10;
+                damage = (attacker.characterType === 'malenia') ? 14 : (attacker.characterType === 'nyx') ? NYX_PUNCH_DAMAGE : (attacker.characterType === 'genji') ? GENJI_PUNCH_DAMAGE : (attacker.characterType === 'weaver') ? WEAVER_PUNCH_DAMAGE : (attacker.characterType === 'ryu') ? RYU_PUNCH_DAMAGE : 10;
                 if (attacker.kaynForm === 'red') damage = 12;
                 if (attacker.characterType === 'malenia') {
-                    attacker.health = Math.min(MAX_HEALTH, attacker.health + 8);
+                    attacker.health = Math.min(attacker.maxHealth, attacker.health + 8);
                 }
                 if (attacker.characterType === 'hades') { effect.type = 'burn'; }
                 if (attacker.characterType === 'jack') {
@@ -1753,7 +1785,7 @@ window.onload = () => {
                 }
                 if (attacker.characterType === 'ryu') {
                     attacker.consecutivePunchCounter++;
-                    attacker.attackSpeedMultiplier = Math.min(7, 1 + (attacker.consecutivePunchCounter - 1));
+                    attacker.attackSpeedMultiplier = Math.min(RYU_MAX_COMBO_SPEED, 1 + (attacker.consecutivePunchCounter - 1));
                     attacker.ryuComboTimer = 120; // 2 segundos
                     createParticleEffect(defender, 'ryu_punch', { x: defender.x, y: defender.chestY, count: attacker.consecutivePunchCounter });
                 }
@@ -2001,7 +2033,7 @@ window.onload = () => {
     // Aliado vivo com menor porcentagem de vida (contando quem pergunta); null se todos estão cheios
     function mostHurtAlly(fighter) {
         const team = fighters.filter(f => alive(f) && f.team === fighter.team && !f.isInsideOpponent);
-        const hurt = team.filter(f => f.health < MAX_HEALTH).sort((a, b) => a.health - b.health);
+        const hurt = team.filter(f => f.health < f.maxHealth).sort((a, b) => a.health - b.health);
         return hurt[0] || null;
     }
 
@@ -2158,6 +2190,16 @@ window.onload = () => {
         return '#b9b2d6';
     }
 
+    // Alcance da ultimate do Kayn (o Assassino das Sombras alcança mais longe)
+    function kaynUltRange(kayn) {
+        return kayn.kaynForm === 'blue' ? KAYN_BLUE_ULT_RANGE : KAYN_ULT_RANGE;
+    }
+
+    // Kayn está dentro deste lutador (ultimate)?
+    function isPossessed(fighter) {
+        return fighters.some(k => k.isInsideOpponent && k.kaynHost === fighter);
+    }
+
     function addKaynCharge(kayn, amount) {
         if (kayn.kaynForm) return; // já transformado
         kayn.kaynCharge = Math.min(KAYN_CHARGE_MAX, kayn.kaynCharge + amount);
@@ -2166,7 +2208,8 @@ window.onload = () => {
         // Perdendo em vida -> Rhaast (vermelho, agressivo); ganhando ou empatado -> Assassino das Sombras (azul).
         // Compara com o inimigo atual (em times, o que ele está enfrentando).
         const opponent = kayn.target || nearestEnemy(kayn);
-        kayn.kaynForm = opponent && kayn.health < opponent.health ? 'red' : 'blue';
+        // Compara a porcentagem de vida (cada personagem tem uma vida máxima diferente)
+        kayn.kaynForm = opponent && kayn.health / kayn.maxHealth < opponent.health / opponent.maxHealth ? 'red' : 'blue';
         sfx.play('kayn_transform');
         const color = kaynFormColor(kayn.kaynForm);
         for (let i = 0; i < 40; i++) {
@@ -2369,14 +2412,18 @@ window.onload = () => {
             me.aiMove = { x: 0, y: 0 };
             me.isDefending = false;
 
-            // Torreta inimiga perto (ou mais perto que o alvo): vai lá e quebra antes de seguir
+            // Torreta inimiga: só vale parar para quebrar quando o alvo está fora de alcance.
+            // Se dá para bater no alvo, bate nele (o Gear não pode se esconder atrás das torretas).
             me.focusTurret = null;
             const enemyTurret = turrets
                 .filter(t => t.team !== me.team && !t.done)
                 .sort((a, b) => distance(me, a) - distance(me, b))[0];
             if (enemyTurret && !SHOOTERS.includes(me.characterType) && !HEALERS.includes(me.characterType) && me.characterType !== 'lorenzo') {
                 const turretDistance = distance(me, enemyTurret);
-                if (turretDistance < 160 || (turretDistance < d && turretDistance < 260)) {
+                const targetInReach = d <= meleeRange + 30;
+                const turretInReach = turretDistance <= meleeRange + 10;      // já está colada: quebra rapidinho
+                const turretOnTheWay = d > 250 && turretDistance < 200 && turretDistance < d - 60; // alvo longe, torreta no caminho
+                if (!targetInReach && (turretInReach || turretOnTheWay)) {
                     me.focusTurret = enemyTurret;
                     if (turretDistance > meleeRange - 10) this.moveToward(enemyTurret);
                     else me.attack('punch'); // fica parado batendo até quebrar
@@ -2394,7 +2441,7 @@ window.onload = () => {
             const allies = fighters.filter(f => alive(f) && f.team === me.team && f !== me);
             if (me.characterType === 'flora') {
                 // Joga a flor quando alguém do time (ou ela, se estiver sozinha) está abaixo de 80% de vida
-                const needsHeal = allies.length ? allies.some(a => a.health < MAX_HEALTH * 0.8) : me.health < MAX_HEALTH * 0.8;
+                const needsHeal = allies.length ? allies.some(a => a.health < a.maxHealth * 0.8) : me.health < me.maxHealth * 0.8;
                 if (needsHeal && me.energy >= FLORA_FLOWER_COST && me.specialCooldown <= 0) {
                     me.attack('special');
                     return;
@@ -2404,7 +2451,7 @@ window.onload = () => {
                 // Laço quando alguém do time (ou ela, sozinha) está abaixo de 70% e há inimigo no alcance.
                 // Fora isso ela luta: é batendo que ela cura.
                 const team = [me, ...allies];
-                const needsHeal = team.some(f => f.health < MAX_HEALTH * 0.7);
+                const needsHeal = team.some(f => f.health < f.maxHealth * 0.7);
                 if (needsHeal && d < NYX_LINK_RANGE * 0.9 && me.energy >= NYX_LINK_COST && me.specialCooldown <= 0) {
                     me.attack('special');
                     return;
@@ -2413,13 +2460,13 @@ window.onload = () => {
             if (me.characterType === 'celestia') {
                 // Ultimate quando 2+ do time (contando ela) estão abaixo de 50%; no 1v1, quando ela está
                 const team = [me, ...allies];
-                const hurt = team.filter(f => f.health < MAX_HEALTH * 0.5).length;
+                const hurt = team.filter(f => f.health < f.maxHealth * 0.5).length;
                 if (hurt >= Math.min(2, team.length) && me.energy >= CELESTIA_ULT_COST && me.specialCooldown <= 0) {
                     me.attack('special');
                     return;
                 }
                 // Fica perto do aliado mais machucado para ele ficar dentro da área
-                const mostHurt = allies.filter(a => a.health < MAX_HEALTH * 0.85).sort((a, b) => a.health - b.health)[0];
+                const mostHurt = allies.filter(a => a.health < a.maxHealth * 0.85).sort((a, b) => a.health - b.health)[0];
                 if (mostHurt && distance(me, mostHurt) > me.auraRadius() * 0.6) {
                     this.moveToward(mostHurt);
                     return;
@@ -2454,7 +2501,7 @@ window.onload = () => {
             // e no alcance. Antes de transformar, a barra enche com trocação, então prefere ficar colado.
             if (me.characterType === 'kayn') {
                 const ultReady = me.energy >= KAYN_ULT_COST && me.specialCooldown <= 0;
-                if (ultReady && d < KAYN_ULT_RANGE * 0.9) {
+                if (ultReady && d < kaynUltRange(me) * 0.9) {
                     me.attack('special');
                     return;
                 }
@@ -2624,8 +2671,8 @@ window.onload = () => {
         for (const f of fighters) {
             if (!f.hud) continue;
             const health = Math.ceil(f.health), energy = Math.ceil(f.energy);
-            setIfChanged(f.hud.health.fill.style, 'width', (health / MAX_HEALTH) * 100 + '%');
-            setIfChanged(f.hud.health.text, 'innerText', `${health} / ${MAX_HEALTH}`);
+            setIfChanged(f.hud.health.fill.style, 'width', (health / f.maxHealth) * 100 + '%');
+            setIfChanged(f.hud.health.text, 'innerText', `${health} / ${f.maxHealth}`);
             setIfChanged(f.hud.energy.fill.style, 'width', (energy / 1000) * 100 + '%');
             setIfChanged(f.hud.energy.text, 'innerText', `${energy} / 1000`);
             if (f.hud.card.classList.contains('dead') !== f.isDead) f.hud.card.classList.toggle('dead', f.isDead);
@@ -2655,6 +2702,7 @@ window.onload = () => {
         if (fighter.adrenaline > 0) html += `<span class="status-icon">💗<span class="stack-count">x${(1 + 0.5 * fighter.adrenaline).toFixed(1)}</span></span>`;
         if (fighter.frenzyTimer > 0) html += `<span class="status-icon">🔥</span>`;
         if (fighter.slowTimer > 0) html += `<span class="status-icon">🕸️</span>`;
+        if (isPossessed(fighter)) html += `<span class="status-icon">👁️</span>`;
         if (fighter.characterType === 'ryu' && fighter.attackSpeedMultiplier > 1) {
             html += `<span class="status-icon">✨<span class="stack-count">x${fighter.attackSpeedMultiplier.toFixed(1)}</span></span>`;
         }
@@ -2669,6 +2717,8 @@ window.onload = () => {
     function knockOut(fighter) {
         fighter.isDead = true;
         fighter.deathTimer = DEATH_DURATION;
+        const killer = fighter.lastAttacker;
+        if (killer && killer.team !== fighter.team) killer.stats.kos++;
         fighter.health = 0;
         fighter.stopChanneling();
         fighter.isDefending = false;
@@ -2690,6 +2740,7 @@ window.onload = () => {
         aiControllers.forEach(ai => ai.stop());
         cancelAnimationFrame(gameLoopId);
         gameOverScreen.classList.remove('hidden');
+        showMatchStats();
 
         const winningTeam = [...aliveTeams][0];
         const survivors = fighters.filter(f => alive(f) && f.team === winningTeam);
@@ -2705,6 +2756,21 @@ window.onload = () => {
         // Todo o time vencedor comemora
         survivors.forEach(f => { f.isCelebrating = true; f.isAttacking = false; f.moveX = 0; f.moveY = 0; });
         startWinnerZoom(survivors.find(f => f.isPlayer) || survivors[0]);
+    }
+
+    // Tabela do fim da luta: dano causado, dano sofrido, cura e abates de cada lutador (⭐ = destaque da partida)
+    function showMatchStats() {
+        const score = f => f.stats.dealt + f.healedTotal + f.stats.kos * 150;
+        const best = fighters.reduce((a, b) => (score(b) > score(a) ? b : a), fighters[0]);
+        const n = v => Math.round(v);
+        const rows = [...fighters].sort((a, b) => a.team - b.team).map(f => `
+            <tr style="color: ${TEAM_COLORS[f.team]}">
+                <td class="stats-name">${f === best ? '⭐ ' : ''}${f.name}</td>
+                <td>${n(f.stats.dealt)}</td><td>${n(f.stats.taken)}</td><td>${n(f.healedTotal)}</td><td>${f.stats.kos}</td>
+            </tr>`).join('');
+        matchStatsEl.innerHTML = `<table>
+            <thead><tr><th></th><th>Dano</th><th>Sofrido</th><th>Cura</th><th>Abates</th></tr></thead>
+            <tbody>${rows}</tbody></table>`;
     }
 
     let zoomFactor = 1;
@@ -3250,7 +3316,7 @@ window.onload = () => {
                 return;
             case 'special':
                 if (f.characterType === 'spark') {
-                    if (!f.isChannelingSpecial && !f.isInsideOpponent) {
+                    if (!f.isChannelingSpecial && !f.isInsideOpponent && !isPossessed(f)) {
                         f.isChannelingSpecial = true;
                         f.channelTarget = f.target;
                     }
@@ -3731,6 +3797,7 @@ window.onload = () => {
         turrets = [];
         hud.innerHTML = '';
         winText.innerText = '';
+        matchStatsEl.innerHTML = '';
         winText.style.color = '';
     }
 

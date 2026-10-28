@@ -718,3 +718,30 @@ body {
     justify-content: space-between;
     padding: 24px 20px 30px;
 }
+
+/* Estatísticas do fim da luta */
+#match-stats table {
+    margin: 10px auto 14px;
+    border-collapse: collapse;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    background: rgba(10, 6, 24, 0.75);
+    border: 1px solid rgba(63, 246, 255, 0.35);
+    border-radius: 6px;
+}
+#match-stats th {
+    color: #9fa8c8;
+    font-weight: 400;
+    font-size: 11px;
+    padding: 6px 12px;
+    border-bottom: 1px solid rgba(63, 246, 255, 0.25);
+}
+#match-stats td {
+    padding: 4px 12px;
+    text-align: right;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+}
+#match-stats td.stats-name {
+    text-align: left;
+    font-weight: 700;
+}

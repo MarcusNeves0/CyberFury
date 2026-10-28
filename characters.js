@@ -1,5 +1,5 @@
 // --- Personagens em Pixel Art ---
-// Cada sprite é uma grade de 32x32 caracteres. Cada caractere é uma cor da paleta ('.' = transparente).
+// Cada sprite é uma grade de 32x32 caracteres (ou 48x48 / 64x64 quando o personagem define size). Cada caractere é uma cor da paleta ('.' = transparente).
 // Linhas mais curtas que 32 são completadas com '.' à direita.
 // O corpo ocupa as colunas 8 a 23 (a "caixa" do lutador); o resto é espaço para braços, armas e capas.
 // O personagem sempre é desenhado virado para a direita; o jogo espelha quando precisa.
@@ -19,28 +19,32 @@ const WALK_POSES = [
     { back: { dx: 0, dy: 0 }, front: { dx: 0, dy: 0 } },
 ];
 
-function buildWalkFrames(idle, legStart) {
-    const legHeight = SPRITE_SIZE - legStart;
+// size: tamanho da grade (32 padrão; sprites mais detalhados usam 48). As colunas e o passo crescem junto.
+function buildWalkFrames(idle, legStart, size = SPRITE_SIZE) {
+    const k = size / SPRITE_SIZE;
+    const split = Math.floor(15 * k), weapons = Math.floor(22 * k);
+    const step = d => Math.sign(d) * Math.round(Math.abs(d) * k);
+    const legHeight = size - legStart;
     return WALK_POSES.map(pose => {
         const canvas = document.createElement('canvas');
-        canvas.width = SPRITE_SIZE;
-        canvas.height = SPRITE_SIZE;
+        canvas.width = size;
+        canvas.height = size;
         const g = canvas.getContext('2d');
-        g.drawImage(idle, 0, 0, SPRITE_SIZE, legStart, 0, 0, SPRITE_SIZE, legStart);                // corpo
-        g.drawImage(idle, 22, legStart, 10, legHeight, 22, legStart, 10, legHeight);              // armas penduradas
-        g.drawImage(idle, 0, legStart, 15, legHeight, pose.back.dx, legStart + pose.back.dy, 15, legHeight);
-        g.drawImage(idle, 15, legStart, 7, legHeight, 15 + pose.front.dx, legStart + pose.front.dy, 7, legHeight);
+        g.drawImage(idle, 0, 0, size, legStart, 0, 0, size, legStart);                                    // corpo
+        g.drawImage(idle, weapons, legStart, size - weapons, legHeight, weapons, legStart, size - weapons, legHeight); // armas penduradas
+        g.drawImage(idle, 0, legStart, split, legHeight, step(pose.back.dx), legStart + step(pose.back.dy), split, legHeight);
+        g.drawImage(idle, split, legStart, weapons - split, legHeight, split + step(pose.front.dx), legStart + step(pose.front.dy), weapons - split, legHeight);
         return canvas;
     });
 }
 
-function buildSprite(rows, palette, name) {
+function buildSprite(rows, palette, name, size = SPRITE_SIZE) {
     const canvas = document.createElement('canvas');
-    canvas.width = SPRITE_SIZE;
-    canvas.height = SPRITE_SIZE;
+    canvas.width = size;
+    canvas.height = size;
     const sctx = canvas.getContext('2d');
     rows.forEach((row, y) => {
-        if (row.length > SPRITE_SIZE) console.warn(`Sprite ${name}: linha ${y} tem ${row.length} colunas (máximo ${SPRITE_SIZE})`);
+        if (row.length > size) console.warn(`Sprite ${name}: linha ${y} tem ${row.length} colunas (máximo ${size})`);
         for (let x = 0; x < row.length; x++) {
             const color = palette[row[x]];
             if (!color) continue;
@@ -49,6 +53,46 @@ function buildSprite(rows, palette, name) {
         }
     });
     return canvas;
+}
+
+// --- Ampliação 32 -> 64 ---
+// Sprites desenhados em 32x32 são ampliados para 64x64 com Scale2x (arredonda curvas e diagonais
+// em vez de virar blocos 2x2) e depois o contorno 'K', que dobrou de grossura, volta a ter 1 pixel.
+const HD_SIZE = 64;
+
+function scale2x(rows, n) {
+    const at = (x, y) => (x < 0 || y < 0 || x >= n || y >= n) ? '.' : ((rows[y] || '')[x] || '.');
+    const out = Array.from({ length: n * 2 }, () => Array(n * 2).fill('.'));
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+        const P = at(x, y), A = at(x, y - 1), B = at(x + 1, y), C = at(x - 1, y), D = at(x, y + 1);
+        out[y * 2][x * 2] = (C === A && C !== D && A !== B) ? A : P;
+        out[y * 2][x * 2 + 1] = (A === B && A !== C && B !== D) ? B : P;
+        out[y * 2 + 1][x * 2] = (D === C && D !== B && C !== A) ? C : P;
+        out[y * 2 + 1][x * 2 + 1] = (B === D && B !== A && D !== C) ? D : P;
+    }
+    return out;
+}
+
+// Afina linhas de contorno de 2 pixels: o lado que encosta numa cor vira essa cor
+function thinOutline(grid) {
+    const n = grid.length;
+    const at = (x, y) => (x < 0 || y < 0 || x >= n || y >= n) ? '.' : grid[y][x];
+    const isColor = c => c !== '.' && c !== 'K';
+    const out = grid.map(row => row.slice());
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+        if (grid[y][x] !== 'K') continue;
+        for (const [dx, dy] of [[1, 0], [0, 1], [-1, 0], [0, -1]]) {
+            const ahead = at(x + dx, y + dy), behind = at(x - dx, y - dy);
+            // Linha interna (cor dos dois lados) ou contorno externo (fundo depois do outro K)
+            const thick = behind === 'K' && (dx + dy > 0 || at(x - 2 * dx, y - 2 * dy) === '.');
+            if (isColor(ahead) && thick) { out[y][x] = ahead; break; }
+        }
+    }
+    return out.map(row => row.join(''));
+}
+
+function upscaleRows(rows) {
+    return thinOutline(scale2x(rows, SPRITE_SIZE));
 }
 
 // Cria um quadro a partir de outro, trocando só as linhas indicadas
@@ -1018,55 +1062,99 @@ pixelCharacters.becca = {
 
 // --- Weaver: acrobata cyberpunk com lançadores de teia (traje preto com teia neon) ---
 pixelCharacters.weaver = {
+    size: 64, // sprite bem detalhado (64x64)
     palette: {
         K: OUTLINE,
         B: '#15131c', b: '#262233',                          // traje
         C: '#3ff6ff', c: '#1a8aa0',                          // linhas de teia neon
-        L: '#e8fbff',                                        // lentes da máscara
-        P: '#a050ff',                                        // emblema
-        G: '#8a94a8',                                        // lançadores de teia
+        L: '#e8fbff', w: '#9fd8e8',                          // lentes da máscara
+        P: '#a050ff', p: '#7a3ad0',                          // emblema de aranha
+        G: '#8a94a8', g: '#4a5266',                          // lançadores de teia
     },
     idle: [
-        '............KKKKKKK',
-        '...........KBBBBBBBK',
-        '..........KBBCBBBCBBK',
-        '..........KBCBBCBBCBBK',
-        '..........KBBLLLKLLLK',
-        '..........KBBLLLKLLLK',
-        '..........KBCBBBBBBCBK',
-        '..........KBBCBBBBCBK',
-        '...........KBBCCCCBK',
-        '............KBBBBK',
-        '.......KKKKBCBBPBBCBKKKKK',
-        '......KbBBKBCBPPPBCBBKBBbK',
-        '......KbCBKCBBBPBBBCBKBCbK',
-        '......KbBBKBCBBBBBCBBKBBbK',
-        '......KGGGKBBCBBBCBBBKGGGK',
-        '......KBBbKBBBCCCBBBBKBBbK',
-        '......KKKKKbBBBBBBBBbKKKKK',
-        '........KBBBBBBBBBBBBK',
-        '........KBCBBBKKBBBCBK',
-        '.........KBCbK..KBCbK',
-        '.........KCBbK..KCBbK',
-        '.........KBCbK..KBCbK',
-        '.........KCBbK..KCBbK',
-        '.........KBCbK..KBCbK',
-        '.........KCBbK..KCBbK',
-        '.........KBCbK..KBCbK',
-        '.........KCBbK..KCBbK',
-        '.........KBCbK..KBCbK',
-        '.........KCBbK..KCBbK',
-        '.........KBBbK..KBBbK',
-        '........KbbbbK.KbbbbbK',
-        '........KKKKKK.KKKKKKK',
+        '',
+        '...........................KKKKKKKKKK',
+        '.........................KKCBBBBBBBBCKK',
+        '........................KBBBCCCBBCCCBBBK',
+        '.......................KBBCCCBBBBBBCCCBBK',
+        '......................KBBCKKKKBBBBKKKKCBBK',
+        '.....................KbBKLLLLLKBBKLLLLLKBBK',
+        '.....................KKKLLLLLLKKKKLLLLLLKKK',
+        '.....................KKLLLLLLLKKKKLLLLLLLKK',
+        '.....................KLLLLLLLLKBBKLLLLLLLLK',
+        '....................KKLLLLLLLKKBBKKLLLLLLLKK',
+        '.....................KwwwwwwKKBBBBKKwwwwwwK',
+        '.....................KwwwwwKBBBBBBBBKwwwwwK',
+        '.....................KKKKKBBBBBBBBBBBBKKKKK',
+        '.....................KbBCBBBBBBBBBBBBBBCBBK',
+        '......................KBBCBBBBBBBBBBBBCBBK',
+        '.......................KBBCCCBBBBBBCCCBBK',
+        '........................KBBBCCCBBCCCBBBK',
+        '.........................KKCBBBBBBBBCKK',
+        '...........................KKKKKKKKKK',
+        '...........................KbbbbbbbbK',
+        '......................KKKKKKbbbbbbbbKKKKKK',
+        '............KKKKKKKK..KBBBBKKKKKKKKKKBCBCK..KKKKKKKK',
+        '............KbBCBBBKKKbBpBBBBBCBBBBBBBBpBBKKKbBCBBCK',
+        '............KbBBCBCKKbCBBppBBCPPPPBBBppBCBBKKbCBBBBK',
+        '............KbBBBCBKKbbCBBBpCBPPPPBBpCBBBCBKKCBBBBBK',
+        '............KbBBCBCKKbbBCBBCpBPPPPBpCBBBBBCKKbCBBBBK',
+        '............KbBCBBBKKbbBBCCBBpPPPPpCBBBBBBBKKbBCBBCK',
+        '............KCCBBBBKKbbBBCCBpBPPPPCpBBBBBBBKKbBBCCBK',
+        '............KCCBBBBKKbbBCBBpBBPPPPBBpBBBBBCKKbBBCCBK',
+        '............KbBCBBBKKbbCBppBCBPPPPBBBppBBCBKKbBCBBCK',
+        '............KGGGGGGKKbCBpBBBBCPPPPBBBBCpCBBKKGGGGGGK',
+        '............KGGGCGGKKCbBBBBBBBCPPBBBBBBCBBBKKGGGCGGK',
+        '............KGGGGGGKKbCBBBBBBCBCBBBBBBCBCBBKKGGGGGGK',
+        '............KggggggKKKKKKKKKKKKKKKKKKKKKKKKKKggggggK',
+        '............KbbbbbbKKccccccccccccccccccccccKKbbbbbbK',
+        '............KbbbbbbKKbbBBBBBBBBBBBBBBBBBBBBKKbbbbbbK',
+        '............KKKKKKKKKbbBBBBBBBBBBBBBBBBBBBBKKKKKKKKK',
+        '....................KKKKKKKKKKKKKKKKKKKKKKKK',
+        '.....................KBCBBBBbK...KBCBBBBbK',
+        '.....................KBBCBBBbK...KBBCBBBbK',
+        '.....................KBBBCBBbK...KBBBCBBbK',
+        '.....................KBCBBBBbK...KBCBBBBbK',
+        '.....................KBBCBBBbK...KBBCBBBbK',
+        '.....................KBBBCBBbK...KBBBCBBbK',
+        '.....................KBCBBBBbK...KBCBBBBbK',
+        '.....................KbbbbbbbK...KbbbbbbbK',
+        '.....................KbbbbbbbK...KbbbbbbbK',
+        '.....................KbbbbbbbK...KbbbbbbbK',
+        '.....................KBBCBBBbK...KBBCBBBbK',
+        '.....................KBBBCBBbK...KBBBCBBbK',
+        '.....................KBCBBBBbK...KBCBBBBbK',
+        '.....................KBBCBBBbK...KBBCBBBbK',
+        '.....................KBBBCBBbK...KBBBCBBbK',
+        '.....................KBCBBBBbK...KBCBBBBbK',
+        '.....................KBBCBBBbK...KBBCBBBbK',
+        '.....................KBBBCBBbK...KBBBCBBbK',
+        '.....................KBCBBBBbK...KBCBBBBbK',
+        '....................KKKKKKKKKKK.KKKKKKKKKKK',
+        '....................KcccccccccK.KcccccccccK',
+        '....................KbbbbbbbbbK.KbbbbbbbbbK',
+        '....................KbbbbbbbbbK.KbbbbbbbbbK',
+        '....................KbbbbbbbbbK.KbbbbbbbbbK',
+        '....................KKKKKKKKKKK.KKKKKKKKKKK',
     ],
     // Golpe: braço esticado com o lançador de teia
     attack: {
-        11: '......KbBBKBCBPPPBCBBKKKKKKKKK',
-        12: '......KbCBKCBBBPBBBCBKBCBBGGBBK',
-        13: '......KbBBKBCBBBBBCBBKBBBBGGBBK',
-        14: '......KGGGKBBCBBBCBBBKKKKKKKKKK',
-        15: '......KBBbKBBBCCCBBBBK',
+        22: '............KKKKKKKK..KBBBBKKKKKKKKKKBCBCK',
+        23: '............KbBCBBBKKKbBpBBBBBCBBBBBBBBpBBKK',
+        24: '............KbBBCBCKKbCBBppBBCPPPPBBBppBCBBK',
+        25: '............KbBBBCBKKbbCBBBpCBPPPPBBpCBBBCBK',
+        26: '............KbBBCBCKKbbBCBBCpBPPPPBpCBBBBBCK',
+        27: '............KbBCBBBKKbbBBCCBBpPPPPpCBBBBBBBKKKKKKKKKKKKKKKKKKK',
+        28: '............KCCBBBBKKbbBBCCBpBPPPPCpBBBBBBBKCBBCBCBBCBGGGGbbbK',
+        29: '............KCCBBBBKKbbBCBBpBBPPPPBBpBBBBBCKBCCBBBCCBBGGGGbbbKC',
+        30: '............KbBCBBBKKbbCBppBCBPPPPBBBppBBCBKBCCBBBCCBBGGCGbbbKCC',
+        31: '............KGGGGGGKKbCBpBBBBCPPPPBBBBCpCBBKCBBCBCBBCBGGGGbbbKC',
+        32: '............KGGGCGGKKCbBBBBBBBCPPBBBBBBCBBBKBBBBCBBBBCGGGGbbbK',
+        33: '............KGGGGGGKKbCBBBBBBCBCBBBBBBCBCBBKKKKKKKKKKKKKKKKKKK',
+        34: '............KggggggKKKKKKKKKKKKKKKKKKKKKKKKK',
+        35: '............KbbbbbbKKccccccccccccccccccccccK',
+        36: '............KbbbbbbKKbbBBBBBBBBBBBBBBBBBBBBK',
+        37: '............KKKKKKKKKbbBBBBBBBBBBBBBBBBBBBBK',
     },
 };
 
@@ -1074,8 +1162,8 @@ pixelCharacters.weaver = {
 // Gerada a partir do sprite parado: recorta o braço da frente (e a arma, se estiver nele)
 // e cola mais para cima, como se o personagem erguesse o braço para soltar o poder.
 // area: retângulo recortado (colunas x0..x1-1, linhas y0..y1-1); lift: quantas linhas sobe.
-function raisedPose(rows, { x0, x1, y0, y1, lift }) {
-    const grid = Array.from({ length: SPRITE_SIZE }, (_, y) => (rows[y] || '').padEnd(SPRITE_SIZE, '.').split(''));
+function raisedPose(rows, { x0, x1, y0, y1, lift }, size = SPRITE_SIZE) {
+    const grid = Array.from({ length: size }, (_, y) => (rows[y] || '').padEnd(size, '.').split(''));
     const out = grid.map(row => row.slice());
     for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) out[y][x] = '.';
     for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
@@ -1101,17 +1189,17 @@ const SPECIAL_POSE = {
     viper: { x0: 22, x1: 32, y0: 10, y1: 16, lift: 6 },
     gear: { x0: 22, x1: 27, y0: 10, y1: 18, lift: 7 },
     becca: { x0: 22, x1: 27, y0: 10, y1: 18, lift: 7 },
-    weaver: { x0: 22, x1: 27, y0: 10, y1: 16, lift: 7 },
+    weaver: { x0: 44, x1: 52, y0: 22, y1: 38, lift: 15 }, // grade 64x64
 };
 
 // Linha onde as pernas se separam em cada sprite (abaixo do short, da saia ou do casaco)
 const LEG_START = {
     titan: 23, spark: 19, hades: 22, jack: 21, genji: 20, ryu: 21, lorenzo: 20, malenia: 19,
-    maliketh: 20, kayn: 20, celestia: 30, flora: 23, nyx: 22, viper: 20, gear: 20, becca: 19, weaver: 19,
+    maliketh: 20, kayn: 20, celestia: 30, flora: 23, nyx: 22, viper: 20, gear: 20, becca: 19, weaver: 37,
 };
 for (const [type, row] of Object.entries(LEG_START)) pixelCharacters[type].legStart = row;
 for (const [type, area] of Object.entries(SPECIAL_POSE)) {
-    pixelCharacters[type].special = raisedPose(pixelCharacters[type].idle, area);
+    pixelCharacters[type].special = raisedPose(pixelCharacters[type].idle, area, pixelCharacters[type].size);
 }
 // Kayn e Celestia: foice e cajado já vão até o topo do quadro; a pose de especial é o braço estendido
 for (const type of ['kayn', 'celestia']) {
@@ -1129,12 +1217,17 @@ function makePixelArt(type) {
         const form = def.forms ? ((fighter && fighter.kaynForm) || 'normal') : 'normal';
         if (!spritesByForm[form]) {
             const palette = def.forms ? { ...def.palette, ...def.forms[form] } : def.palette;
-            const idle = buildSprite(def.idle, palette, `${type} idle`);
+            // Sprites em 32x32 são ampliados para 64x64; os desenhados em 64 entram direto
+            const hd = !def.size;
+            const size = hd ? HD_SIZE : def.size;
+            const frame = rows => hd ? upscaleRows(rows) : rows;
+            const legStart = (def.legStart || 20) * (hd ? 2 : 1);
+            const idle = buildSprite(frame(def.idle), palette, `${type} idle`, size);
             spritesByForm[form] = {
                 idle,
-                attack: buildSprite(spriteVariant(def.idle, def.attack), palette, `${type} attack`),
-                walk: buildWalkFrames(idle, def.legStart || 20),
-                special: buildSprite(def.special || def.idle, palette, `${type} special`),
+                attack: buildSprite(frame(spriteVariant(def.idle, def.attack)), palette, `${type} attack`, size),
+                walk: buildWalkFrames(idle, legStart, size),
+                special: buildSprite(frame(def.special || def.idle), palette, `${type} special`, size),
             };
         }
         const sprites = spritesByForm[form];
