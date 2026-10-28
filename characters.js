@@ -331,8 +331,8 @@ pixelCharacters.jack = {
     },
 };
 
-// --- Genji: ninja cibernético com katana ---
-pixelCharacters.genji = {
+// --- Kaze: ninja cibernético com katana ---
+pixelCharacters.kaze = {
     palette: {
         K: OUTLINE,
         M: '#9aa6b8', m: '#5f6a80',                          // capacete
@@ -397,8 +397,8 @@ pixelCharacters.genji = {
     },
 };
 
-// --- Ryu: lutador de quimono ---
-pixelCharacters.ryu = {
+// --- Kenji: lutador de quimono ---
+pixelCharacters.kenji = {
     palette: {
         K: OUTLINE,
         S: '#f2b98f', s: '#c47f5a',                          // pele
@@ -452,8 +452,8 @@ pixelCharacters.ryu = {
     },
 };
 
-// --- Don Lorenzo: atacante de futebol ---
-pixelCharacters.lorenzo = {
+// --- El Craque: atacante de futebol ---
+pixelCharacters.craque = {
     palette: {
         K: OUTLINE,
         S: '#f2b98f', s: '#c47f5a',                          // pele
@@ -513,8 +513,8 @@ pixelCharacters.lorenzo = {
     },
 };
 
-// --- Malenia: a Espada de Miquella ---
-pixelCharacters.malenia = {
+// --- Akane: a Lâmina Carmesim ---
+pixelCharacters.akane = {
     palette: {
         K: OUTLINE,
         A: '#d4a64a', a: '#8f6a2a', l: '#ffe08a',            // armadura dourada
@@ -576,8 +576,8 @@ pixelCharacters.malenia = {
     },
 };
 
-// --- Maliketh: a Besta Presa nas Sombras ---
-pixelCharacters.maliketh = {
+// --- Fenris: a fera das sombras ---
+pixelCharacters.fenris = {
     palette: {
         K: OUTLINE,
         D: '#2a2533', d: '#18141f',                          // armadura
@@ -641,9 +641,9 @@ pixelCharacters.maliketh = {
     },
 };
 
-// --- Kayn: o ceifador das sombras, com a foice viva Rhaast ---
+// --- Zarek: o ceifador das sombras, com a foice viva ---
 // Tem três formas que só trocam as cores de destaque (X/x), da lâmina (B/b) e do olho da foice (E).
-pixelCharacters.kayn = {
+pixelCharacters.zarek = {
     palette: {
         K: OUTLINE,
         A: '#2b2540', a: '#1a1528',                          // armadura
@@ -889,8 +889,8 @@ pixelCharacters.nyx = {
     },
 };
 
-// --- Viper: sniper de capuz e máscara de gás, com rifle venenoso ---
-pixelCharacters.viper = {
+// --- Mamba: sniper de capuz e máscara de gás, com rifle venenoso ---
+pixelCharacters.mamba = {
     palette: {
         K: OUTLINE,
         H: '#1f3a2a', h: '#2f5a3e',                          // capuz
@@ -1001,8 +1001,8 @@ pixelCharacters.gear = {
     },
 };
 
-// --- Becca: baixinha caótica com duas pistolas rosa (desenhada um pouco menor no jogo) ---
-pixelCharacters.becca = {
+// --- Roxy: baixinha caótica com duas pistolas rosa (desenhada um pouco menor no jogo) ---
+pixelCharacters.roxy = {
     palette: {
         K: OUTLINE,
         T: '#3ff0c8', t: '#1fa88a',                          // cabelo verde-água
@@ -1158,6 +1158,331 @@ pixelCharacters.weaver = {
     },
 };
 
+// --- Aegis: policial de choque com escudo de energia (tanque) ---
+pixelCharacters.aegis = {
+    size: 64,
+    palette: { K: OUTLINE, B: '#25336b', n: '#18214a', A: '#3d5199', V: '#3ff6ff', v: '#1a8aa0', S: '#4aa8ff', s: '#2a6fd0', W: '#cfeaff', Y: '#ffd23f', G: '#8a94a8' },
+    idle: [
+        '',
+        '...........................KKKKKKKKKK',
+        '.........................KKAAAAAAAAAAKK',
+        '........................KAAAAAAAAAAAAAAK',
+        '.......................KBBBBBBBBBBBBBBBBK',
+        '......................KnBBBBBBBBBBBBBBBBBK',
+        '.....................KnnBBBBBBBBBBBBBBBBBBK',
+        '.....................KnnBBBBBBBBBBBBBBBBBBK',
+        '.....................KnVVVVVVVVVVVVVVVVVVVK',
+        '.....................KnVVVVVVVVVVVVVVVVVVVK',
+        '....................KnnVVVVVVVVVVVVVVVVVVVVK',
+        '.....................KnVVVVVVVVVVVVVVVVVVVK',
+        '.....................KnvvvvvvvvvvvvvvvvvvvK',
+        '.....................KnnBBBBBBBBBBBBBBBBBBK',
+        '.....................KnnBBBBBBBBBBBBBBBBBBK',
+        '......................KnBBBBBBBBBBBBBBBBBK.....KKKKKKK',
+        '.......................KBBBBBBBBBBBBBBBBK....KKsssssssKK',
+        '................K.......KBBBBBBBBBBBBBBK...KKSSSSSSSSSSSK',
+        '.............KKKAKKK.....KKBBBBBBBBBBKK...KAKWSSSSSSSSSSK',
+        '............KAAAAAAAKKKKKKKKKKKKKKKKKKKKKKAKsWSSSSSSSSSSsK',
+        '...........KAAAAAAAAAKAAAAAKnnnnnnnnKAAAAKAKsWWSSSSSSSSSsK',
+        '...........KAAAAAAAAAKABABBKKKKKKKKKKBBBKAAKsSWSSSSSSSSSsK',
+        '..........KAAAAAAAAAAAKABBBBBBBBABBBYBBBBKAKsSWWSSSSSSSSsK',
+        '..........KKAAAAAAAAAKABBBBBBBBABBBYYYBBAKAKsSSWSSSSSSSSsK',
+        '..........KKAAAAAAAAAKABBBBBBBABBBYYYYYABAKKsSSWWSSSSSSSsK',
+        '..........KnKAAAAAAAKAABBBBBBABBBBBYYYABBAAKsSSSWSSSSSSSsK',
+        '..........KnBKKKAKKKnAABBBBBABBBBBBBYABBBAAKsSSSWWSSSSSSsK',
+        '..........KnBBBBKnnnnnnnnnnnnnnnnnnnnnnnnnnKsSSSSWSSSSSSsK',
+        '..........KnBBBBKnnnnAABBBABBBBBBBBABBBBBAAKsSSSSWWSSSSSsK',
+        '..........KnBBBBKnnnnAABBABBBBBBBBABBBBBBAAKsSSSSSWSSSSSsK',
+        '..........KnBBBBKnnnnAABABBBBBBBBABBBBBBBAAKsSSSSWWWSSSSsK',
+        '..........KnBBBBBKnnnAAABBBBBBBBABBBBBBBBAAKsSSSWWWWWSSSsK',
+        '..........KnBBBBBKnnnAAAAAAAAAAAAAAAAAAAAAAKsSSWWWWWWWSSsK',
+        '..........KnBBBBBKKKnAAAAAAAAAAAAAAAAAAAAAAKsSSWWWWWWWSSsK',
+        '..........KnBBBBBKKnKKKKKKKKKKKKKKKKKKKKKKKKsSSWWWWWWWSSsK',
+        '..........KnnnnnnKKGGGGGGGGGGGGGGGGGGGGGGGGKsSSWWWWWWWSSsK',
+        '..........KnnnnnnKKnnnnnnnnnnnnnnnnnnnnnnnnKsSSWWWWWWWWSsK',
+        '..........KnnnnnnKKnnnnnnnnnnnnnnnnnnnnnnnnKsSSSWWWWWSWSsK',
+        '..........KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKsSSSSWWWSSWWsK',
+        '....................KnBBBBBBBK...KnBBBBBBBKKsSSSSSSSSSSWsK',
+        '....................KnBBBBBBBK...KnBBBBBBBKKsSSSSSSSSSSWsK',
+        '....................KnBBBBBBBK...KnBBBBBBBKKsSSSSSSSSSSSsK',
+        '....................KnBBBBBBBK...KnBBBBBBBKKsSSSSSSSSSSSsK',
+        '....................KnBBBBBBBK...KnBBBBBBBKKsSSSSSSSSSSSsK',
+        '....................KnBBBBBBBK...KnBBBBBBBKKsSSSSSSSSSSSsK',
+        '....................KnBBBBBBBK...KnBBBBBBBKKsSSSSSSSSSSSsK',
+        '....................KAAAAAAAAK...KAAAAAAAAKKsSSSSSSSSSSSsK',
+        '....................KAAAAAAAAK...KAAAAAAAAKKsSSSSSSSSSSSsK',
+        '....................KAAAAAAAAK...KAAAAAAAAKKsSSSSSSSSSSSsK',
+        '....................KnBBBBBBBK...KnBBBBBBBKKsSSSSSSSSSSSsK',
+        '....................KnBBBBBBBK...KnBBBBBBBKKsSSSSSSSSSSSsK',
+        '....................KnBBBBBBBK...KnBBBBBBBKKsSSSSSSSSSSSsK',
+        '....................KnBBBBBBBK...KnBBBBBBBK.KSSSSSSSSSSSK',
+        '....................KnBBBBBBBK...KnBBBBBBBK.KSSSSSSSSSSSK',
+        '....................KnBBBBBBBK...KnBBBBBBBK..KKsssssssKK',
+        '....................KnBBBBBBBK...KnBBBBBBBK....KKKKKKK',
+        '....................KKKKKKKKKK...KKKKKKKKKK',
+        '....................KAAAAAAAAAK..KAAAAAAAAAK',
+        '...................KnnnnnnnnnnnKKnnnnnnnnnnnK',
+        '...................KnnnnnnnnnnnKKnnnnnnnnnnnK',
+        '...................KnnnnnnnnnnnKKnnnnnnnnnnnK',
+        '...................KnnnnnnnnnnnKKnnnnnnnnnnnK',
+        '....................KnnnnnnnnnK..KnnnnnnnnnK',
+        '.....................KKKKKKKKK....KKKKKKKKK',
+    ],
+    attack: {
+        15: '......................KnBBBBBBBBBBBBBBBBBK..........KKKKKKK',
+        16: '.......................KBBBBBBBBBBBBBBBBK.....K...KKsssssssKK',
+        17: '................K.......KBBBBBBBBBBBBBBK...KKKAKKKSSSSSSSSSSSK',
+        18: '.............KKKAKKK.....KKBBBBBBBBBBKK...KAAAAAAKWSSSSSSSSSSK',
+        19: '............KAAAAAAAKKKKKKKKKKKKKKKKKKKKKKAAAAAAKsWSSSSSSSSSSsK',
+        20: '...........KAAAAAAAAAKAAAAAKnnnnnnnnKAAAAKAAAAAAKsWWSSSSSSSSSsK',
+        21: '...........KAAAAAAAAAKABABBKKKKKKKKKKBBBKAAAAAAAKsSWSSSSSSSSSsK',
+        22: '..........KAAAAAAAAAAAKABBBBBBBBABBBYBBBBKAAAAAAKsSWWSSSSSSSSsK',
+        23: '..........KKAAAAAAAAAKABBBBBBBBABBBYYYBBAKAAAAAAKsSSWSSSSSSSSsK',
+        24: '..........KKAAAAAAAAAKABBBBBBBABBBYYYYYABAKAAAAAKsSSWWSSSSSSSsK',
+        25: '..........KnKAAAAAAAKAABBBBBBABBBBBYYYABBAAKKKAKKsSSSWSSSSSSSsK',
+        26: '..........KnBKKKAKKKnAABBBBBABBBBBBBYABBKKKKKKKKKsSSSWWSSSSSSsK',
+        27: '..........KnBBBBKnnnnnnnnnnnnnnnnnnnnnnnKBBBBBBnKsSSSSWSSSSSSsK',
+        28: '..........KnBBBBKnnnnAABBBABBBBBBBBABBBBKBBBBBBnKsSSSSWWSSSSSsK',
+        29: '..........KnBBBBKnnnnAABBABBBBBBBBABBBBBKBBBBBBnKsSSSSSWSSSSSsK',
+        30: '..........KnBBBBKnnnnAABABBBBBBBBABBBBBBKBBBBBBnKsSSSSWWWSSSSsK',
+        31: '..........KnBBBBBKnnnAAABBBBBBBBABBBBBBBKBBBBBBnKsSSSWWWWWSSSsK',
+        32: '..........KnBBBBBKnnnAAAAAAAAAAAAAAAAAAAKKKKKKKKKsSSWWWWWWWSSsK',
+        33: '..........KnBBBBBKKKnAAAAAAAAAAAAAAAAAAAAAAAKK..KsSSWWWWWWWSSsK',
+        34: '..........KnBBBBBKKnKKKKKKKKKKKKKKKKKKKKKKKKnK..KsSSWWWWWWWSSsK',
+        35: '..........KnnnnnnKKGGGGGGGGGGGGGGGGGGGGGGGGGGK..KsSSWWWWWWWSSsK',
+        36: '..........KnnnnnnKKnnnnnnnnnnnnnnnnnnnnnnnnnnK..KsSSWWWWWWWWSsK',
+        37: '..........KnnnnnnKKnnnnnnnnnnnnnnnnnnnnnnnnnnK..KsSSSWWWWWSWSsK',
+        38: '..........KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK..KsSSSSWWWSSWWsK',
+        39: '....................KnBBBBBBBK...KnBBBBBBBK.....KsSSSSSSSSSSWsK',
+        40: '....................KnBBBBBBBK...KnBBBBBBBK.....KsSSSSSSSSSSWsK',
+        41: '....................KnBBBBBBBK...KnBBBBBBBK.....KsSSSSSSSSSSSsK',
+        42: '....................KnBBBBBBBK...KnBBBBBBBK.....KsSSSSSSSSSSSsK',
+        43: '....................KnBBBBBBBK...KnBBBBBBBK.....KsSSSSSSSSSSSsK',
+        44: '....................KnBBBBBBBK...KnBBBBBBBK.....KsSSSSSSSSSSSsK',
+        45: '....................KnBBBBBBBK...KnBBBBBBBK.....KsSSSSSSSSSSSsK',
+        46: '....................KAAAAAAAAK...KAAAAAAAAK.....KsSSSSSSSSSSSsK',
+        47: '....................KAAAAAAAAK...KAAAAAAAAK.....KsSSSSSSSSSSSsK',
+        48: '....................KAAAAAAAAK...KAAAAAAAAK.....KsSSSSSSSSSSSsK',
+        49: '....................KnBBBBBBBK...KnBBBBBBBK.....KsSSSSSSSSSSSsK',
+        50: '....................KnBBBBBBBK...KnBBBBBBBK.....KsSSSSSSSSSSSsK',
+        51: '....................KnBBBBBBBK...KnBBBBBBBK.....KsSSSSSSSSSSSsK',
+        52: '....................KnBBBBBBBK...KnBBBBBBBK......KSSSSSSSSSSSK',
+        53: '....................KnBBBBBBBK...KnBBBBBBBK......KSSSSSSSSSSSK',
+        54: '....................KnBBBBBBBK...KnBBBBBBBK.......KKsssssssKK',
+        55: '....................KnBBBBBBBK...KnBBBBBBBK.........KKKKKKK',
+    },
+};
+
+// --- Rhino: mercenário com armadura de rinoceronte (tanque de atropelo) ---
+pixelCharacters.rhino = {
+    size: 64,
+    palette: { K: OUTLINE, R: '#6b6f7a', r: '#474b55', h: '#9aa0ad', H: '#efe6cc', O: '#ff8a2a', o: '#b35a12', E: '#ff3b3b', D: '#2b2e35', B: '#6b6f7a' },
+    idle: [
+        '...........................K',
+        '..........................KRK',
+        '.........................KRRRK',
+        '.........................KRRRKK............KKKKKKK',
+        '.........................KKKKKhKKKKK.......KHHHHHK',
+        '........................KhhhhhhhhhhhK......KHHHHHK',
+        '......................KKRRRRRRRRRRRRRKK....KHHHHK',
+        '.....................KrrRRRRRRRRRRRRRRRK...KHHHK',
+        '.....................KrrRRRRRRRRRRRRREEK..KHHHK',
+        '....................KrrrRRRRRRRRRRRREEEEK.KHHHK',
+        '....................KrrrRRRRRRRRRRRRREERK.KHHK',
+        '....................KrrrRRRRRRRRRRRRRRRRRKKhKK',
+        '...................KrrrrRRRRRRRRRRRRRRRRRRKKRK',
+        '....................KrrrRRRRRRRRRRRRRRRRRKKKRK',
+        '....................KrrrRRRRRRRRRRRRRRRRRRRRRK',
+        '....................KrrrRRRRRRRRRRRRRRRRRRRRRK',
+        '.....................KrrRRRRRRRRRRRRRRRRRRRRRK',
+        '...............K.....KrrrrrrrrrrrrrrrrrrrrrrrK.K',
+        '............KKKhKKK...KKrrrrrrrrrrrrrrrrrrrrrKKhKKK',
+        '...........KhhhhhhhK....KrrrrrrrrrrrKKKKKKKKKKhhhhhK',
+        '..........KhhhhhhhhhKKKKKKKKKKrKKKKKKKKKKKKhhhhhhhhhK',
+        '..........KRRRRRRRRRKRRRRRRRRRKRRRRRRRRRRRKRRRRRRRRRK',
+        '.........KRRRRRRRRRRRKRRRRRRRRRRRRRRRRRRRKRRKKKKKKKKKK',
+        '..........KRRRRRRRRRKRRRRRRRooooooooRRRRRRKRKrRRRRRRK',
+        '..........KRRRRRRRRRKrrrrrrroOOOOOOorrrrrrKRKrRRRRRRK',
+        '..........KKRRRRRRRKrRRRRRRRoOOOOOOoRRRRRRRKKrRRRRRRK',
+        '..........KrKKKRKKKrrRRRRRRRoOOOOOOoRRRRRRRRKrRRRRRRK',
+        '..........KrrRRKKrrrrRRRRRRRoOOOOOOoRRRRRRRRKrRRRRRRK',
+        '..........KrrRRRKrrrrrrrrrrroOOOOOOorrrrrrrrKrRRRRRRK',
+        '..........KrrRRRKrrrrRRRRRRRoOOOOOOoRRRRRRRRKrRRRRRRK',
+        '..........KrrRRRRKrrrRRRRRRRooooooooRRRRRRRRKrRRRRRRK',
+        '..........KrrRRRRKrrrRRRRRRRRRRRRRRRRRRRRRRRKrRRRRRRK',
+        '..........KrrRRRRKrrrrrrrrrrrrrrrrrrrrrrrrrrKrRRRRRRK',
+        '..........KDDDDDDDKKKRRRRRRRRRRRRRRRRRRRRRRKKDDDDDDDK',
+        '..........KDDDDDDDKrrKKKKKKKKKKKKKKKKKKKKKKrKDDDDDDDK',
+        '..........KDDDDDDDKOOOOOOOOOOOOOOOOOOOOOOOOOKDDDDDDDK',
+        '..........KDDDDDDDKrrrrrrrrrrrrrrrrrrrrrrrrrKDDDDDDDK',
+        '..........KKKKKKKKKrrrrrrrrrrrrrrrrrrrrrrrrrKKKKKKKKK',
+        '..................KKKKKKKKKKKKKKKKKKKKKKKKKKKK',
+        '....................KrRRRRRRRK...KrRRRRRRRK',
+        '....................KrRRRRRRRK...KrRRRRRRRK',
+        '....................KrRRRRRRRK...KrRRRRRRRK',
+        '....................KrRRRRRRRK...KrRRRRRRRK',
+        '....................KrRRRRRRRK...KrRRRRRRRK',
+        '....................KrRRRRRRRK...KrRRRRRRRK',
+        '....................KrRRRRRRRK...KrRRRRRRRK',
+        '....................KhhhhhhhhK...KhhhhhhhhK',
+        '....................KhhhhhhhhK...KhhhhhhhhK',
+        '....................KhhhhhhhhK...KhhhhhhhhK',
+        '....................KrRRRRRRRK...KrRRRRRRRK',
+        '....................KrRRRRRRRK...KrRRRRRRRK',
+        '....................KrRRRRRRRK...KrRRRRRRRK',
+        '....................KrRRRRRRRK...KrRRRRRRRK',
+        '....................KrRRRRRRRK...KrRRRRRRRK',
+        '....................KrRRRRRRRK...KrRRRRRRRK',
+        '....................KrRRRRRRRK...KrRRRRRRRK',
+        '....................KKKKKKKKKK...KKKKKKKKKK',
+        '....................KhhhhhhhhhK..KhhhhhhhhhK',
+        '...................KDDDDDDDDDDDKKDDDDDDDDDDDK',
+        '...................KDDDDDDDDDDDKKDDDDDDDDDDDK',
+        '...................KDDDDDDDDDDDKKDDDDDDDDDDDK',
+        '...................KDDDDDDDDDDDKKDDDDDDDDDDDK',
+        '....................KDDDDDDDDDK..KDDDDDDDDDK',
+        '.....................KKKKKKKKK....KKKKKKKKK',
+    ],
+    attack: {
+        22: '.........KRRRRRRRRRRRKRRRRRRRRRRRRRRRRRRRKRRRRRRRRRRRK',
+        23: '..........KRRRRRRRRRKRRRRRRRooooooooRRRRRRKRRRRRRRRRK',
+        24: '..........KRRRRRRRRRKrrrrrrroOOOOOOorrrrrrKRRRRRRRRRK',
+        25: '..........KKRRRRRRRKrRRRRRRRoOOOOOOoRRRRRRRKKKKKKKKKKKKKKKKKKK',
+        26: '..........KrKKKRKKKrrRRRRRRRoOOOOOOoRRRRRRRRKRRRRRRRRRRRDDDDDK',
+        27: '..........KrrRRKKrrrrRRRRRRRoOOOOOOoRRRRRRRRKRRRRRRRRRRRDDDDDK',
+        28: '..........KrrRRRKrrrrrrrrrrroOOOOOOorrrrrrrrKRRRRRRRRRRRDDDDDK',
+        29: '..........KrrRRRKrrrrRRRRRRRoOOOOOOoRRRRRRRRKRRRRRRRRRRRDDDDDK',
+        30: '..........KrrRRRRKrrrRRRRRRRooooooooRRRRRRRRKRRRRRRRRRRRDDDDDK',
+        31: '..........KrrRRRRKrrrRRRRRRRRRRRRRRRRRRRRRRRKKKKKKKKKKKKKKKKKK',
+        32: '..........KrrRRRRKrrrrrrrrrrrrrrrrrrrrrrrrrrrrK',
+        33: '..........KDDDDDDDKKKRRRRRRRRRRRRRRRRRRRRRRKKK',
+        34: '..........KDDDDDDDKrrKKKKKKKKKKKKKKKKKKKKKKrrK',
+        35: '..........KDDDDDDDKOOOOOOOOOOOOOOOOOOOOOOOOOOK',
+        36: '..........KDDDDDDDKrrrrrrrrrrrrrrrrrrrrrrrrrrK',
+        37: '..........KKKKKKKKKrrrrrrrrrrrrrrrrrrrrrrrrrrK',
+    },
+};
+
+// --- Anchor: marinheiro ciborgue com âncora e corrente (tanque) ---
+pixelCharacters.anchor = {
+    size: 64,
+    palette: { K: OUTLINE, N: '#1d2b4a', n: '#131c33', W: '#e8eef8', w: '#2f4f8f', C: '#f2f2f2', c: '#1a1a1a', S: '#e0a87e', s: '#b07a55', B: '#8a5a35', b: '#6b4426', I: '#8a94a8', i: '#4a5266', L: '#c0c8d8', E: '#3ff6ff' },
+    idle: [
+        '',
+        '.......................KKKKKKKKKKKKKKKKK',
+        '.......................KCCCCCCCCCCCCCCCK',
+        '.....................KKCCCCCCCCCCCCCCCCCKK',
+        '.....................KcccccccccccccccccccK',
+        '.....................KKKKKKKKKKKKKKKKKKKKKKKKKK',
+        '........................KSSSSSSSSSSSKKKKKKKKKKK',
+        '.......................KsSSSSSSSSSSSSSSSK',
+        '......................KssSSSSSSSSSSSSSSSSK.........KKK',
+        '......................KssSSSSSSSSSSSEEESSK........KIIIK',
+        '......................KssSSSSSSSSSSSEEESSK.......KI...IK',
+        '......................KssSSSSSSSSSSSEEESSK.......KI...IK',
+        '.....................KsssSSSSSSSSSSSSSSSSSK......KI...IK',
+        '......................KssSSSSSSSSSSSSSSSsK........KIIIK',
+        '......................KssSSSSSSSSSSSSSSSSK.........KKK',
+        '......................KBBbBBBbBBBbBBBbBBBK.........KIK',
+        '......................KBbBBBbBBBbBBBbBBBbK.........KIK',
+        '................K......KBBBbBBBbBBBbBBBbK.....K....KIK',
+        '.............KKKNKKK....KBbBBBbBBBbBBBbK...KKKNKKKKKKKKKKK',
+        '............KNNNNNNNK....KBBBbBBBbBBBbK...KNNNNKIIIIIIIIIK',
+        '...........KNNNNNNNNNKKKKKKKKBBBbBBKKKKKKKNNNNNKKKKKKKKKKK',
+        '...........KNNNNNNNNNKNNNnwKsKKKKKKsKwnNNKNNNNNNNNNKIK',
+        '..........KNNNNNNNNNNNKNNnWKKKKKKKKKKWnNKNNNKKKKKKKKIK',
+        '..........KKNNNNNNNNNKNNNnWWWWWWWWWWWWnNNKNNKnNNNNKKIK',
+        '..........KKNNNNNNNNNKNNNnwwwwwwwwwwwwnNNKNNKnNNNNKKIK',
+        '..........KnKNNNNNNNKNNNNnWWWWWWWWWWWWnNNNKNKnNNNNKKIK',
+        '..........KnNKKKNKKKnNNNNnWWWWWWWWWWWWnNNNNKKnNNNNKKIK',
+        '..........KnNNNNKnnnnNNNNnwwwwwwwwwwwwnNNNNNKnNNNNKKIK',
+        '..........KnNNNNKnnnnNNNNnWWWWWWWWWWWWnNNNNNKnNNNNKKIK',
+        '..........KnNNNNKnnnnNNNNnWWWWWWWWWWWWnNNNNNKnNNNNKKIK',
+        '..........KnNNNNKnnnnNNNNnwwwwwwwwwwwwnNNNNNKnNNNNKKIK',
+        '..........KnNNNNKnnnnNNNNnWWWWWWWWWWWWnNNNNNKnNNNNKKIK',
+        '..........KnNNNNKnnnnNNNNnWWWWWWWWWWWWnNNNNNKnNNNNKKIK',
+        '..........KnNNNNKnnnnNNNNnwwwwwwwwwwwwnNNNNNKnNNNNKKIK',
+        '..........KSSSSSKnnnnNNNNnWWWWWWWWWWWWnNNNNNKSSSSSKKIK',
+        '..........KSSSSSSKnnnnnnnnnnnnnnnnnnnnnnnnnnKSSSSSKKIK',
+        '..........KSSSSSSKnnnnnnnnnnnnnnnnnnnnnnnnnnKSSSSSKKIK',
+        '..........KKKKKKKKKKnnnnnnnnnnnnnnnnnnnnnnnnKKKKKKKKIK',
+        '....................KKKKKKKKKKKKKKKKKKKKKKKK.......KIK',
+        '....................KKnnnnnnnK...KKnnnnnnnK........KIK',
+        '....................KKnnnnnnnK...KKnnnnnnnK........KIK',
+        '....................KKnnnnnnnK...KKnnnnnnnKKKK.....KIK.....KKKK',
+        '....................KKnnnnnnnK...KKnnnnnnnKLLK.....KIK.....KLLK',
+        '....................KKnnnnnnnK...KKnnnnnnnKLLK.....KIK.....KLLK',
+        '....................KKnnnnnnnK...KKnnnnnnnKLLK.....KIK.....KLLK',
+        '....................KKnnnnnnnK...KKnnnnnnnKLLK.....KIK.....KLLK',
+        '....................KNNNNNNNNK...KNNNNNNNNKKKKK....KIK....KKKKK',
+        '....................KNNNNNNNNK...KNNNNNNNNK.KIK....KIK....KIK',
+        '....................KNNNNNNNNK...KNNNNNNNNK.KIK....KIK....KIK',
+        '....................KKnnnnnnnK...KKnnnnnnnK..KIK...KIK...KIK',
+        '....................KKnnnnnnnK...KKnnnnnnnK..KKIKK.KIK.KKIKK',
+        '....................KKnnnnnnnK...KKnnnnnnnK....KIIKKKKKIIK',
+        '....................KKnnnnnnnK...KKnnnnnnnK.....KKKKIKKKK',
+        '....................KKnnnnnnnK...KKnnnnnnnK.........K',
+        '....................KKnnnnnnnK...KKnnnnnnnK',
+        '....................KKnnnnnnnK...KKnnnnnnnK',
+        '....................KKKKKKKKKK...KKKKKKKKKK',
+        '....................KNNNNNNNNNK..KNNNNNNNNNK',
+        '...................KcccccccccccKKcccccccccccK',
+        '...................KcccccccccccKKcccccccccccK',
+        '...................KcccccccccccKKcccccccccccK',
+        '...................KcccccccccccKKcccccccccccK',
+        '....................KcccccccccK..KcccccccccK',
+        '.....................KKKKKKKKK....KKKKKKKKK',
+    ],
+    attack: {
+        8: '......................KssSSSSSSSSSSSSSSSSK',
+        9: '......................KssSSSSSSSSSSSEEESSK',
+        10: '......................KssSSSSSSSSSSSEEESSK',
+        11: '......................KssSSSSSSSSSSSEEESSK',
+        12: '.....................KsssSSSSSSSSSSSSSSSSSK',
+        13: '......................KssSSSSSSSSSSSSSSSsK',
+        14: '......................KssSSSSSSSSSSSSSSSSK',
+        15: '......................KBBbBBBbBBBbBBBbBBBK',
+        16: '......................KBbBBBbBBBbBBBbBBBbK',
+        17: '................K......KBBBbBBBbBBBbBBBbK.....K',
+        18: '.............KKKNKKK....KBbBBBbBBBbBBBbK...KKKNKKK',
+        19: '............KNNNNNNNK....KBBBbBBBbBBBbK...KNNNNNNNK...LLLL',
+        20: '...........KNNNNNNNNNKKKKKKKKBBBbBBKKKKKKKNNNNNNNNNK..LLLL',
+        21: '...........KNNNNNNNNNKNNNnwKsKKKKKKsKwnNNKNNNNNNNNNK..LLLL',
+        22: '..........KNNNNNNNNNNNKNNnWKKKKKKKKKKWnNKNNNNNNNNNNNK.LLLLKK',
+        23: '..........KKNNNNNNNNNKNNNnWWWWWWWWWWWWnNNKNNNNNNNNNK....KKIIK',
+        24: '..........KKNNNNNNNNNKNNNnwwwwwwwwwwwwnNNKNNNNNNNNKKK.....KKIK',
+        25: '..........KnKNNNNNNNKNNNNnWWWWWWWWWWWWnNNNKNNNNNNNKIK.......KIK',
+        26: '..........KnNKKKNKKKnNNNNnWWWWWWWWWWWWnNNNKKKKKKKKKIK.......KIK',
+        27: '..........KnNNNNKnnnnNNNNnwwwwwwwwwwwwnNNNKNNNSSK.KIK........KK',
+        28: '..........KnNNNNKnnnnNNNNnWWWWWWWWWWWWnNNNKNNNKKKKKIKKKKKKKKKKK',
+        29: '..........KnNNNNKnnnnNNNNnWWWWWWWWWWWWnNNNKNNNKIIIKIKIIIIIIIIKIK',
+        30: '..........KnNNNNKnnnnNNNNnwwwwwwwwwwwwnNNNKNNNKKKKKIKKKKKKKKKKK',
+        31: '..........KnNNNNKnnnnNNNNnWWWWWWWWWWWWnNNNKNNNSSK.KIK........KK',
+        32: '..........KnNNNNKnnnnNNNNnWWWWWWWWWWWWnNNNKKKKKKK.KIK.......KIK',
+        33: '..........KnNNNNKnnnnNNNNnwwwwwwwwwwwwnNNNNNNNNK..KIK.......KIK',
+        34: '..........KSSSSSKnnnnNNNNnWWWWWWWWWWWWnNNNNNNNNK..KKK.....KKIK',
+        35: '..........KSSSSSSKnnnnnnnnnnnnnnnnnnnnnnnnnnnnK.........KKIIK',
+        36: '..........KSSSSSSKnnnnnnnnnnnnnnnnnnnnnnnnnnnnK.......LLLLKK',
+        37: '..........KKKKKKKKKKnnnnnnnnnnnnnnnnnnnnnnnnKK........LLLL',
+        38: '....................KKKKKKKKKKKKKKKKKKKKKKKK..........LLLL',
+        39: '....................KKnnnnnnnK...KKnnnnnnnK...........LLLL',
+        40: '....................KKnnnnnnnK...KKnnnnnnnK',
+        41: '....................KKnnnnnnnK...KKnnnnnnnK',
+        42: '....................KKnnnnnnnK...KKnnnnnnnK',
+        43: '....................KKnnnnnnnK...KKnnnnnnnK',
+        44: '....................KKnnnnnnnK...KKnnnnnnnK',
+        45: '....................KKnnnnnnnK...KKnnnnnnnK',
+        46: '....................KNNNNNNNNK...KNNNNNNNNK',
+        47: '....................KNNNNNNNNK...KNNNNNNNNK',
+        48: '....................KNNNNNNNNK...KNNNNNNNNK',
+        49: '....................KKnnnnnnnK...KKnnnnnnnK',
+        50: '....................KKnnnnnnnK...KKnnnnnnnK',
+        51: '....................KKnnnnnnnK...KKnnnnnnnK',
+        52: '....................KKnnnnnnnK...KKnnnnnnnK',
+        53: '....................KKnnnnnnnK...KKnnnnnnnK',
+    },
+};
+
 // --- Pose de especial ---
 // Gerada a partir do sprite parado: recorta o braço da frente (e a arma, se estiver nele)
 // e cola mais para cima, como se o personagem erguesse o braço para soltar o poder.
@@ -1179,30 +1504,33 @@ const SPECIAL_POSE = {
     spark: { x0: 22, x1: 32, y0: 10, y1: 17, lift: 7 },
     hades: { x0: 22, x1: 28, y0: 10, y1: 18, lift: 8 },
     jack: { x0: 22, x1: 32, y0: 11, y1: 25, lift: 9 },
-    genji: { x0: 22, x1: 26, y0: 9, y1: 28, lift: 9 },
-    ryu: { x0: 22, x1: 27, y0: 10, y1: 17, lift: 7 },
-    lorenzo: { x0: 22, x1: 27, y0: 10, y1: 17, lift: 7 },
-    malenia: { x0: 22, x1: 26, y0: 9, y1: 26, lift: 8 },
-    maliketh: { x0: 22, x1: 27, y0: 10, y1: 28, lift: 9 },
+    kaze: { x0: 22, x1: 26, y0: 9, y1: 28, lift: 9 },
+    kenji: { x0: 22, x1: 27, y0: 10, y1: 17, lift: 7 },
+    craque: { x0: 22, x1: 27, y0: 10, y1: 17, lift: 7 },
+    akane: { x0: 22, x1: 26, y0: 9, y1: 26, lift: 8 },
+    fenris: { x0: 22, x1: 27, y0: 10, y1: 28, lift: 9 },
     flora: { x0: 22, x1: 27, y0: 10, y1: 17, lift: 7 },
     nyx: { x0: 22, x1: 27, y0: 10, y1: 17, lift: 7 },
-    viper: { x0: 22, x1: 32, y0: 10, y1: 16, lift: 6 },
+    mamba: { x0: 22, x1: 32, y0: 10, y1: 16, lift: 6 },
     gear: { x0: 22, x1: 27, y0: 10, y1: 18, lift: 7 },
-    becca: { x0: 22, x1: 27, y0: 10, y1: 18, lift: 7 },
+    roxy: { x0: 22, x1: 27, y0: 10, y1: 18, lift: 7 },
     weaver: { x0: 44, x1: 52, y0: 22, y1: 38, lift: 15 }, // grade 64x64
+    aegis: { x0: 43, x1: 58, y0: 15, y1: 56, lift: 8 }, // grade 64x64
+    rhino: { x0: 44, x1: 53, y0: 22, y1: 38, lift: 14 }, // grade 64x64
+    anchor: { x0: 43, x1: 61, y0: 7, y1: 54, lift: 6 }, // grade 64x64
 };
 
 // Linha onde as pernas se separam em cada sprite (abaixo do short, da saia ou do casaco)
 const LEG_START = {
-    titan: 23, spark: 19, hades: 22, jack: 21, genji: 20, ryu: 21, lorenzo: 20, malenia: 19,
-    maliketh: 20, kayn: 20, celestia: 30, flora: 23, nyx: 22, viper: 20, gear: 20, becca: 19, weaver: 37,
+    titan: 23, spark: 19, hades: 22, jack: 21, kaze: 20, kenji: 21, craque: 20, akane: 19,
+    fenris: 20, zarek: 20, celestia: 30, flora: 23, nyx: 22, mamba: 20, gear: 20, roxy: 19, weaver: 37, aegis: 37, rhino: 37, anchor: 37,
 };
 for (const [type, row] of Object.entries(LEG_START)) pixelCharacters[type].legStart = row;
 for (const [type, area] of Object.entries(SPECIAL_POSE)) {
     pixelCharacters[type].special = raisedPose(pixelCharacters[type].idle, area, pixelCharacters[type].size);
 }
-// Kayn e Celestia: foice e cajado já vão até o topo do quadro; a pose de especial é o braço estendido
-for (const type of ['kayn', 'celestia']) {
+// Zarek e Celestia: foice e cajado já vão até o topo do quadro; a pose de especial é o braço estendido
+for (const type of ['zarek', 'celestia']) {
     pixelCharacters[type].special = spriteVariant(pixelCharacters[type].idle, pixelCharacters[type].attack);
 }
 
@@ -1213,8 +1541,8 @@ function makePixelArt(type) {
     const def = pixelCharacters[type];
     const spritesByForm = {};
     return (ctx, x, y, width, height, fighter) => {
-        // Personagens com formas (Kayn) trocam a paleta conforme a forma atual
-        const form = def.forms ? ((fighter && fighter.kaynForm) || 'normal') : 'normal';
+        // Personagens com formas (Zarek) trocam a paleta conforme a forma atual
+        const form = def.forms ? ((fighter && fighter.zarekForm) || 'normal') : 'normal';
         if (!spritesByForm[form]) {
             const palette = def.forms ? { ...def.palette, ...def.forms[form] } : def.palette;
             // Sprites em 32x32 são ampliados para 64x64; os desenhados em 64 entram direto

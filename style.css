@@ -556,7 +556,7 @@ body {
     transition: width 0.3s;
 }
 
-/* Barra de transformação do Kayn */
+/* Barra de transformação do Zarek */
 .transform-bar-outer {
     width: 100%;
     height: 14px;
@@ -744,4 +744,22 @@ body {
 #match-stats td.stats-name {
     text-align: left;
     font-weight: 700;
+}
+
+/* Escolha da arena: 5 opções em grade */
+.hub-options-maps {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+}
+.hub-options-maps .hub-option {
+    padding: 8px 6px;
+}
+.hub-options-maps .hub-option-title {
+    font-size: 14px;
+}
+.hub-options-maps .hub-option-desc {
+    font-size: 10px;
+}
+@media (max-width: 900px) {
+    .hub-options-maps { grid-template-columns: repeat(2, 1fr); }
 }

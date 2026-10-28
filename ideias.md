@@ -8,13 +8,13 @@ Documento técnico contendo as especificações de estilo, inspiração, pixel-a
 ## 📋 Sumário
 1. [Titan](#1-titan)
 2. [Spark](#2-spark)
-3. [Lorenzo](#3-lorenzo)
+3. [Craque](#3-craque)
 4. [Hades](#4-hades)
 5. [Jack](#5-jack)
-6. [Genji](#6-genji)
-7. [Ryu](#7-ryu)
-8. [Malenia](#8-malenia)
-9. [Maliketh](#9-maliketh)
+6. [Kaze](#6-kaze)
+7. [Kenji](#7-kenji)
+8. [Akane](#8-akane)
+9. [Fenris](#9-fenris)
 
 ---
 
@@ -44,7 +44,7 @@ Documento técnico contendo as especificações de estilo, inspiração, pixel-a
 
 ---
 
-### 3. LORENZO
+### 3. CRAQUE
 * **Conceito & Estilo:** Atleta cibernético com uniforme esportivo azul e branco. É o único lutador que utiliza munição visível no HUD para seu ataque básico.
 * **Inspiração:** Personagens com estilo *Zoner/Gimmick* esportivo e pirotecnia de combate.
 * **Estilo de Luta:** *Tactical Zoner*. Mantém o oponente à distância usando projéteis físicos limitados.
@@ -55,7 +55,7 @@ Documento técnico contendo as especificações de estilo, inspiração, pixel-a
   * **Sem Munição:** Executa um chute básico de baixo dano.
 * **Especial - Recarga Completa (`ArrowRight`):**
   * **Custo:** 150 Energia
-  * **Efeito:** Lorenzo recupera instantaneamente suas 3 bolas de futebol (`balls = 3`), permitindo retomar a sequência de projéteis.
+  * **Efeito:** Craque recupera instantaneamente suas 3 bolas de futebol (`balls = 3`), permitindo retomar a sequência de projéteis.
 
 ---
 
@@ -85,7 +85,7 @@ Documento técnico contendo as especificações de estilo, inspiração, pixel-a
 
 ---
 
-### 6. GENJI
+### 6. KAZE
 * **Conceito & Estilo:** Cyborg Ninja minimalista com armadura escura e lâminas com iluminação em tom verde água / turquesa (`#7fffd4`).
 * **Inspiração:** Ninjas cibernéticos clássicos da cultura pop (*Overwatch* / *Metal Gear Solid*).
 * **Estilo de Luta:** *Rushdown*. Alta velocidade de deslocamento e golpes sequenciais rápidos.
@@ -98,7 +98,7 @@ Documento técnico contendo as especificações de estilo, inspiração, pixel-a
 
 ---
 
-### 7. RYU
+### 7. KENJI
 * **Conceito & Estilo:** Artista marcial tradicional cibernetizado usando gi branco, faixa escura e luvas de combate.
 * **Inspiração:** Lutadores tradicionais de artes marciais de jogos de luta 2D (*Street Fighter*).
 * **Estilo de Luta:** *Combo Master*. Focado no encadeamento contínuo de golpes.
@@ -114,14 +114,13 @@ Documento técnico contendo as especificações de estilo, inspiração, pixel-a
 
 ---
 
-### 8. MALENIA
+### 8. AKANE
 * **Conceito & Estilo:** Guerreira cibernética elegante com armadura dourada/latão (`#c9a46a`) e capa vermelha fluida (`#a13a3a`).
-* **Inspiração:** *Elden Ring* (Malenia, Blade of Miquella).
 * **Estilo de Luta:** *Life-Steal Slasher*. Recompensa o jogador com sustentação de vida ao manter uma postura agressiva.
 
 #### ⚔️ Mecânicas de Combate:
 * **Mecânica Passiva - Drenagem de Vida (On-Hit):**
-  * **Efeito:** Toda vez que Malenia conecta um ataque (soco ou especial) no adversário, ela recupera **+15 de HP** instantaneamente (`hp = Math.min(maxHp, hp + 15)`).
+  * **Efeito:** Toda vez que Akane conecta um ataque (soco ou especial) no adversário, ela recupera **+15 de HP** instantaneamente (`hp = Math.min(maxHp, hp + 15)`).
 * **Soco Básico (`ArrowLeft`):** Sequência de estocadas rápidas.
 * **Especial - Dança das Lâminas (`ArrowRight`):**
   * **Custo:** 150 Energia
@@ -129,9 +128,8 @@ Documento técnico contendo as especificações de estilo, inspiração, pixel-a
 
 ---
 
-### 9. MALIKETH
+### 9. FENRIS
 * **Conceito & Estilo:** Lorde de armadura negra pontiaguda com efeitos visuais e lâminas nas cores de energia vermelha sangue (`#f00`).
-* **Inspiração:** *Elden Ring* (Maliketh, the Black Blade).
 * **Estilo de Luta:** *Heavy Anti-Tank*. Especialize-se em destruir lutadores com muita vida através da degradação de vida máxima.
 
 #### ⚔️ Mecânicas de Combate:
