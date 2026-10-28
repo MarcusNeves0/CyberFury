@@ -49,6 +49,8 @@ window.onload = () => {
         { id: 'nyx', name: 'Nyx' },
         { id: 'viper', name: 'Viper' },
         { id: 'gear', name: 'Gear' },
+        { id: 'becca', name: 'Becca' },
+        { id: 'weaver', name: 'Weaver' },
     ];
 
     // Teclas (cada ação aceita uma lista). Contra a IA o jogador pode andar com WASD ou setas;
@@ -128,7 +130,33 @@ window.onload = () => {
     const NYX_LINK_RANGE = 300;           // alcance para prender o inimigo (arrebenta um pouco além)
     const NYX_LINK_TICK = 10;             // a cada meio segundo: inimigo perde isso, aliado recupera isso (20/s)
     // Atiradores: o golpe básico é um tiro
-    const SHOOTERS = ['viper', 'gear'];
+    const SHOOTERS = ['viper', 'gear', 'becca'];
+    // Becca: duas pistolas, adrenalina e Frenesi
+    const BECCA_SHOT_DAMAGE = 7;
+    const BECCA_DOUBLE_DAMAGE = 9;        // segurar o tiro: as duas pistolas juntas
+    const BECCA_FIRE_INTERVAL = 8;        // passos entre tiros (~0,13 s), antes da adrenalina
+    const BECCA_SPEED = 1.15;             // anda 15% mais rápido
+    const BECCA_HEIGHT = 0.85;            // é desenhada menor que os outros
+    const BECCA_ADRENALINE_PER_HIT = 0.1; // cada acerto; 1 = adrenalina máxima (+50% de velocidade de tiro)
+    const BECCA_ADRENALINE_HOLD = 60;     // 1 s sem acertar zera a adrenalina
+    const BECCA_FRENZY_COST = 120;
+    const BECCA_FRENZY_COOLDOWN = 480;    // 8 segundos
+    const BECCA_FRENZY_DURATION = 180;    // 3 segundos atirando sozinha, no dobro da velocidade
+    // Weaver: teia que deixa lento, sentido aranha e Puxão
+    const WEB_DAMAGE = 25;
+    const WEAVER_PUNCH_DAMAGE = 30;      // combo rápido de socos e chutes
+    const WEB_SLOW_DURATION = 120;        // 2 segundos com 50% da velocidade
+    const SPIDER_SENSE_CHANCE = 0.25;     // chance de desviar sozinho de um golpe ou tiro
+    const SPIDER_SENSE_COOLDOWN = 180;    // 3 segundos
+    const WEAVER_PULL_COST = 100;
+    const WEAVER_PULL_COOLDOWN = 360;     // 6 segundos
+    const WEAVER_PULL_RANGE = 380;
+    const WEAVER_PULL_SPEED = 18;         // pixels por passo enquanto o alvo é puxado
+    const WEAVER_PULL_DAMAGE = 35;
+    const WEAVER_PULL_STUN = 48;          // 0,8 s atordoado ao chegar (dá tempo de bater)
+    const WEAVER_KICK_DELAY = 12;         // ~0,2 s depois de puxar, chute para cima automático
+    const WEAVER_KICK_DAMAGE = 30;
+    const WEAVER_PUNCH_COOLDOWN = 16;     // combo mais rápido que o soco comum (20)
     const VIPER_SHOT_DAMAGE = 22;
     const VIPER_STRONG_DAMAGE = 45;
     const VIPER_POISON_CHANCE = 0.2;      // 20% dos tiros envenenam
@@ -282,9 +310,9 @@ window.onload = () => {
             this.y = shooter.y + direction.y * (FIGHTER_RADIUS + 6);
             this.vx = direction.x * speed;
             this.vy = direction.y * speed;
-            this.radius = { pumpkin: 22, rocket_punch: 14, tornado: 16, football: 13, maliketh_blade: 10, viper_shot: 7, nail: 6, turret_shot: 6 }[type] || 12;
+            this.radius = { pumpkin: 22, rocket_punch: 14, tornado: 16, football: 13, maliketh_blade: 10, viper_shot: 7, nail: 6, turret_shot: 6, pistol_shot: 6, web: 9 }[type] || 12;
             // Duração em passos (com a velocidade, define o alcance dos tiros)
-            this.life = { football: 200, viper_shot: 34, nail: 30, turret_shot: 34 }[type] || 150;
+            this.life = { football: 200, viper_shot: 34, nail: 30, turret_shot: 34, pistol_shot: 29, web: 30 }[type] || 150;
             this.bounces = 0;
             this.isReturning = false;
             this.returnSpeed = 7; // bola puxada pelo especial volta mais rápido
@@ -384,7 +412,23 @@ window.onload = () => {
                 viper_shot: { color: '#6dff8a', length: 18, width: 3 },
                 nail: { color: '#cfd6e6', length: 10, width: 2 },
                 turret_shot: { color: '#3ff6ff', length: 12, width: 3 },
+                pistol_shot: { color: '#ff4fa3', length: 11, width: 3 },
             };
+            if (this.type === 'web') {
+                // Bolinha de teia: círculo branco com fios saindo
+                ctx.save();
+                ctx.translate(this.x, this.y - 30);
+                ctx.rotate(this.life * 0.3);
+                ctx.strokeStyle = 'rgba(232, 251, 255, 0.9)';
+                ctx.lineWidth = 1.5;
+                for (let i = 0; i < 6; i++) {
+                    const a = (i / 6) * Math.PI * 2;
+                    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(a) * 10, Math.sin(a) * 10); ctx.stroke();
+                }
+                ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI * 2); ctx.stroke();
+                ctx.restore();
+                return;
+            }
             const bolt = bolts[this.type];
             if (bolt) {
                 const dir = normalize(this.vx, this.vy);
@@ -551,6 +595,24 @@ window.onload = () => {
 
             // IA: torreta inimiga que está tentando quebrar (a mira vai nela em vez do lutador)
             this.focusTurret = null;
+
+            // Becca
+            this.adrenaline = 0;       // 0 a 1
+            this.adrenalineTimer = 0;
+            this.frenzyTimer = 0;
+            this.frenzyFireCooldown = 0;
+            if (characterType === 'becca') {
+                this.height = Math.round(FIGHTER_HEIGHT * BECCA_HEIGHT);
+                this.radius = 14;
+            }
+
+            // Weaver / teia
+            this.slowTimer = 0;          // grudado na teia: anda na metade da velocidade
+            this.spiderSenseCooldown = 0;
+            this.pullTarget = null;      // inimigo sendo puxado pela teia
+            this.pullTimer = 0;
+            this.kickTarget = null;      // chute automático logo depois do puxão
+            this.kickTimer = 0;
         }
 
         applyPoison(stacks) {
@@ -560,6 +622,18 @@ window.onload = () => {
 
         // Atiradores: o golpe básico é um tiro com mira automática
         shoot(strong) {
+            if (this.characterType === 'becca') {
+                // Alterna as mãos; segurando, as duas pistolas disparam juntas
+                const base = leadAim(this, 14);
+                const baseAngle = Math.atan2(base.y, base.x);
+                const shots = strong ? [-0.07, 0.07] : [(Math.random() - 0.5) * 0.16];
+                for (const spread of shots) {
+                    const angle = baseAngle + spread;
+                    projectiles.push(new Projectile(this, 'pistol_shot', strong ? BECCA_DOUBLE_DAMAGE : BECCA_SHOT_DAMAGE, { x: Math.cos(angle), y: Math.sin(angle) }, 14));
+                }
+                sfx.play('pistol_shot');
+                return;
+            }
             if (this.characterType === 'viper') {
                 projectiles.push(new Projectile(this, 'viper_shot', strong ? VIPER_STRONG_DAMAGE : VIPER_SHOT_DAMAGE, leadAim(this, 16), 16));
                 sfx.play('viper_shot');
@@ -597,6 +671,101 @@ window.onload = () => {
                 if (enemy.isInsideOpponent || distance(this, enemy) > VIPER_CLOUD_RADIUS + enemy.radius) continue;
                 const defended = enemy.takeDamage(VIPER_CLOUD_TICK_DAMAGE, { sound: 'hit' }, this);
                 if (!defended && this.viperCloudTick % 60 === 0) enemy.applyPoison(1);
+            }
+        }
+
+        // Becca: Frenesi — por 3 s as duas pistolas atiram sozinhas, no dobro da velocidade,
+        // cada uma no seu alvo (os dois inimigos mais próximos)
+        startFrenzy() {
+            this.isAttacking = false;
+            if (this.energy < BECCA_FRENZY_COST || this.specialCooldown > 0) return;
+            this.energy -= BECCA_FRENZY_COST;
+            this.specialCooldown = BECCA_FRENZY_COOLDOWN;
+            this.frenzyTimer = BECCA_FRENZY_DURATION;
+            this.frenzyFireCooldown = 0;
+            this.poseSpecial();
+            sfx.play('becca_special');
+        }
+
+        // Adrenalina (some depois de 1 s sem acertar) e os tiros automáticos do Frenesi
+        updateBecca() {
+            if (this.adrenalineTimer > 0) this.adrenalineTimer--;
+            else this.adrenaline = 0;
+
+            if (this.frenzyTimer <= 0) return;
+            this.frenzyTimer--;
+            if (--this.frenzyFireCooldown > 0) return;
+            // Dobro da velocidade normal, alternando as mãos
+            this.frenzyFireCooldown = Math.max(2, Math.round(BECCA_FIRE_INTERVAL / 2 / (1 + 0.5 * this.adrenaline)));
+            const targets = enemiesOf(this)
+                .filter(e => !e.isInsideOpponent && distance(this, e) < 420)
+                .sort((a, b) => distance(this, a) - distance(this, b));
+            if (!targets.length) return;
+            // Mão esquerda no mais próximo, mão direita no segundo (ou no mesmo, se só houver um)
+            this.frenzyHand = this.frenzyHand === 0 ? 1 : 0;
+            const enemy = targets[this.frenzyHand] || targets[0];
+            const realTarget = this.target;
+            this.target = enemy;
+            const dir = leadAim(this, 14);
+            this.target = realTarget;
+            projectiles.push(new Projectile(this, 'pistol_shot', BECCA_SHOT_DAMAGE, dir, 14));
+            sfx.play('pistol_shot');
+        }
+
+        // Weaver: lança uma teia no alvo e puxa ele até perto; chegando, o alvo leva dano e fica atordoado
+        startWeaverPull() {
+            this.isAttacking = false;
+            const target = this.target;
+            if (!alive(target) || target.isInsideOpponent || this.pullTarget) return;
+            if (this.energy < WEAVER_PULL_COST || this.specialCooldown > 0 || distance(this, target) > WEAVER_PULL_RANGE) return;
+            this.energy -= WEAVER_PULL_COST;
+            this.specialCooldown = WEAVER_PULL_COOLDOWN;
+            this.pullTarget = target;
+            this.pullTimer = 40; // no máximo ~0,7 s puxando (se ficar preso num obstáculo, solta)
+            this.poseSpecial();
+            sfx.play('weaver_special');
+        }
+
+        updateWeaverPull() {
+            const target = this.pullTarget;
+            if (!target) return;
+            if (!alive(target) || target.isInsideOpponent) { this.pullTarget = null; return; }
+            const stopDistance = this.radius + target.radius + 10;
+            const d = distance(this, target);
+            this.pullTimer--;
+            if (d > stopDistance && this.pullTimer > 0) {
+                const dir = directionTo(target, this);
+                const step = Math.min(WEAVER_PULL_SPEED, d - stopDistance);
+                target.x += dir.x * step;
+                target.y += dir.y * step;
+                target.isParalyzed = true;
+                target.paralysisTimer = Math.max(target.paralysisTimer, 2);
+                return;
+            }
+            // Chegou: dano e atordoamento; logo depois vem o chute para cima
+            target.isParalyzed = true;
+            target.paralysisTimer = Math.max(target.paralysisTimer, WEAVER_PULL_STUN);
+            target.takeDamage(WEAVER_PULL_DAMAGE, { unblockable: true, sound: 'hit_heavy' }, this);
+            this.pullTarget = null;
+            this.kickTarget = target;
+            this.kickTimer = WEAVER_KICK_DELAY;
+        }
+
+        // Chute para cima depois do puxão: dano e joga o alvo no ar
+        updateWeaverKick() {
+            if (!this.kickTarget) return;
+            if (--this.kickTimer > 0) return;
+            const target = this.kickTarget;
+            this.kickTarget = null;
+            if (!alive(target) || target.isInsideOpponent || distance(this, target) > this.radius + target.radius + 40) return;
+            this.isAttacking = true;
+            this.attackType = 'strong_punch';
+            this.attackAge = 4; // mostra direto o quadro do golpe (sem preparação)
+            this.attackCooldown = Math.max(this.attackCooldown, 12);
+            target.vz = 8;
+            target.takeDamage(WEAVER_KICK_DAMAGE, { unblockable: true, sound: 'hit_heavy' }, this);
+            for (let i = 0; i < 10; i++) {
+                particles.push(new Particle(target.x, target.chestY, i % 2 ? '#3ff6ff' : '#e8fbff', 0, { x: (Math.random() - 0.5) * 4, y: -Math.random() * 4 }));
             }
         }
 
@@ -694,6 +863,7 @@ window.onload = () => {
             const special = this.specialPoseTimer > 0 || this.isCelebrating;
             if (special && !isMeleeStrike) this.spriteFrame = 'special';
             if (this.isDashing || this.isWaterfowlDancing || this.isChannelingSpecial) this.spriteFrame = 'attack';
+            if (this.frenzyTimer > 0 && this.specialPoseTimer <= 0) this.spriteFrame = 'attack'; // Frenesi: pistolas sempre apontadas
             if (!isWalking && this.spriteFrame === null) this.spriteFrame = 'idle';
             if (special) {
                 // Brilho em volta do corpo enquanto solta o poder
@@ -810,6 +980,8 @@ window.onload = () => {
             if (this.hitFlash > 0) this.hitFlash--;
             if (this.specialCooldown > 0) this.specialCooldown--;
             if (this.specialPoseTimer > 0) this.specialPoseTimer--;
+            if (this.slowTimer > 0) this.slowTimer--;
+            if (this.spiderSenseCooldown > 0) this.spiderSenseCooldown--;
 
             if (this.isInsideOpponent) {
                 this.updateKaynUltimate();
@@ -869,7 +1041,11 @@ window.onload = () => {
             } else {
                 move = this.aiMove;
             }
-            const speed = this.isDefending ? 0 : this.isAttacking ? MOVE_SPEED * 0.5 : MOVE_SPEED;
+            const baseSpeed = this.characterType === 'becca' ? MOVE_SPEED * BECCA_SPEED : MOVE_SPEED;
+            // Atirando, a Becca quase não perde velocidade (ela corre e atira)
+            const attackSlow = this.characterType === 'becca' ? 0.85 : 0.5;
+            const webbed = this.slowTimer > 0 ? 0.5 : 1; // grudado na teia: metade da velocidade
+            const speed = this.isDefending ? 0 : (this.isAttacking ? baseSpeed * attackSlow : baseSpeed) * webbed;
             this.moveX = move.x * speed;
             this.moveY = move.y * speed;
             this.x += this.moveX;
@@ -1311,6 +1487,16 @@ window.onload = () => {
         takeDamage(damage, effect = {}, attacker = null) {
             if (this.isInsideOpponent || this.isDead) return false; // Kayn dentro do oponente não pode ser atingido
 
+            // Sentido aranha: às vezes o Weaver percebe o golpe a tempo e desvia sozinho
+            if (this.characterType === 'weaver' && !effect.unblockable && this.spiderSenseCooldown <= 0 && Math.random() < SPIDER_SENSE_CHANCE) {
+                this.spiderSenseCooldown = SPIDER_SENSE_COOLDOWN;
+                const away = attacker ? directionTo(attacker, this) : { x: 0, y: 1 };
+                this.push({ x: -away.y, y: away.x }, Math.random() < 0.5 ? 6 : -6); // pulinho para o lado
+                floatingTexts.push(new FloatingText(this.x, this.y - this.height - 14, '!', '#ffe34a'));
+                sfx.play('spider_sense');
+                return true;
+            }
+
             if (this.isDefending && !effect.unblockable) {
                 const effectiveDamage = (this.characterType === 'spark' || this.characterType === 'titan') ? damage * 0.5 : damage;
                 this.defenseHealth -= effectiveDamage;
@@ -1368,7 +1554,9 @@ window.onload = () => {
             switch (type) {
                 case 'punch':
                     if (SHOOTERS.includes(this.characterType)) {
-                        this.attackCooldown = this.characterType === 'viper' ? 28 : 16;
+                        this.attackCooldown = this.characterType === 'viper' ? 28
+                            : this.characterType === 'becca' ? Math.round(BECCA_FIRE_INTERVAL / (1 + 0.5 * this.adrenaline))
+                            : 16;
                         this.shoot(false);
                         break;
                     }
@@ -1386,15 +1574,22 @@ window.onload = () => {
                         this.attackTimer = 8;
                         sfx.play('blade_swing');
                     } else {
-                        this.attackCooldown = 20 / this.attackSpeedMultiplier;
+                        this.attackCooldown = (this.characterType === 'weaver' ? WEAVER_PUNCH_COOLDOWN : 20) / this.attackSpeedMultiplier;
                         this.attackTimer = 6;
                         sfx.play(this.characterType === 'genji' ? 'blade_swing' : 'swing');
                     }
                     this.attackWindup = 2; // puxa o braço por um instante antes de acertar
                     break;
                 case 'strong_punch':
+                    if (this.characterType === 'weaver') {
+                        // Weaver: o "soco forte" é uma bolinha de teia que deixa o alvo lento
+                        this.attackCooldown = 40;
+                        projectiles.push(new Projectile(this, 'web', WEB_DAMAGE, leadAim(this, 11), 11));
+                        sfx.play('web_shot');
+                        break;
+                    }
                     if (SHOOTERS.includes(this.characterType)) {
-                        this.attackCooldown = 45;
+                        this.attackCooldown = this.characterType === 'becca' ? 20 : 45;
                         this.shoot(true);
                         break;
                     }
@@ -1429,6 +1624,14 @@ window.onload = () => {
                     }
                     if (this.characterType === 'gear') {
                         this.placeTurret();
+                        return;
+                    }
+                    if (this.characterType === 'becca') {
+                        this.startFrenzy();
+                        return;
+                    }
+                    if (this.characterType === 'weaver') {
+                        this.startWeaverPull();
                         return;
                     }
                     const energyCost = specialCost(this.characterType);
@@ -1528,7 +1731,7 @@ window.onload = () => {
         if (isBladeUser(attacker)) effect.sound = 'blade_hit';
         switch (attacker.attackType) {
             case 'punch':
-                damage = (attacker.characterType === 'malenia') ? 14 : (attacker.characterType === 'nyx') ? NYX_PUNCH_DAMAGE : (attacker.characterType === 'genji') ? GENJI_PUNCH_DAMAGE : 10;
+                damage = (attacker.characterType === 'malenia') ? 14 : (attacker.characterType === 'nyx') ? NYX_PUNCH_DAMAGE : (attacker.characterType === 'genji') ? GENJI_PUNCH_DAMAGE : (attacker.characterType === 'weaver') ? WEAVER_PUNCH_DAMAGE : 10;
                 if (attacker.kaynForm === 'red') damage = 12;
                 if (attacker.characterType === 'malenia') {
                     attacker.health = Math.min(MAX_HEALTH, attacker.health + 8);
@@ -1761,6 +1964,29 @@ window.onload = () => {
         }
     }
 
+    // Fio de teia esticado do Weaver até quem ele está puxando
+    function drawWebLine(weaver, target) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(232, 251, 255, 0.9)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(weaver.x, weaver.chestY);
+        ctx.lineTo(target.x, target.chestY);
+        ctx.stroke();
+        // Fiozinhos tremendo em volta do fio principal
+        ctx.strokeStyle = 'rgba(63, 246, 255, 0.5)';
+        ctx.lineWidth = 1;
+        const dx = target.x - weaver.x, dy = target.chestY - weaver.chestY;
+        ctx.beginPath();
+        for (let i = 0; i <= 10; i++) {
+            const t = i / 10;
+            const wobble = (Math.random() - 0.5) * 6;
+            ctx.lineTo(weaver.x + dx * t - dy / Math.hypot(dx, dy || 1) * wobble, weaver.chestY + dy * t + dx / Math.hypot(dx, dy || 1) * wobble);
+        }
+        ctx.stroke();
+        ctx.restore();
+    }
+
     // Poeirinha no chão a cada passo
     function spawnStepDust(fighter) {
         for (let i = 0; i < 3; i++) {
@@ -1917,7 +2143,7 @@ window.onload = () => {
         return {
             malenia: 150, maliketh: 300, lorenzo: 150, genji: 100, ryu: 100, jack: 90,
             kayn: KAYN_ULT_COST, celestia: CELESTIA_ULT_COST, flora: FLORA_FLOWER_COST, nyx: NYX_LINK_COST,
-            viper: VIPER_CLOUD_COST, gear: GEAR_TURRET_COST,
+            viper: VIPER_CLOUD_COST, gear: GEAR_TURRET_COST, becca: BECCA_FRENZY_COST, weaver: WEAVER_PULL_COST,
         }[characterType] || 45;
     }
 
@@ -2136,7 +2362,7 @@ window.onload = () => {
             const d = distance(me, opponent);
             const meleeRange = (isBladeUser(me) ? BLADE_REACH : PUNCH_REACH) + me.radius + opponent.radius - 6;
             // Só tenta o especial se tiver a energia de verdade (antes tentava com 45 e perdia a vez)
-            const canUseSpecial = !['kayn', 'celestia', 'flora', 'spark', 'nyx', 'viper', 'gear'].includes(me.characterType) &&
+            const canUseSpecial = !['kayn', 'celestia', 'flora', 'spark', 'nyx', 'viper', 'gear', 'becca', 'weaver'].includes(me.characterType) &&
                 me.energy >= specialCost(me.characterType) && me.specialCooldown <= 0;
             if (Math.random() < 0.1) this.strafeSign *= -1;
 
@@ -2235,6 +2461,38 @@ window.onload = () => {
             }
 
             // Atiradores: mantêm distância, recuam de quem chega perto e atiram de longe
+            // Weaver: caçador de atiradores e healers — puxa quem está lá atrás; de média distância, joga teia
+            if (me.characterType === 'weaver') {
+                if (me.energy >= WEAVER_PULL_COST && me.specialCooldown <= 0 && !me.pullTarget) {
+                    const inRange = enemiesOf(me).filter(e => !e.isInsideOpponent && distance(me, e) <= WEAVER_PULL_RANGE * 0.95);
+                    const backline = inRange.filter(e => SHOOTERS.includes(e.characterType) || HEALERS.includes(e.characterType) || e.characterType === 'lorenzo');
+                    const prey = backline.sort((a, b) => a.health - b.health)[0] || inRange.find(e => distance(me, e) > 150);
+                    if (prey) {
+                        me.target = prey;
+                        me.attack('special');
+                        return;
+                    }
+                }
+                if (d > 120 && d < 300 && opponent.slowTimer <= 0 && Math.random() < 0.3) {
+                    me.attack('strong_punch'); // teia para deixar o alvo lento
+                    this.moveToward(opponent);
+                    return;
+                }
+            }
+
+            // Becca: agressiva — chega perto atirando sem parar e solta o Frenesi quando tem inimigo no alcance
+            if (me.characterType === 'becca') {
+                if (me.frenzyTimer <= 0 && me.energy >= BECCA_FRENZY_COST && me.specialCooldown <= 0 && d < 380) {
+                    me.attack('special');
+                    return;
+                }
+                if (d < 380) me.attack('punch');
+                if (d < 110) this.moveAway(opponent);
+                else if (d > 300) this.moveToward(opponent);
+                else this.strafe(opponent);
+                return;
+            }
+
             if (SHOOTERS.includes(me.characterType)) {
                 const isViper = me.characterType === 'viper';
                 const shotRange = isViper ? 480 : 330;
@@ -2394,6 +2652,9 @@ window.onload = () => {
         if (fighter.burnDuration > 0) html += `<span class="status-icon">🌋</span>`;
         if (fighter.curseStacks > 0) html += `<span class="status-icon">💀<span class="stack-count">${fighter.curseStacks}</span></span>`;
         if (fighter.poisonStacks > 0) html += `<span class="status-icon">🧪<span class="stack-count">${fighter.poisonStacks}</span></span>`;
+        if (fighter.adrenaline > 0) html += `<span class="status-icon">💗<span class="stack-count">x${(1 + 0.5 * fighter.adrenaline).toFixed(1)}</span></span>`;
+        if (fighter.frenzyTimer > 0) html += `<span class="status-icon">🔥</span>`;
+        if (fighter.slowTimer > 0) html += `<span class="status-icon">🕸️</span>`;
         if (fighter.characterType === 'ryu' && fighter.attackSpeedMultiplier > 1) {
             html += `<span class="status-icon">✨<span class="stack-count">x${fighter.attackSpeedMultiplier.toFixed(1)}</span></span>`;
         }
@@ -2739,6 +3000,13 @@ window.onload = () => {
             }
 
             const defended = target.takeDamage(projectile.damage, {}, attacker);
+            // Teia do Weaver: gruda e deixa o alvo lento
+            if (projectile.type === 'web' && !defended) target.slowTimer = WEB_SLOW_DURATION;
+            // Becca: cada acerto aumenta a adrenalina (atira mais rápido)
+            if (projectile.type === 'pistol_shot' && !defended) {
+                attacker.adrenaline = Math.min(1, attacker.adrenaline + BECCA_ADRENALINE_PER_HIT);
+                attacker.adrenalineTimer = BECCA_ADRENALINE_HOLD;
+            }
             // Soco-foguete do Titan: empurra e atordoa por 0,3 s (se não for bloqueado)
             if (projectile.type === 'rocket_punch') titanShockwave(target.x, target.y, projectile.shooter, target);
             if (projectile.type === 'rocket_punch' && !defended) {
@@ -2862,6 +3130,8 @@ window.onload = () => {
         for (const f of fighters) {
             if (alive(f) && f.characterType === 'nyx') f.updateNyxLink();
             if (alive(f) && f.characterType === 'viper') f.updateViperCloud();
+            if (alive(f) && f.characterType === 'becca') f.updateBecca();
+            if (alive(f) && f.characterType === 'weaver') { f.updateWeaverPull(); f.updateWeaverKick(); }
         }
         turrets.forEach(t => t.update());
         turrets = turrets.filter(t => !t.done);
@@ -2934,6 +3204,7 @@ window.onload = () => {
             if (f.isInsideOpponent && alive(f.kaynHost)) drawKaynMark(f, f.kaynHost);
             if (alive(f) && f.isChannelingSpecial && alive(f.channelTarget)) drawLightningChain(f, f.channelTarget);
             if (alive(f) && f.nyxLinkTimer > 0 && alive(f.nyxLinkEnemy)) drawNyxLink(f);
+            if (alive(f) && f.pullTarget && alive(f.pullTarget)) drawWebLine(f, f.pullTarget);
         }
         lifeOrbs.forEach(orb => orb.draw());
 

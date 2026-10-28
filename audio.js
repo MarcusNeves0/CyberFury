@@ -98,6 +98,11 @@ const sfx = (() => {
         gear_shot: t => { clang(t, 900, -24, 0.04); whoosh(t, 5000, 3000, 0.03, -22, 1); },
         gear_special: t => { clang(t, 300, -12, 0.2); thump(t, 'E2', -10, 0.15); zap(t + 0.1, 400, 1200, 0.2, -18, 'square'); },
         turret_shot: t => zap(t, 1400, 700, 0.05, -24, 'square'),
+        pistol_shot: t => { zap(t, 2400, 1100, 0.05, -24, 'square'); whoosh(t, 6000, 3000, 0.03, -26, 1); },
+        becca_special: t => { for (let i = 0; i < 4; i++) zap(t + i * 0.06, 500 * (i + 1), 900 * (i + 1), 0.08, -18, 'square'); whoosh(t, 800, 6000, 0.4, -14, 0.8); },
+        web_shot: t => { whoosh(t, 3500, 1200, 0.12, -14, 2); zap(t, 700, 350, 0.08, -24, 'triangle'); },
+        spider_sense: t => { zap(t, 1500, 1500, 0.05, -20, 'sine'); zap(t + 0.06, 2000, 2000, 0.05, -20, 'sine'); },
+        weaver_special: t => { whoosh(t, 5000, 800, 0.25, -10, 2); zap(t + 0.05, 300, 120, 0.3, -16, 'sawtooth'); },
         kayn_transform: t => { thump(t, 'A0', -2, 1); zap(t, 100, 900, 0.8, -12, 'sawtooth'); whoosh(t, 300, 6000, 0.9, -8, 0.8); },
     };
 

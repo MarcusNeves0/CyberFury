@@ -957,6 +957,119 @@ pixelCharacters.gear = {
     },
 };
 
+// --- Becca: baixinha caótica com duas pistolas rosa (desenhada um pouco menor no jogo) ---
+pixelCharacters.becca = {
+    palette: {
+        K: OUTLINE,
+        T: '#3ff0c8', t: '#1fa88a',                          // cabelo verde-água
+        S: '#f6d2c0', s: '#c99a86',                          // pele
+        E: '#ff4fa3',                                        // olhos
+        P: '#ff4fa3', p: '#b02a6e',                          // rosa neon (braços cibernéticos e pistolas)
+        J: '#1c1a22', j: '#2e2a38',                          // jaqueta e short
+        W: '#f4f4f8',                                        // blusa
+        Y: '#fff3a0',                                        // clarão do tiro
+    },
+    idle: [
+        '............KKKKKKK',
+        '...........KTTTTTTTK',
+        '......KK..KTTTtTTTTTK.KK',
+        '.....KTTK.KTtTTTTTTTK.KTTK',
+        '.....KTtK.KTSSSSSSSTK.KTtK',
+        '.....KTtK.KTSSSSSESTK.KTtK',
+        '....KTTtK.KSSSSSSSSSK.KTtTK',
+        '....KTtTK.KsSSSSSPSSK.KTtTK',
+        '....KTTK...KsSSSSSK...KTTK',
+        '.....KK.....KSSSK.....KK',
+        '.......KKKKJJJWWWJJJKKKKK',
+        '......KpPPKJJJWWWJJJJKpPPK',
+        '......KpPPKJJJWPWJJJJKpPPK',
+        '......KpPPKJjJWWWJjJJKpPPK',
+        '......KpPpKJjJJJJJjJJKpPpK',
+        '......KSSsKJJJJJJJJJJKSSsK',
+        '......KPPKKjjjjjjjjjjKKPPK',
+        '......KPpKKjjjjjjjjjjKKPpK',
+        '.......KK.KjjjjKKjjjjK.KK',
+        '.........KSSsK..KSSsK',
+        '.........KSSsK..KSSsK',
+        '.........KSSsK..KSSsK',
+        '.........KPPpK..KPPpK',
+        '.........KJJjK..KJJjK',
+        '.........KJJjK..KJJjK',
+        '.........KJJjK..KJJjK',
+        '.........KJJjK..KJJjK',
+        '.........KJJjK..KJJjK',
+        '.........KJJjK..KJJjK',
+        '.........KJJjK..KJJjK',
+        '........KPPPPK.KPPPPPK',
+        '........KKKKKK.KKKKKKK',
+    ],
+    // Tiro: as duas pistolas apontadas para frente, com clarão
+    attack: {
+        11: '......KpPPKJJJWWWJJJJKKKKKKKKK',
+        12: '......KpPPKJJJWPWJJJJKpPPPPPPYK',
+        13: '......KpPPKJjJWWWJjJJKKKKKKKKKK',
+        14: '......KSSsKJjJJJJJjJJKpPPPPPPYK',
+        15: '......KSSsKJJJJJJJJJJKKKKKKKKK',
+        16: '......KKKKKjjjjjjjjjjK',
+        17: '......KKKKKjjjjjjjjjjK',
+        18: '.......KK.KjjjjKKjjjjK',
+    },
+};
+
+// --- Weaver: acrobata cyberpunk com lançadores de teia (traje preto com teia neon) ---
+pixelCharacters.weaver = {
+    palette: {
+        K: OUTLINE,
+        B: '#15131c', b: '#262233',                          // traje
+        C: '#3ff6ff', c: '#1a8aa0',                          // linhas de teia neon
+        L: '#e8fbff',                                        // lentes da máscara
+        P: '#a050ff',                                        // emblema
+        G: '#8a94a8',                                        // lançadores de teia
+    },
+    idle: [
+        '............KKKKKKK',
+        '...........KBBBBBBBK',
+        '..........KBBCBBBCBBK',
+        '..........KBCBBCBBCBBK',
+        '..........KBBLLLKLLLK',
+        '..........KBBLLLKLLLK',
+        '..........KBCBBBBBBCBK',
+        '..........KBBCBBBBCBK',
+        '...........KBBCCCCBK',
+        '............KBBBBK',
+        '.......KKKKBCBBPBBCBKKKKK',
+        '......KbBBKBCBPPPBCBBKBBbK',
+        '......KbCBKCBBBPBBBCBKBCbK',
+        '......KbBBKBCBBBBBCBBKBBbK',
+        '......KGGGKBBCBBBCBBBKGGGK',
+        '......KBBbKBBBCCCBBBBKBBbK',
+        '......KKKKKbBBBBBBBBbKKKKK',
+        '........KBBBBBBBBBBBBK',
+        '........KBCBBBKKBBBCBK',
+        '.........KBCbK..KBCbK',
+        '.........KCBbK..KCBbK',
+        '.........KBCbK..KBCbK',
+        '.........KCBbK..KCBbK',
+        '.........KBCbK..KBCbK',
+        '.........KCBbK..KCBbK',
+        '.........KBCbK..KBCbK',
+        '.........KCBbK..KCBbK',
+        '.........KBCbK..KBCbK',
+        '.........KCBbK..KCBbK',
+        '.........KBBbK..KBBbK',
+        '........KbbbbK.KbbbbbK',
+        '........KKKKKK.KKKKKKK',
+    ],
+    // Golpe: braço esticado com o lançador de teia
+    attack: {
+        11: '......KbBBKBCBPPPBCBBKKKKKKKKK',
+        12: '......KbCBKCBBBPBBBCBKBCBBGGBBK',
+        13: '......KbBBKBCBBBBBCBBKBBBBGGBBK',
+        14: '......KGGGKBBCBBBCBBBKKKKKKKKKK',
+        15: '......KBBbKBBBCCCBBBBK',
+    },
+};
+
 // --- Pose de especial ---
 // Gerada a partir do sprite parado: recorta o braço da frente (e a arma, se estiver nele)
 // e cola mais para cima, como se o personagem erguesse o braço para soltar o poder.
@@ -987,12 +1100,14 @@ const SPECIAL_POSE = {
     nyx: { x0: 22, x1: 27, y0: 10, y1: 17, lift: 7 },
     viper: { x0: 22, x1: 32, y0: 10, y1: 16, lift: 6 },
     gear: { x0: 22, x1: 27, y0: 10, y1: 18, lift: 7 },
+    becca: { x0: 22, x1: 27, y0: 10, y1: 18, lift: 7 },
+    weaver: { x0: 22, x1: 27, y0: 10, y1: 16, lift: 7 },
 };
 
 // Linha onde as pernas se separam em cada sprite (abaixo do short, da saia ou do casaco)
 const LEG_START = {
     titan: 23, spark: 19, hades: 22, jack: 21, genji: 20, ryu: 21, lorenzo: 20, malenia: 19,
-    maliketh: 20, kayn: 20, celestia: 30, flora: 23, nyx: 22, viper: 20, gear: 20,
+    maliketh: 20, kayn: 20, celestia: 30, flora: 23, nyx: 22, viper: 20, gear: 20, becca: 19, weaver: 19,
 };
 for (const [type, row] of Object.entries(LEG_START)) pixelCharacters[type].legStart = row;
 for (const [type, area] of Object.entries(SPECIAL_POSE)) {
