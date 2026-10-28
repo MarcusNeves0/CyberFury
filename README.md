@@ -4,7 +4,7 @@
 
 **Briga de rua cyberpunk vista de cima, com 20 lutadores, 4 arenas cheias de perigo e partidas de 1v1 até 3v3.**
 
-<img width="1019" height="581" alt="Cybernetic Fury" src="https://github.com/user-attachments/assets/751f7546-95c3-4e73-8d06-063cd806ea30" />
+<img width="900" alt="Os 20 lutadores de Cybernetic Fury" src="assets/personagens.png" />
 
 ### 🎮 [JOGAR AGORA NO NAVEGADOR](https://marcusneves0.github.io/CyberFury/) 🎮
 

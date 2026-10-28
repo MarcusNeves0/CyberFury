@@ -2816,9 +2816,9 @@ window.onload = () => {
     }
 
     // --- Cenário ---
-    // A rua neon do background.png fica no fundo dos menus
+    // A rua neon do assets/background.png fica no fundo dos menus
     const backgroundImage = new Image();
-    backgroundImage.src = 'background.png';
+    backgroundImage.src = 'assets/background.png';
     backgroundImage.onload = () => { if (gameState !== 'FIGHT' && canvasWidth) drawMenuBackground(); };
 
     function drawMenuBackground() {
