@@ -708,6 +708,13 @@ body {
 }
 
 #win-text {
-    font-size: 8rem;
+    font-size: 6rem;
     text-shadow: 0 0 20px var(--neon-pink);
+}
+
+/* Fim de luta: escurece só em cima e embaixo, para a comemoração do vencedor aparecer no meio */
+#game-over-screen {
+    background: linear-gradient(rgba(10, 10, 20, 0.8), rgba(10, 10, 20, 0.05) 35%, rgba(10, 10, 20, 0.05) 65%, rgba(10, 10, 20, 0.85));
+    justify-content: space-between;
+    padding: 24px 20px 30px;
 }

@@ -3,9 +3,36 @@
 // Linhas mais curtas que 32 são completadas com '.' à direita.
 // O corpo ocupa as colunas 8 a 23 (a "caixa" do lutador); o resto é espaço para braços, armas e capas.
 // O personagem sempre é desenhado virado para a direita; o jogo espelha quando precisa.
-// Cada personagem tem dois quadros: 'idle' (parado) e 'attack' (golpe).
+// Cada personagem desenha dois quadros à mão: 'idle' (parado) e 'attack' (golpe).
+// Os 4 quadros de caminhada são gerados sozinhos a partir do 'idle' (ver buildWalkFrames).
 const SPRITE_SIZE = 32;
 const OUTLINE = '#1a1024';
+
+// Caminhada gerada a partir do sprite parado: separa a parte de baixo em perna de trás
+// (colunas 0-14) e perna da frente (colunas 15-21) e mexe cada uma, alternando os passos.
+// As colunas 22+ (armas penduradas, cajados) ficam paradas.
+// legStart: linha onde começam as pernas (personagens de vestido/saia mexem só os pés).
+const WALK_POSES = [
+    { back: { dx: -1, dy: 0 }, front: { dx: 1, dy: -1 } }, // perna da frente adiantada e levantada
+    { back: { dx: 0, dy: 0 }, front: { dx: 0, dy: 0 } },   // pernas passando uma pela outra
+    { back: { dx: 1, dy: -1 }, front: { dx: -1, dy: 0 } }, // perna de trás adiantada e levantada
+    { back: { dx: 0, dy: 0 }, front: { dx: 0, dy: 0 } },
+];
+
+function buildWalkFrames(idle, legStart) {
+    const legHeight = SPRITE_SIZE - legStart;
+    return WALK_POSES.map(pose => {
+        const canvas = document.createElement('canvas');
+        canvas.width = SPRITE_SIZE;
+        canvas.height = SPRITE_SIZE;
+        const g = canvas.getContext('2d');
+        g.drawImage(idle, 0, 0, SPRITE_SIZE, legStart, 0, 0, SPRITE_SIZE, legStart);                // corpo
+        g.drawImage(idle, 22, legStart, 10, legHeight, 22, legStart, 10, legHeight);              // armas penduradas
+        g.drawImage(idle, 0, legStart, 15, legHeight, pose.back.dx, legStart + pose.back.dy, 15, legHeight);
+        g.drawImage(idle, 15, legStart, 7, legHeight, 15 + pose.front.dx, legStart + pose.front.dy, 7, legHeight);
+        return canvas;
+    });
+}
 
 function buildSprite(rows, palette, name) {
     const canvas = document.createElement('canvas');
@@ -930,7 +957,55 @@ pixelCharacters.gear = {
     },
 };
 
-// Monta a função de desenho de cada personagem (os sprites são gerados na primeira vez que aparecem)
+// --- Pose de especial ---
+// Gerada a partir do sprite parado: recorta o braço da frente (e a arma, se estiver nele)
+// e cola mais para cima, como se o personagem erguesse o braço para soltar o poder.
+// area: retângulo recortado (colunas x0..x1-1, linhas y0..y1-1); lift: quantas linhas sobe.
+function raisedPose(rows, { x0, x1, y0, y1, lift }) {
+    const grid = Array.from({ length: SPRITE_SIZE }, (_, y) => (rows[y] || '').padEnd(SPRITE_SIZE, '.').split(''));
+    const out = grid.map(row => row.slice());
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) out[y][x] = '.';
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
+        const c = grid[y][x];
+        if (c !== '.' && y - lift >= 0) out[y - lift][x] = c;
+    }
+    return out.map(row => row.join('').replace(/\.+$/, ''));
+}
+
+// Área do braço (e arma) de cada personagem para a pose de especial
+const SPECIAL_POSE = {
+    titan: { x0: 22, x1: 28, y0: 10, y1: 20, lift: 8 },
+    spark: { x0: 22, x1: 32, y0: 10, y1: 17, lift: 7 },
+    hades: { x0: 22, x1: 28, y0: 10, y1: 18, lift: 8 },
+    jack: { x0: 22, x1: 32, y0: 11, y1: 25, lift: 9 },
+    genji: { x0: 22, x1: 26, y0: 9, y1: 28, lift: 9 },
+    ryu: { x0: 22, x1: 27, y0: 10, y1: 17, lift: 7 },
+    lorenzo: { x0: 22, x1: 27, y0: 10, y1: 17, lift: 7 },
+    malenia: { x0: 22, x1: 26, y0: 9, y1: 26, lift: 8 },
+    maliketh: { x0: 22, x1: 27, y0: 10, y1: 28, lift: 9 },
+    flora: { x0: 22, x1: 27, y0: 10, y1: 17, lift: 7 },
+    nyx: { x0: 22, x1: 27, y0: 10, y1: 17, lift: 7 },
+    viper: { x0: 22, x1: 32, y0: 10, y1: 16, lift: 6 },
+    gear: { x0: 22, x1: 27, y0: 10, y1: 18, lift: 7 },
+};
+
+// Linha onde as pernas se separam em cada sprite (abaixo do short, da saia ou do casaco)
+const LEG_START = {
+    titan: 23, spark: 19, hades: 22, jack: 21, genji: 20, ryu: 21, lorenzo: 20, malenia: 19,
+    maliketh: 20, kayn: 20, celestia: 30, flora: 23, nyx: 22, viper: 20, gear: 20,
+};
+for (const [type, row] of Object.entries(LEG_START)) pixelCharacters[type].legStart = row;
+for (const [type, area] of Object.entries(SPECIAL_POSE)) {
+    pixelCharacters[type].special = raisedPose(pixelCharacters[type].idle, area);
+}
+// Kayn e Celestia: foice e cajado já vão até o topo do quadro; a pose de especial é o braço estendido
+for (const type of ['kayn', 'celestia']) {
+    pixelCharacters[type].special = spriteVariant(pixelCharacters[type].idle, pixelCharacters[type].attack);
+}
+
+// Monta a função de desenho de cada personagem (os sprites são gerados na primeira vez que aparecem).
+// Quadro escolhido: golpe (se estiver acertando), passo da caminhada (se estiver andando) ou parado.
+// fighter.spriteFrame pode forçar 'attack' ou 'idle' (usado pelas animações de golpe do jogo).
 function makePixelArt(type) {
     const def = pixelCharacters[type];
     const spritesByForm = {};
@@ -939,16 +1014,22 @@ function makePixelArt(type) {
         const form = def.forms ? ((fighter && fighter.kaynForm) || 'normal') : 'normal';
         if (!spritesByForm[form]) {
             const palette = def.forms ? { ...def.palette, ...def.forms[form] } : def.palette;
+            const idle = buildSprite(def.idle, palette, `${type} idle`);
             spritesByForm[form] = {
-                idle: buildSprite(def.idle, palette, `${type} idle`),
+                idle,
                 attack: buildSprite(spriteVariant(def.idle, def.attack), palette, `${type} attack`),
+                walk: buildWalkFrames(idle, def.legStart || 20),
+                special: buildSprite(def.special || def.idle, palette, `${type} special`),
             };
         }
         const sprites = spritesByForm[form];
-        const isStriking = fighter && fighter.isAttacking && (fighter.attackType === 'punch' || fighter.attackType === 'strong_punch');
+        let sprite = sprites.idle;
+        if (fighter && fighter.spriteFrame === 'attack') sprite = sprites.attack;
+        else if (fighter && fighter.spriteFrame === 'special') sprite = sprites.special;
+        else if (fighter && fighter.spriteFrame !== 'idle' && fighter.walkFrame !== null && fighter.walkFrame !== undefined) sprite = sprites.walk[fighter.walkFrame];
         ctx.imageSmoothingEnabled = false;
         // Sprite tem o dobro da largura da caixa: metade da caixa sobra de cada lado
-        ctx.drawImage(isStriking ? sprites.attack : sprites.idle, x - width / 2, y, width * 2, height);
+        ctx.drawImage(sprite, x - width / 2, y, width * 2, height);
     };
 }
 

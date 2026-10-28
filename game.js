@@ -70,11 +70,14 @@ window.onload = () => {
     let fighters = [], aiControllers = [], particles = [], projectiles = [];
     let obstacles = [], groundBalls = [];
     let hazards = []; // áreas no chão que explodem depois de um aviso (Hades)
+    let screenShake = 0; // tremor da tela nos golpes pesados (diminui sozinho)
+    const DEATH_DURATION = 60; // 1 segundo caindo e sumindo
     let shockwaves = []; // anéis visuais das ondas de choque do Titan
     const TITAN_SHOCKWAVE_RADIUS = 75;
     const TITAN_SHOCKWAVE_DAMAGE = 25;
     let arena = { left: 0, top: 0, right: WORLD_W, bottom: WORLD_H };
 
+    const AI_DECISION_STEPS = 18;  // a IA decide a cada 18 passos (0,3 s de jogo)
     const FIGHTER_RADIUS = 16;     // "pé" do lutador no chão (colisão)
     const FIGHTER_HEIGHT = 64;     // altura do sprite
     const MOVE_SPEED = 3.4;        // pixels por passo
@@ -448,6 +451,15 @@ window.onload = () => {
             this.vz = 0;
             this.moveX = 0; // movimento deste passo (para animação)
             this.moveY = 0;
+            this.walkPhase = 0;     // avança conforme anda; define o quadro da caminhada
+            this.walkFrame = null;  // 0-3 andando, null parado
+            this.spriteFrame = null; // força 'attack' ou 'idle' durante as animações de golpe
+            this.attackAge = 0;     // passos desde o início do golpe
+            this.attackWindup = 0;  // passos de preparação antes do golpe acertar
+            this.landSquash = 0;    // achatamento ao cair no chão depois de um salto
+            this.specialPoseTimer = 0; // mostra a pose de especial por meio segundo
+            this.deathTimer = 0;    // animação de derrota (cai e some)
+            this.isCelebrating = false; // pose de vitória no zoom final
             this.kbx = 0;   // empurrão (decai sozinho)
             this.kby = 0;
             this.aim = { x: team === 0 ? 1 : -1, y: 0 }; // direção da mira
@@ -571,6 +583,7 @@ window.onload = () => {
             this.specialCooldown = VIPER_CLOUD_COOLDOWN;
             this.viperCloudTimer = VIPER_CLOUD_DURATION;
             this.viperCloudTick = 0;
+            this.poseSpecial();
             sfx.play('viper_special');
         }
 
@@ -609,6 +622,7 @@ window.onload = () => {
                 if (!turrets.some(t => !t.done && Math.hypot(t.x - x, t.y - y) < 32)) break;
             }
             turrets.push(new Turret(this, x, y));
+            this.poseSpecial();
             sfx.play('gear_special');
         }
 
@@ -619,7 +633,8 @@ window.onload = () => {
 
         draw() {
             // Kayn dentro do oponente fica invisível (a foice em cima da cabeça é desenhada à parte)
-            if (this.isInsideOpponent || this.isDead) return;
+            if (this.isInsideOpponent) return;
+            if (this.isDead) { this.drawDefeat(); return; }
 
             // Sombra e anel do time no chão (estilo Brawl Stars)
             const shadowScale = Math.max(0.4, 1 - this.z / 120);
@@ -640,16 +655,66 @@ window.onload = () => {
             ctx.stroke();
             ctx.restore();
 
-            // Respiração parado, balanço andando, tremor ao levar dano
-            const isWalking = Math.hypot(this.moveX, this.moveY) > 0.1;
-            const time = Date.now() / (isWalking ? 90 : 300) + fighters.indexOf(this) * 1.5;
-            const bob = Math.round((Math.sin(time) + 1) * (isWalking ? 1.5 : 1));
+            // --- Animação ---
+            const isWalking = Math.hypot(this.moveX, this.moveY) > 0.3 && this.walkFrame !== null;
+            // Andando: o corpo sobe um pixel quando as pernas se cruzam; parado: respiração lenta
+            let bob = isWalking
+                ? (this.walkFrame % 2 === 1 ? 2 : 0)
+                : Math.round((Math.sin(Date.now() / 300 + fighters.indexOf(this) * 1.5) + 1));
+            if (this.isCelebrating) bob = Math.round(Math.abs(Math.sin(Date.now() / 140)) * 10); // pulinhos de vitória
             const shake = this.hitFlash > 0 ? (Math.random() - 0.5) * 4 : 0;
-            const lean = this.isAttacking ? 3 * this.facing : 0;
+            const ranged = SHOOTERS.includes(this.characterType) || this.characterType === 'lorenzo';
+            const isMeleeStrike = this.isAttacking && !ranged && (this.attackType === 'punch' || this.attackType === 'strong_punch');
+            let lean = 0, squashX = 1, squashY = 1, ghost = false;
+            this.spriteFrame = null;
+            if (isMeleeStrike && this.attackWindup > 0) {
+                // Preparação: puxa o corpo para trás
+                this.spriteFrame = 'idle';
+                lean = this.attackType === 'strong_punch' ? -5 : -3;
+                squashX = 0.95; squashY = 1.04;
+            } else if (isMeleeStrike) {
+                // Impacto e recuperação: avança e volta aos poucos, com um rastro nos primeiros quadros
+                const strikeAge = this.attackAge - (this.attackType === 'strong_punch' ? 4 : 2);
+                this.spriteFrame = 'attack';
+                lean = Math.max(1, 6 - strikeAge * 0.6);
+                ghost = strikeAge < 5;
+            } else if (this.isAttacking && ranged && (this.attackType === 'punch' || this.attackType === 'strong_punch')) {
+                // Atiradores: coice para trás logo depois do tiro
+                this.spriteFrame = this.attackAge < 10 ? 'attack' : 'idle';
+                lean = this.attackAge < 4 ? -3 : 0;
+            }
+            if (this.isChargingPunch && this.punchHeld > 4) {
+                // Carregando o soco forte: se encolhe
+                const charge = Math.min(1, this.punchHeld / STRONG_PUNCH_HOLD);
+                squashX = 1 + 0.07 * charge; squashY = 1 - 0.08 * charge;
+                lean = -2 * charge;
+            }
+            if (this.landSquash > 0) { squashX = 1.1; squashY = 0.88; }
+            // Especiais: pose de poder; investidas e canalizações usam o quadro de golpe
+            const special = this.specialPoseTimer > 0 || this.isCelebrating;
+            if (special && !isMeleeStrike) this.spriteFrame = 'special';
+            if (this.isDashing || this.isWaterfowlDancing || this.isChannelingSpecial) this.spriteFrame = 'attack';
+            if (!isWalking && this.spriteFrame === null) this.spriteFrame = 'idle';
+            if (special) {
+                // Brilho em volta do corpo enquanto solta o poder
+                const glow = ctx.createRadialGradient(this.x, this.chestY, 4, this.x, this.chestY, 42);
+                const color = this.isCelebrating ? '255, 230, 120' : this.team === 0 ? '0, 255, 255' : '255, 77, 255';
+                const strength = this.isCelebrating ? 0.35 : 0.45 * (this.specialPoseTimer / 30);
+                glow.addColorStop(0, `rgba(${color}, ${strength})`);
+                glow.addColorStop(1, `rgba(${color}, 0)`);
+                ctx.fillStyle = glow;
+                ctx.beginPath();
+                ctx.arc(this.x, this.chestY, 42, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            // Levando dano: inclina para trás
+            const hurtTilt = this.hitFlash > 0 ? -0.14 * (this.hitFlash / 12) : 0;
 
             ctx.save();
-            ctx.translate(this.x + shake + lean, this.y - this.z - bob);
+            ctx.translate(this.x + shake + lean * this.facing, this.y - this.z - bob);
             if (this.facing === -1) ctx.scale(-1, 1);
+            ctx.rotate(hurtTilt);
+            ctx.scale(squashX, squashY);
             const possessor = fighters.find(f => f.isInsideOpponent && f.kaynHost === this);
             if (this.hitFlash > 0 && this.hitFlash % 4 < 2) {
                 ctx.filter = 'brightness(3) saturate(0)';
@@ -661,13 +726,20 @@ window.onload = () => {
                 ctx.filter = `drop-shadow(0 0 ${Math.min(6, this.punchHeld / 4)}px #fff3a0)`;
             }
             const drawArt = characterArt[this.characterType];
+            if (drawArt && ghost) {
+                // Rastro do golpe: uma cópia transparente um pouco atrás
+                ctx.save();
+                ctx.globalAlpha = 0.3;
+                drawArt(ctx, -this.height / 4 - 7, -this.height, this.height / 2, this.height, this);
+                ctx.restore();
+            }
             if (drawArt) drawArt(ctx, -this.height / 4, -this.height, this.height / 2, this.height, this);
             ctx.restore();
 
             const headY = this.y - this.z - this.height - 8;
 
-            // Golpe: arco na direção da mira
-            if (this.attackTimer > 0 && this.attackType !== 'special') {
+            // Golpe: arco na direção da mira (só depois da preparação)
+            if (this.attackTimer > 0 && this.attackWindup === 0 && this.attackType !== 'special') {
                 const reach = (isBladeUser(this) ? BLADE_REACH : PUNCH_REACH) + this.radius;
                 const angle = Math.atan2(this.aim.y, this.aim.x);
                 ctx.save();
@@ -709,9 +781,35 @@ window.onload = () => {
             }
         }
 
+        // Pose de especial com brilho, por meio segundo
+        poseSpecial() {
+            this.specialPoseTimer = 30;
+        }
+
+        // Derrota: tomba para trás e vai sumindo
+        drawDefeat() {
+            if (this.deathTimer <= 0) return;
+            const progress = 1 - this.deathTimer / DEATH_DURATION;
+            const drawArt = characterArt[this.characterType];
+            this.spriteFrame = 'idle';
+            ctx.save();
+            ctx.globalAlpha = this.deathTimer < 25 ? this.deathTimer / 25 : 1;
+            ctx.fillStyle = 'rgba(5, 0, 15, 0.5)';
+            ctx.beginPath();
+            ctx.ellipse(this.x - this.facing * 24 * Math.min(1, progress * 2), this.y, 26, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.translate(this.x, this.y - Math.sin(Math.min(1, progress * 2) * Math.PI) * 10); // quica de leve ao cair
+            if (this.facing === -1) ctx.scale(-1, 1);
+            ctx.rotate(-Math.min(1, progress * 2.2) * Math.PI / 2);
+            ctx.filter = 'grayscale(0.6) brightness(0.8)';
+            if (drawArt) drawArt(ctx, -this.height / 4, -this.height, this.height / 2, this.height, this);
+            ctx.restore();
+        }
+
         update() {
             if (this.hitFlash > 0) this.hitFlash--;
             if (this.specialCooldown > 0) this.specialCooldown--;
+            if (this.specialPoseTimer > 0) this.specialPoseTimer--;
 
             if (this.isInsideOpponent) {
                 this.updateKaynUltimate();
@@ -722,8 +820,10 @@ window.onload = () => {
             if (this.z > 0 || this.vz !== 0) {
                 this.vz -= 0.7;
                 this.z += this.vz;
-                if (this.z <= 0) { this.z = 0; this.vz = 0; }
+                if (this.z <= 0) { this.z = 0; this.vz = 0; this.landSquash = 6; }
             }
+            if (this.landSquash > 0) this.landSquash--;
+            if (this.isAttacking) this.attackAge++;
 
             // Empurrões
             this.x += this.kbx;
@@ -774,6 +874,18 @@ window.onload = () => {
             this.moveY = move.y * speed;
             this.x += this.moveX;
             this.y += this.moveY;
+
+            // Caminhada: o ritmo dos passos acompanha a velocidade; a cada pé no chão, uma poeirinha
+            const moving = Math.hypot(this.moveX, this.moveY);
+            if (moving > 0.3) {
+                const before = this.walkFrame;
+                this.walkPhase += moving * 0.045;
+                this.walkFrame = Math.floor(this.walkPhase) % 4;
+                if (this.walkFrame !== before && (this.walkFrame === 0 || this.walkFrame === 2)) spawnStepDust(this);
+            } else {
+                this.walkFrame = null;
+                this.walkPhase = 0;
+            }
             if (!opponent && Math.abs(move.x) > 0.05) this.facing = move.x > 0 ? 1 : -1;
 
             // Segurar o soco carrega o soco forte
@@ -785,7 +897,9 @@ window.onload = () => {
                 }
             }
 
-            if (this.attackTimer > 0) {
+            if (this.attackWindup > 0) {
+                this.attackWindup--; // ainda puxando o braço: o golpe só acerta depois
+            } else if (this.attackTimer > 0) {
                 this.attackTimer--;
                 if (!this.attackHit) tryMelee(this);
             }
@@ -1104,6 +1218,7 @@ window.onload = () => {
             this.energy -= CELESTIA_ULT_COST;
             this.specialCooldown = CELESTIA_ULT_COOLDOWN;
             this.celestiaUltTimer = CELESTIA_ULT_DURATION;
+            this.poseSpecial();
             sfx.play('celestia_special');
             for (let i = 0; i < 36; i++) {
                 const angle = (i / 36) * Math.PI * 2;
@@ -1151,6 +1266,7 @@ window.onload = () => {
             this.nyxLinkEnemy = enemy;
             this.nyxLinkAlly = mostHurtAlly(this);
             this.nyxLinkTimer = NYX_LINK_DURATION;
+            this.poseSpecial();
             sfx.play('nyx_special');
         }
 
@@ -1174,6 +1290,7 @@ window.onload = () => {
             this.specialCooldown = 60;
             this.attackCooldown = 15;
             this.isAttacking = true;
+            this.poseSpecial();
             sfx.play('flora_special');
             healingFlowers.push(new HealingFlower(this));
         }
@@ -1213,6 +1330,7 @@ window.onload = () => {
 
             sfx.play(effect.sound || (damage >= 25 ? 'hit_heavy' : 'hit'));
             this.hitFlash = 12;
+            if (damage >= 25) screenShake = Math.max(screenShake, Math.min(8, damage / 9));
             if (this.isChannelingSpecial) this.stopChanneling(); // levar dano quebra o choque
             // Malenia grudada: se o time da vítima bater forte nela, a dança é interrompida
             if (this.isWaterfowlDancing && this.waterfowlLock) {
@@ -1244,6 +1362,8 @@ window.onload = () => {
             this.isAttacking = true;
             this.attackType = type;
             this.attackHit = false;
+            this.attackAge = 0;
+            this.attackWindup = 0;
 
             switch (type) {
                 case 'punch':
@@ -1270,6 +1390,7 @@ window.onload = () => {
                         this.attackTimer = 6;
                         sfx.play(this.characterType === 'genji' ? 'blade_swing' : 'swing');
                     }
+                    this.attackWindup = 2; // puxa o braço por um instante antes de acertar
                     break;
                 case 'strong_punch':
                     if (SHOOTERS.includes(this.characterType)) {
@@ -1279,6 +1400,7 @@ window.onload = () => {
                     }
                     this.attackCooldown = 45;
                     this.attackTimer = 8;
+                    this.attackWindup = 4; // o soco forte puxa mais o braço
                     sfx.play(isBladeUser(this) ? 'blade_swing' : 'swing_heavy');
                     break;
                 case 'special':
@@ -1317,6 +1439,7 @@ window.onload = () => {
                     // Recuperação curta (o lutador volta a se mexer logo) e recarga própria do especial
                     this.attackCooldown = 15;
                     this.specialCooldown = 60;
+                    this.poseSpecial();
 
                     sfx.play(`${this.characterType}_special`);
 
@@ -1638,6 +1761,17 @@ window.onload = () => {
         }
     }
 
+    // Poeirinha no chão a cada passo
+    function spawnStepDust(fighter) {
+        for (let i = 0; i < 3; i++) {
+            const p = new Particle(fighter.x + (Math.random() - 0.5) * 14, fighter.y - 2, 'rgba(190, 180, 215, 0.5)', 0,
+                { x: -fighter.moveX * 0.15 + (Math.random() - 0.5) * 0.6, y: -Math.random() * 0.5 });
+            p.radius = 1.5 + Math.random() * 1.5;
+            p.life = 45;
+            particles.push(p);
+        }
+    }
+
     // Aliado vivo com menor porcentagem de vida (contando quem pergunta); null se todos estão cheios
     function mostHurtAlly(fighter) {
         const team = fighters.filter(f => alive(f) && f.team === fighter.team && !f.isInsideOpponent);
@@ -1925,17 +2059,27 @@ window.onload = () => {
     class AI {
         constructor(fighter) {
             this.fighter = fighter;
-            this.decisionInterval = null;
+            this.running = false;
+            this.stepsUntilDecision = 0;
             this.strafeSign = Math.random() < 0.5 ? 1 : -1;
         }
 
         start() {
-            this.decisionInterval = setInterval(() => this.makeDecision(), 300); // A IA toma decisões mais rápido
+            this.running = true;
+            this.stepsUntilDecision = Math.floor(Math.random() * AI_DECISION_STEPS); // não decidem todos no mesmo passo
         }
 
         stop() {
-            if (this.decisionInterval) clearInterval(this.decisionInterval);
+            this.running = false;
             this.fighter.aiMove = { x: 0, y: 0 };
+        }
+
+        // Chamado a cada passo do jogo: decide a cada 0,3 s de jogo (acompanha o jogo mesmo se ele engasgar)
+        tick() {
+            if (!this.running) return;
+            if (--this.stepsUntilDecision > 0) return;
+            this.stepsUntilDecision = AI_DECISION_STEPS;
+            this.makeDecision();
         }
 
         // Escolhe o alvo: o inimigo mais próximo, mas troca por um inimigo quase morto que esteja perto
@@ -2263,6 +2407,7 @@ window.onload = () => {
     // --- Derrota e Fim de Jogo ---
     function knockOut(fighter) {
         fighter.isDead = true;
+        fighter.deathTimer = DEATH_DURATION;
         fighter.health = 0;
         fighter.stopChanneling();
         fighter.isDefending = false;
@@ -2296,6 +2441,8 @@ window.onload = () => {
             : `${TEAM_NAMES[winningTeam]} VENCE!`;
         winText.style.color = match.mode === '1v1' ? '' : TEAM_COLORS[winningTeam];
 
+        // Todo o time vencedor comemora
+        survivors.forEach(f => { f.isCelebrating = true; f.isAttacking = false; f.moveX = 0; f.moveY = 0; });
         startWinnerZoom(survivors.find(f => f.isPlayer) || survivors[0]);
     }
 
@@ -2306,6 +2453,7 @@ window.onload = () => {
         winnerToZoom = winner;
         zoomFactor = 1;
 
+        const confettiColors = ['#ff4dff', '#00ffff', '#ffe34a', '#6dff8a', '#ff7a1a'];
         function zoomLoop() {
             if (zoomFactor > 2.5) {
                 winnerToZoom = null;
@@ -2313,6 +2461,17 @@ window.onload = () => {
                 return;
             }
             zoomFactor += 0.01;
+
+            // A luta parou, mas a queda de quem perdeu e o confete continuam
+            fighters.forEach(f => { if (f.isDead && f.deathTimer > 0) f.deathTimer--; });
+            if (Math.random() < 0.8) {
+                const c = new Particle(winnerToZoom.x + (Math.random() - 0.5) * 120, winnerToZoom.y - 110, confettiColors[Math.floor(Math.random() * confettiColors.length)], 0,
+                    { x: (Math.random() - 0.5) * 2, y: 1 + Math.random() * 1.5 });
+                c.radius = 1.5 + Math.random() * 1.5;
+                particles.push(c);
+            }
+            particles.forEach(p => p.update());
+            particles = particles.filter(p => p.life > 0);
 
             draw();
 
@@ -2682,6 +2841,7 @@ window.onload = () => {
     let lastFrameTime = null, timeAccumulator = 0;
 
     function step() {
+        aiControllers.forEach(ai => ai.tick());
         // Humanos sempre miram no inimigo mais próximo; a IA escolhe o alvo, mas troca se ele cair
         for (const f of fighters) {
             if (!alive(f)) continue;
@@ -2717,9 +2877,11 @@ window.onload = () => {
         updateHazards();
         shockwaves.forEach(w => w.life--);
         shockwaves = shockwaves.filter(w => w.life > 0);
+        screenShake = screenShake > 0.3 ? screenShake * 0.85 : 0;
 
         for (const f of fighters) {
             if (!f.isDead && f.health <= 0) knockOut(f);
+            else if (f.isDead && f.deathTimer > 0) f.deathTimer--;
         }
 
         checkGameOver();
@@ -2746,6 +2908,7 @@ window.onload = () => {
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvasWidth, canvasHeight);
         ctx.setTransform(viewScale, 0, 0, viewScale, 0, 0);
+        if (screenShake > 0) ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
         ctx.imageSmoothingEnabled = false;
         drawArenaFloor();
 
@@ -3296,6 +3459,7 @@ window.onload = () => {
         lifeOrbs = [];
         turrets = [];
         hud.innerHTML = '';
+        winText.innerText = '';
         winText.style.color = '';
     }
 
