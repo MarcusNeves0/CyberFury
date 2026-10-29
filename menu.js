@@ -193,6 +193,7 @@ function drawPreviewFrame() {
     ctx.imageSmoothingEnabled = false;
     if (characterArt[previewId]) {
         const pose = PREVIEW_CYCLE[previewStep % PREVIEW_CYCLE.length];
+        if (previewId === 'gear') drawPreviewTurret(ctx, pose.spriteFrame === 'attack');
         characterArt[previewId](ctx, 48, 0, 96, 192, { walkFrame: null, zarekForm: null, ...pose });
     } else {
         ctx.font = 'bold 120px Orbitron, sans-serif';
@@ -202,6 +203,45 @@ function drawPreviewFrame() {
         ctx.fillText('?', 96, 100);
     }
 }
+// Torreta do Gear ao lado dele no destaque: o cano procura alvo e atira junto quando ele atira
+function drawPreviewTurret(ctx, firing) {
+    const x = 30, y = 186; // pé da torreta no canvas do destaque (192x192)
+    ctx.save();
+    ctx.fillStyle = 'rgba(5, 0, 15, 0.5)';
+    ctx.beginPath(); ctx.ellipse(x, y, 16, 5, 0, 0, Math.PI * 2); ctx.fill();
+    // Tripé
+    ctx.strokeStyle = '#1a1024';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(x - 12, y); ctx.lineTo(x, y - 22); ctx.lineTo(x + 12, y);
+    ctx.moveTo(x, y + 2); ctx.lineTo(x, y - 22);
+    ctx.stroke();
+    ctx.strokeStyle = '#5a6270';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    // Cabeça com o cano girando devagar para os lados
+    ctx.translate(x, y - 30);
+    ctx.fillStyle = '#1a1024';
+    ctx.fillRect(-13, -10, 26, 20);
+    ctx.fillStyle = '#9aa3b8';
+    ctx.fillRect(-11, -8, 22, 16);
+    ctx.fillStyle = '#5a6270';
+    ctx.fillRect(-11, 4, 22, 4);
+    const blink = Math.floor(Date.now() / 400) % 2 === 0;
+    ctx.fillStyle = blink ? '#3ff6ff' : '#1a8aa0';
+    ctx.fillRect(-4, -4, 6, 6); // luz
+    ctx.rotate(Math.PI + 0.4 + Math.sin(Date.now() / 700) * 0.25); // para o lado e um pouco para cima
+    ctx.fillStyle = '#1a1024';
+    ctx.fillRect(8, -5, 18, 10);
+    ctx.fillStyle = '#4a5060';
+    ctx.fillRect(9, -3, 16, 6);
+    if (firing) {
+        ctx.fillStyle = '#fff3a0';
+        ctx.beginPath(); ctx.arc(29, 0, 5, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+}
+
 // Anima o destaque só enquanto a tela de seleção está aberta
 setInterval(() => {
     if (gameState !== 'SELECT' || !previewId) return;
