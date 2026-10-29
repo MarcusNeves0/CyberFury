@@ -319,44 +319,233 @@ body {
     background: rgba(0, 255, 255, 0.15);
 }
 
+/* --- Seleção de personagem ---
+   Tudo medido pelo tamanho da tela do jogo (cqw/cqh), para caber sem rolagem em qualquer tamanho */
+#character-selection {
+    container-type: size;
+    justify-content: flex-start;
+    gap: 1.6cqh;
+    padding: 2cqh 2.5cqw 2.5cqh;
+    overflow: hidden;
+    background:
+        radial-gradient(ellipse at 30% 35%, rgba(255, 0, 255, 0.12), transparent 60%),
+        linear-gradient(180deg, rgba(10, 10, 20, 0.92), rgba(5, 5, 14, 0.97));
+    --class-color: var(--neon-pink);
+}
+
+.selection-header {
+    position: relative;
+    width: 100%;
+    text-align: center;
+}
+
+.selection-header .back-button {
+    top: 0;
+    left: 0;
+    font-size: 1.8cqh;
+}
+
+#character-selection h1 {
+    font-size: 4.4cqh;
+    letter-spacing: 0.3em;
+    color: var(--neon-pink);
+    text-shadow: 0 0 10px var(--neon-pink);
+    margin: 0;
+}
+
 .selection-title {
-    font-size: 1.3rem;
-    margin: -10px 0 15px 0;
+    font-size: 2.2cqh;
+    margin: 0.4cqh 0 0;
     color: var(--neon-blue);
     text-shadow: 0 0 6px var(--neon-blue);
 }
 
-/* --- Seleção de personagem --- */
-#character-selection h1 {
-    font-size: 3rem;
-    color: var(--neon-pink);
-    text-shadow: 0 0 10px var(--neon-pink);
-    margin-bottom: 20px;
-}
+/* Cores de cada classe */
+.melee { --class-color: #ff3b6b; }
+.shooter { --class-color: #00e5ff; }
+.healer { --class-color: #5dff8a; }
+.tank { --class-color: #b07bff; }
 
-.selection-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 15px;
-    width: 95%;
-}
-
-.character-card {
-    border: 2px solid var(--neon-blue);
-    border-radius: 10px;
-    padding: 15px;
-    text-align: center;
-    cursor: pointer;
-    transition: transform 0.3s, box-shadow 0.3s;
+/* Painel do lutador em destaque */
+.selection-preview {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    gap: 2.5cqw;
+    border: 1px solid color-mix(in srgb, var(--class-color) 55%, transparent);
+    border-radius: 12px;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--class-color) 16%, transparent), rgba(0, 0, 0, 0.35) 45%);
+    box-shadow: inset 0 0 30px color-mix(in srgb, var(--class-color) 18%, transparent);
+    padding: 1.5cqh 2cqw;
+    box-sizing: border-box;
+    transition: border-color 0.25s, background 0.25s;
+}
+
+.preview-art {
+    flex: 0 0 auto;
+    height: 100%;
+    aspect-ratio: 1;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
     justify-content: center;
 }
 
-.character-card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 15px var(--neon-pink), 0 0 30px var(--neon-blue);
+/* Plataforma de luz embaixo do lutador */
+.preview-art::before {
+    content: '';
+    position: absolute;
+    bottom: 2%;
+    width: 70%;
+    height: 12%;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, color-mix(in srgb, var(--class-color) 70%, transparent), transparent 70%);
+}
+
+#preview-canvas {
+    position: relative;
+    height: 100%;
+    aspect-ratio: 1;
+    image-rendering: pixelated;
+    animation: preview-float 2.4s ease-in-out infinite;
+}
+
+@keyframes preview-float {
+    50% { transform: translateY(-2.5%); }
+}
+
+.preview-info {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.1cqh;
+    font-family: sans-serif;
+}
+
+.preview-top {
+    display: flex;
+    align-items: center;
+    gap: 1.5cqw;
+}
+
+#preview-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 6cqh;
+    margin: 0;
+    color: #fff;
+    text-shadow: 0 0 12px var(--class-color);
+}
+
+.preview-class {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.8cqh;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    padding: 0.4cqh 1cqw;
+    border-radius: 999px;
+    color: var(--class-color);
+    border: 1px solid var(--class-color);
+}
+
+.preview-style {
+    margin: 0;
+    font-size: 2.4cqh;
+    color: #e8e8f0;
+}
+
+.preview-hp {
+    display: flex;
+    align-items: center;
+    gap: 1cqw;
+    font-size: 2cqh;
+    color: #aaa;
+}
+
+.preview-hp-bar {
+    flex: 0 1 30cqw;
+    height: 1.3cqh;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+#preview-hp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #39ff7a, #b6ff3a);
+    transition: width 0.3s;
+}
+
+.preview-hp strong {
+    color: #fff;
+}
+
+.preview-ult {
+    margin: 0;
+    font-size: 2.2cqh;
+    color: #fff;
+}
+
+.preview-ult span {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.7cqh;
+    color: #ffd23f;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-right: 0.6cqw;
+}
+
+.preview-lore {
+    margin: 0;
+    font-size: 1.9cqh;
+    line-height: 1.45;
+    color: #9a9ab0;
+    font-style: italic;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Elenco: 2 fileiras de 10, com o nome da classe em cima de cada grupo */
+.selection-grid {
+    flex: 0 0 auto;
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 0.8cqh 0.7cqw;
+    width: 100%;
+}
+
+.roster-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.6cqh;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--class-color);
+    border-bottom: 1px solid color-mix(in srgb, var(--class-color) 45%, transparent);
+    padding-bottom: 0.3cqh;
+}
+
+.character-card {
+    position: relative;
+    border: 2px solid color-mix(in srgb, var(--class-color) 35%, transparent);
+    border-radius: 8px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), color-mix(in srgb, var(--class-color) 14%, rgba(0, 0, 0, 0.5)));
+    cursor: pointer;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.character-card:hover,
+.character-card.active {
+    transform: translateY(-3px);
+    border-color: var(--class-color);
+    box-shadow: 0 0 12px var(--class-color);
 }
 
 /* Personagem já escolhido pelo outro jogador */
@@ -366,36 +555,27 @@ body {
     filter: grayscale(1);
 }
 
-.character-card h2 {
-    color: var(--neon-pink);
-    font-size: 1.5rem;
-    margin-top: 0;
-    margin-bottom: 10px;
-}
-
 .thumbnail-canvas {
-    width: 100px;
-    height: 100px;
-    border: 2px solid var(--neon-blue);
-    background-color: var(--asphalt-color);
-    margin-bottom: 10px;
-    border-radius: 5px;
+    width: 100%;
+    aspect-ratio: 1;
+    height: auto;
+    max-height: 9cqh;
+    object-fit: contain;
+    image-rendering: pixelated;
 }
 
-#lore-tooltip {
-    position: absolute;
-    display: none;
-    background-color: rgba(0, 0, 10, 0.9);
-    border: 1px solid var(--neon-blue);
-    color: var(--text-color);
-    padding: 10px;
-    border-radius: 5px;
-    max-width: 250px;
-    font-family: sans-serif;
-    font-size: 0.9rem;
-    pointer-events: none; /* Impede que o tooltip bloqueie eventos do rato */
-    z-index: 100;
-    box-shadow: 0 0 10px var(--neon-blue);
+.character-card h2 {
+    width: 100%;
+    margin: 0;
+    padding: 0.4cqh 0;
+    text-align: center;
+    font-size: 1.45cqh;
+    letter-spacing: 0.05em;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.55);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* --- Tela de Controles --- */

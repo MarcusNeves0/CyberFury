@@ -124,6 +124,7 @@ function setPadFocus(el) {
     if (el) {
         el.classList.add('pad-focus');
         el.scrollIntoView({ block: 'nearest' });
+        el.dispatchEvent(new Event('padfocus')); // na seleção, atualiza o lutador em destaque
     }
 }
 

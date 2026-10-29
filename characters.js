@@ -1578,9 +1578,10 @@ for (const type of Object.keys(pixelCharacters)) {
 function drawThumbnails() {
     for (const [name, drawFn] of Object.entries(characterArt)) {
         const canvas = document.getElementById(`${name}-thumbnail`);
-        canvas.width = 120;
-        canvas.height = 120;
+        // Retrato: só cabeça e tronco (o sprite é desenhado maior e cortado embaixo)
+        canvas.width = 96;
+        canvas.height = 96;
         canvas.getContext('2d').imageSmoothingEnabled = false;
-        drawFn(canvas.getContext('2d'), 30, 0, 60, 120, null);
+        drawFn(canvas.getContext('2d'), 8, 4, 80, 160, null);
     }
 }

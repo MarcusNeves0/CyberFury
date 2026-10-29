@@ -101,13 +101,69 @@ function openSelection() {
     const humans = match.vs === 'pvp' ? 2 : 1;
     const step = match.picks.length + 1;
     selectionTitle.innerText = humans === 1
-        ? `${match.mode.toUpperCase()} — escolha seu lutador`
-        : `${match.mode.toUpperCase()} — JOGADOR ${step}: escolha seu lutador`;
+        ? `${match.mode.toUpperCase()} contra a IA`
+        : `${match.mode.toUpperCase()} — vez do JOGADOR ${step}`;
     selectionTitle.style.color = humans === 1 ? '' : TEAM_COLORS[step - 1];
-    document.querySelectorAll('.character-card').forEach(card => {
+    const cards = [...document.querySelectorAll('.character-card')];
+    cards.forEach(card => {
         card.classList.toggle('taken', match.picks.includes(card.id.replace('select-', '')));
     });
     showScreen(selectionScreen);
+    // Começa mostrando o primeiro lutador livre
+    const first = cards.find(card => !card.classList.contains('taken'));
+    if (first) showPreview(first);
+}
+
+// Classe, estilo e ultimate de cada lutador (painel de destaque da seleção)
+const CLASS_NAMES = { melee: 'Corpo a corpo', shooter: 'Atirador', healer: 'Healer', tank: 'Tanque' };
+const ROSTER_INFO = {
+    titan: { cls: 'melee', style: 'Ex-soldado com braço robótico', ult: 'Soco-foguete com onda de choque' },
+    spark: { cls: 'melee', style: 'Robô de segurança abandonado', ult: 'Corrente elétrica que dobra de dano' },
+    hades: { cls: 'melee', style: 'Punhos de fogo, queima quem acerta', ult: 'Círculo de fogo que explode no chão' },
+    jack: { cls: 'melee', style: 'Amaldiçoado no Halloween, rouba vida', ult: 'Abóbora amaldiçoada' },
+    kaze: { cls: 'melee', style: 'Espadachim, cortes que fazem sangrar', ult: 'Tornado que prende o inimigo no ar' },
+    kenji: { cls: 'melee', style: 'Combo de socos que acelera a cada acerto', ult: 'Investida explosiva' },
+    akane: { cls: 'melee', style: 'Lâmina carmesim que cura a cada golpe', ult: 'Dança das Sete Lâminas: 7 cortes seguidos' },
+    fenris: { cls: 'melee', style: 'Fera sombria', ult: 'Salta e dispara lâminas do céu' },
+    zarek: { cls: 'melee', style: 'Muda de forma na luta: Rubra 🔴 ou Umbral 🔵', ult: 'Entra no corpo do inimigo e sai rasgando' },
+    weaver: { cls: 'melee', style: 'Acrobata com teia e sentido aranha', ult: 'Puxão de teia e chute para cima' },
+    mamba: { cls: 'shooter', style: 'Rifle tóxico de longo alcance', ult: 'Nuvem de veneno' },
+    gear: { cls: 'shooter', style: 'Mecânico de pregos', ult: 'Monta até 3 torretas' },
+    roxy: { cls: 'shooter', style: 'Duas pistolas, a adrenalina acelera os tiros', ult: 'Frenesi: cada pistola escolhe um alvo' },
+    craque: { cls: 'shooter', style: 'Atacante que chuta bolas que voltam', ult: 'Chama todas as bolas de volta' },
+    celestia: { cls: 'healer', style: 'Aura de cura em volta dela', ult: 'Círculo de cura gigante para o time' },
+    flora: { cls: 'healer', style: 'Flores que voam até o aliado ferido', ult: 'Flor encantada de cura' },
+    nyx: { cls: 'healer', style: 'Rouba vida batendo e manda para o time', ult: 'Laço de vida com o inimigo' },
+    aegis: { cls: 'tank', style: 'Escudo que segura os tiros do time', ult: 'Muralha de energia' },
+    rhino: { cls: 'tank', style: 'Ganha embalo correndo', ult: 'Estouro: atropela tudo, quebra caixas e torretas' },
+    anchor: { cls: 'tank', style: 'Não sai do lugar com empurrões', ult: 'Gancho: a corrente arrasta ele até o inimigo e o atordoa' },
+};
+const MAX_HEALTH_SHOWN = Math.max(...Object.values(HEALTH_BY_CHARACTER));
+
+// Mostra no painel de destaque o lutador do card (mouse ou controle em cima)
+function showPreview(card) {
+    const id = card.id.replace('select-', '');
+    const info = ROSTER_INFO[id];
+    if (!info) return;
+    document.querySelectorAll('.character-card.active').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+    const preview = document.getElementById('selection-preview');
+    preview.classList.remove(...Object.keys(CLASS_NAMES));
+    preview.classList.add(info.cls);
+    const health = HEALTH_BY_CHARACTER[id] || 1000;
+    document.getElementById('preview-name').innerText = card.querySelector('h2').innerText;
+    document.getElementById('preview-class').innerText = CLASS_NAMES[info.cls];
+    document.getElementById('preview-style').innerText = info.style;
+    document.getElementById('preview-hp').innerText = health;
+    document.getElementById('preview-hp-fill').style.width = `${(health / MAX_HEALTH_SHOWN) * 100}%`;
+    document.getElementById('preview-ult').innerText = info.ult;
+    document.getElementById('preview-lore').innerText = card.dataset.lore;
+    const canvas = document.getElementById('preview-canvas');
+    canvas.width = canvas.height = 192;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, 192, 192);
+    ctx.imageSmoothingEnabled = false;
+    if (characterArt[id]) characterArt[id](ctx, 48, 0, 96, 192, null);
 }
 
 function setupSelectionScreen() {
@@ -122,19 +178,8 @@ function setupSelectionScreen() {
                 startGame();
             }
         });
-        const loreTooltip = document.getElementById('lore-tooltip');
-        card.addEventListener('mouseenter', (e) => {
-            loreTooltip.innerText = e.currentTarget.dataset.lore;
-            loreTooltip.style.display = 'block';
-        });
-        card.addEventListener('mouseleave', () => {
-            loreTooltip.style.display = 'none';
-        });
-        card.addEventListener('mousemove', (e) => {
-            const gameContainerRect = gameContainer.getBoundingClientRect();
-            loreTooltip.style.left = `${e.clientX - gameContainerRect.left + 15}px`;
-            loreTooltip.style.top = `${e.clientY - gameContainerRect.top - loreTooltip.offsetHeight - 5}px`;
-        });
+        card.addEventListener('mouseenter', () => showPreview(card));
+        card.addEventListener('padfocus', () => showPreview(card));
     });
 }
 

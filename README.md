@@ -116,7 +116,7 @@ Depois abra **http://localhost:8123** no navegador.
 - Começou como um jogo para **aprender HTML, CSS e JavaScript** e testar a criação de um jogo do zero.
 - Feito em **colaboração com IA** (Gemini e Claude) em todas as partes: mecânicas, personagens, arte e código. O balanceamento é testado com milhares de lutas simuladas entre IAs.
 - Todos os lutadores são **originais**: os que começaram inspirados em personagens de outros jogos ganharam nome, história e identidade próprios.
-- Recebe atualizações sempre que o código **não quebra**. 😅
+- Recebe **atualizações regularmente**. Antes era "sempre que o código não quebrava" 😅, mas agora cada mudança passa por testes e lutas simuladas antes de subir.
 
 <div align="center">
 
