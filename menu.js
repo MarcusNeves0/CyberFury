@@ -44,6 +44,7 @@ function setupHub() {
 
     document.getElementById('hub-start').addEventListener('click', () => {
         if (waitingForGamepad()) return;
+        Tone.start().catch(() => {}); // libera o som já no clique (os "tics" da seleção precisam dele)
         match.picks = [];
         openSelection();
     });
@@ -108,10 +109,39 @@ function openSelection() {
     cards.forEach(card => {
         card.classList.toggle('taken', match.picks.includes(card.id.replace('select-', '')));
     });
+    renderSelectionChips();
     showScreen(selectionScreen);
     // Começa mostrando o primeiro lutador livre
     const first = cards.find(card => !card.classList.contains('taken'));
-    if (first) showPreview(first);
+    if (first) showPreview(first, true);
+}
+
+// Cabeçalho da seleção: arena escolhida no HUB e, na vez do P2, quem o P1 já pegou
+const MAP_CHIPS = {
+    random: { icon: '🎲', name: 'SORTEIO', color: '#ffd23f' },
+    plaza: { icon: '🌃', name: 'PRAÇA NEON', color: '#ff4dff' },
+    rooftop: { icon: '🌧️', name: 'TELHADO NEON', color: '#3ff6ff' },
+    lab: { icon: '🧪', name: 'LABORATÓRIO', color: '#6dff8a' },
+    garden: { icon: '🌸', name: 'JARDIM SUSPENSO', color: '#ff9ad5' },
+};
+function renderSelectionChips() {
+    const map = MAP_CHIPS[match.map] || MAP_CHIPS.random;
+    const mapChip = document.getElementById('selection-map');
+    mapChip.innerText = `${map.icon} ${map.name}`;
+    mapChip.style.setProperty('--chip-color', map.color);
+
+    const pickChip = document.getElementById('selection-p1-pick');
+    const p1 = match.picks.length ? CHARACTERS.find(c => c.id === match.picks[0]) : null;
+    pickChip.classList.toggle('hidden', !p1);
+    if (!p1) return;
+    pickChip.style.setProperty('--chip-color', TEAM_COLORS[0]);
+    document.getElementById('selection-p1-name').innerText = `P1: ${p1.name.toUpperCase()}`;
+    const portrait = document.getElementById('selection-p1-portrait');
+    portrait.width = portrait.height = 48;
+    const g = portrait.getContext('2d');
+    g.clearRect(0, 0, 48, 48);
+    g.imageSmoothingEnabled = false;
+    if (characterArt[p1.id]) characterArt[p1.id](g, 4, 2, 40, 80, null);
 }
 
 // Classe, estilo e ultimate de cada lutador (painel de destaque da seleção)
@@ -144,11 +174,50 @@ const MAX_HEALTH_SHOWN = Math.max(...Object.values(HEALTH_BY_CHARACTER));
 // Card "Aleatório": no destaque aparece um "?" em vez de um lutador
 const RANDOM_INFO = { cls: 'random', style: 'A sorte escolhe um lutador livre para você', ult: '???' };
 
-// Mostra no painel de destaque o lutador do card (mouse ou controle em cima)
-function showPreview(card) {
+// Lutador em destaque: id e passo da animação (parado, andando, golpe e pose de especial, em ciclo)
+let previewId = null;
+let previewStep = 0;
+const PREVIEW_CYCLE = [
+    ...Array(8).fill({ spriteFrame: 'idle' }),
+    ...[0, 1, 2, 3, 0, 1, 2, 3].map(walkFrame => ({ spriteFrame: null, walkFrame })),
+    ...Array(4).fill({ spriteFrame: 'attack' }),
+    ...Array(4).fill({ spriteFrame: 'idle' }),
+    ...Array(6).fill({ spriteFrame: 'special' }),
+];
+
+function drawPreviewFrame() {
+    const canvas = document.getElementById('preview-canvas');
+    if (canvas.width !== 192) canvas.width = canvas.height = 192;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, 192, 192);
+    ctx.imageSmoothingEnabled = false;
+    if (characterArt[previewId]) {
+        const pose = PREVIEW_CYCLE[previewStep % PREVIEW_CYCLE.length];
+        characterArt[previewId](ctx, 48, 0, 96, 192, { walkFrame: null, zarekForm: null, ...pose });
+    } else {
+        ctx.font = 'bold 120px Orbitron, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffd23f';
+        ctx.fillText('?', 96, 100);
+    }
+}
+// Anima o destaque só enquanto a tela de seleção está aberta
+setInterval(() => {
+    if (gameState !== 'SELECT' || !previewId) return;
+    previewStep++;
+    drawPreviewFrame();
+}, 110);
+
+// Mostra no painel de destaque o lutador do card (mouse ou controle em cima).
+// silent: sem o "tic" (quando a tela abre já mostrando alguém)
+function showPreview(card, silent = false) {
     const id = card.id.replace('select-', '');
     const info = id === 'random' ? RANDOM_INFO : ROSTER_INFO[id];
     if (!info) return;
+    if (!silent && id !== previewId) sfx.play('menu_move');
+    previewId = id;
+    previewStep = 0;
     document.querySelectorAll('.character-card.active').forEach(c => c.classList.remove('active'));
     card.classList.add('active');
     const preview = document.getElementById('selection-preview');
@@ -163,20 +232,7 @@ function showPreview(card) {
     document.getElementById('preview-hp-fill').style.width = `${((health || 0) / MAX_HEALTH_SHOWN) * 100}%`;
     document.getElementById('preview-ult').innerText = info.ult;
     document.getElementById('preview-lore').innerText = card.dataset.lore;
-    const canvas = document.getElementById('preview-canvas');
-    canvas.width = canvas.height = 192;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, 192, 192);
-    ctx.imageSmoothingEnabled = false;
-    if (characterArt[id]) {
-        characterArt[id](ctx, 48, 0, 96, 192, null);
-    } else {
-        ctx.font = 'bold 120px Orbitron, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#ffd23f';
-        ctx.fillText('?', 96, 100);
-    }
+    drawPreviewFrame();
 }
 
 // Lutadores que ainda podem ser escolhidos (o outro jogador já pode ter pegado algum)
@@ -193,6 +249,7 @@ function setupSelectionScreen() {
                 const free = freeCharacterIds();
                 id = free[Math.floor(Math.random() * free.length)];
             }
+            sfx.play('menu_confirm');
             match.picks.push(id);
             const humans = match.vs === 'pvp' ? 2 : 1;
             if (match.picks.length < humans) {

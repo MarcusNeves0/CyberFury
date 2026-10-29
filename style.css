@@ -360,6 +360,39 @@ body {
     text-shadow: 0 0 6px var(--neon-blue);
 }
 
+/* Selos do cabeçalho: arena escolhida e quem o P1 já pegou */
+.selection-chips {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.6cqh;
+}
+
+.selection-chip {
+    --chip-color: var(--neon-blue);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5cqw;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.7cqh;
+    letter-spacing: 0.08em;
+    padding: 0.4cqh 1cqw;
+    border-radius: 999px;
+    color: var(--chip-color);
+    border: 1px solid var(--chip-color);
+    background: color-mix(in srgb, var(--chip-color) 12%, rgba(0, 0, 0, 0.5));
+    box-shadow: 0 0 8px color-mix(in srgb, var(--chip-color) 40%, transparent);
+}
+
+#selection-p1-portrait {
+    width: 3.2cqh;
+    height: 3.2cqh;
+    image-rendering: pixelated;
+}
+
 /* Cores de cada classe */
 .melee { --class-color: #ff3b6b; }
 .shooter { --class-color: #00e5ff; }

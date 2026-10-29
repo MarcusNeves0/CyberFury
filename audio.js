@@ -111,6 +111,10 @@ const sfx = (() => {
         laser: t => { zap(t, 1800, 2400, 0.9, -24, 'sine'); zap(t + 0.1, 900, 1200, 0.8, -26, 'square'); },
         chomp: t => { thump(t, 'E2', -8, 0.12); clang(t, 500, -20, 0.05); whoosh(t, 2500, 600, 0.08, -16, 1); },
         glass: t => { clang(t, 2400, -14, 0.15); clang(t + 0.03, 3200, -18, 0.2); whoosh(t, 8000, 3000, 0.2, -16, 2); },
+        // Menus
+        menu_move: t => clang(t, 2200, -30, 0.03),
+        menu_confirm: t => { zap(t, 660, 990, 0.08, -18, 'square'); zap(t + 0.07, 990, 1320, 0.12, -18, 'square'); thump(t, 'C2', -14, 0.12); },
+
         // Capitã Sina
         sina_special: t => { for (let i = 0; i < 3; i++) clang(t + i * 0.05, 1800 + i * 400, -22, 0.08); whoosh(t, 900, 4000, 0.3, -16, 1); },
         sina_tick: t => clang(t, 2600, -28, 0.03),
