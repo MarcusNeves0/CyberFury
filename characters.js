@@ -1483,6 +1483,108 @@ pixelCharacters.anchor = {
     },
 };
 
+// --- Capitã Sina: pirata apostadora com faca, chapéu vermelho e papagaio no ombro ---
+pixelCharacters.sina = {
+    size: 64,
+    palette: { K: OUTLINE, G: '#2e9e5b', g: '#1d6b3c', W: '#f2ead8', w: '#cfc3a6', Y: '#ffd23f', b: '#5a3418', B: '#7a4a24', R: '#d6283a', r: '#8f1424', S: '#f0c09a', s: '#c98f6a', H: '#4a1f14', h: '#2e130c', E: '#1a1024', P: '#3b2a20', p: '#2a1d16', D: '#2a1a12', d: '#5a3a24', M: '#d8e0ea', A: '#2f7bff', a: '#1a4fb0', y: '#ffe34a', O: '#ffb020' },
+    idle: [
+        '',
+        '.............................KKKKKKK',
+        '..........................KKKRRRRRRRKKK',
+        '.........................KrRRRRRRRRRRRRK',
+        '...............K........KrrRRRRRRRRRRRRRK........K',
+        '...............KK.......KrrRRRRRRRRRRRRRK.......KK',
+        '...............KrK.....KKKKKKKKKKKKKKKKKKK.....KrK',
+        '.............KKKrRKKKKKRRRRRRRRRRRRRRRRRRRKKKKKRrK',
+        '............KAAAKRRKrrRRRRRRRRRRRRRRRRRRRRRRRKRRrK',
+        '...........KAAAEAKKKKKRRRRRRRRRRRRRRRRRRRRRKKKKKKK',
+        '...........KAAAAAKOKKKKYYYYYYYYYYYYYYYYYYYKKKKK',
+        '...........KAAAAAKK....KKKKKKKKKKKKKKKKKKK',
+        '...........KKAAAKK.....KHHsssSSSSSSSSSSSSK',
+        '..........KAAKKKKK.....KHHsssSSSSSSSSEESSK',
+        '..........KAAAAAK...KKKHHHsssSSSSSSSSEESSSK',
+        '.........KAAAAAAAK.KHHHKHHsssSSSSSSSSEESSK',
+        '.........KAAAAyyyKKhHHHKHHsssSSSSSSSSSSSSK',
+        '.........KAAAAyyyKKhHHHKHHsssSSSSSSSSSSSSK',
+        '.........KAAAAyyyKhhHHHHKHsssSSSSSSSSSSSK',
+        '.........KAAAAyyyKhhHHHHKHsssSSSSSSSrrrSK.....K',
+        '..........KAAAyyKKKKHHHHHKsssSSSSSSSSSSK...KKKYKKK',
+        '..........KAAAyyKYYYKHHHHHKKsSSSSSSSSKK...KYYYYYYYK',
+        '.........KKKKAKKGGGGGKKKKKKKKKKKSKKKKKKKKKGGGGGGGGGK',
+        '.........KaKGKGGGGGGGKGGGGGgKKKKKKKKgGGGGKGGGGGGGGGK',
+        '........KaaKGGGGGGGGGGKGGGYgWWWWWWWWgYGGKGGGKKKKKKKGK',
+        '........KaaKGGGGGGGGGKGGGGGgWWwwwwWWgGGGGKGGKgGGGGKK',
+        '........KaaKGGGGGGGGGKGGGGGgWWWWWWWWgGGGGKGGKgGGGGKK',
+        '.......KaaaKKGGGGGGGKGGGGGYgWWWWWWWWgYGGGGKGKgGGGGK',
+        '.......KaaKKgKKKGKKKgGGGGGGgWWwwwwWWgGGGGGGKKgGGGGK',
+        '......KaaaKKgGGGKggggGGGGGGgWWWWWWWWgGGGGGGGKgGGGGK',
+        '......KaaaKKgGGGKggggGGGGGYgWWWWWWWWgYGGGGGGKgGGGGK',
+        '......KaaK.KgGGGKggggGGGGGGgWWwwwwWWgGGGGGGGKgGGGGK',
+        '......KaaK.KgGGGKggggGGGGGGgWWWWWWWWgGGGGGGGKgGGGGK',
+        '......KKK..KgGGGKggggGGGGGGgWWWWWWWWgGGGGGGGKgGGGGK',
+        '...........KgGGGKbbbbbbbbbbbbbYYYYbbbbbbbbbbKSKKKKK',
+        '...........KgGGGKbbbbbbbbbbbbbYYYYbbbbbbbbbbKSKBBBK',
+        '...........KSSSSKbbbbbbbbbbbbbYYYYbbbbbbbbbbKSKBBBK',
+        '...........KSSSKgKgggGGGGGGgGGGGGGGGgGGGGGGGKKKBBBK',
+        '...........KKKKKgKgggGGGGGGgGGGGGGGGgGGGGGGGKKKKKKKKK',
+        '...............KggKKgGGGGGGgGGGGGGGGgGGGGGGGKKKKKKKKK',
+        '..............KgggggKKKKKKKKKKKKKKKKKKKKKKKKGGKKKKK',
+        '..............KgggggKpPPPPPKGGGGGGKpPPPPPKGGGGKMWMK',
+        '..............KgggggKpPPPPPKGGGGGGKpPPPPPKGGGGKMWMK',
+        '.............KggggggKpPPPPPKGGGGGGKpPPPPPKGGGGKMWMK',
+        '.............KggggggKpPPPPPKGGGGGGKpPPPPPKGGGGKMWMK',
+        '.............KKKKKKKKpPPPPPKKKKKKKKpPPPPPKKKKKKMWMK',
+        '....................KpPPPPPK......KpPPPPPK....KMWMK',
+        '....................KpPPPPPK......KpPPPPPK....KMWMK',
+        '....................KpPPPPPK......KpPPPPPK....KMWMK',
+        '....................KKKKKKKK......KKKKKKKK.....KWK',
+        '....................KdddddddK.....KdddddddK.....K',
+        '...................KdddddddddK...KdddddddddK....K',
+        '...................KDDDDDDDDDK...KDDDDDDDDDK',
+        '...................KDDDDDDDDDK...KDDDDDDDDDK',
+        '...................KDDDDDDDDDK...KDDDDDDDDDK',
+        '...................KDDDDDDDDDK...KDDDDDDDDDK',
+        '...................KDDDDDDDDDK...KDDDDDDDDDK',
+        '...................KDDDDDDDDDK...KDDDDDDDDDK',
+        '...................KDDDDDDDDDK...KDDDDDDDDDK',
+        '...................KDDDDDDDDDK...KDDDDDDDDDK',
+        '...................KBBBBBBBBBK...KBBBBBBBBBK',
+        '...................KDDDDDDDDDK...KDDDDDDDDDK',
+        '....................KDDDDDDDK.....KDDDDDDDK',
+        '.....................KKKKKKK.......KKKKKKK',
+    ],
+    attack: {
+        24: '........KaaKGGGGGGGGGGKGGGYgWWWWWWWWgYGGKGGGGGGGGGGGKKK',
+        25: '........KaaKGGGGGGGGGKGGGGGgWWwwwwWWgGGGGKGGGGGGGGGK.KK',
+        26: '........KaaKGGGGGGGGGKGGGGGgWWWWWWWWgGGGGKKKKKKKKKKKKKK',
+        27: '.......KaaaKKGGGGGGGKGGGGGYgWWWWWWWWgYGGGGKGGGGGSSKBBKKKKKKKKK',
+        28: '.......KaaKKgKKKGKKKgGGGGGGgWWwwwwWWgGGGGGKGGGGGSSKBBKKKWWWWWWK',
+        29: '......KaaaKKgGGGKggggGGGGGGgWWWWWWWWgGGGGGKGGGGGSSKBBKKKMMMMMMK',
+        30: '......KaaaKKgGGGKggggGGGGGYgWWWWWWWWgYGGGGKGGGGGSSKBBKKKKKKKKK',
+        31: '......KaaK.KgGGGKggggGGGGGGgWWwwwwWWgGGGGGKKKKKKKKKKKKK',
+        32: '......KaaK.KgGGGKggggGGGGGGgWWWWWWWWgGGGGGGGGGGK.....KK',
+        33: '......KKK..KgGGGKggggGGGGGGgWWWWWWWWgGGGGGGGGGGK.....KK',
+        34: '...........KgGGGKbbbbbbbbbbbbbYYYYbbbbbbbbbbbbbK',
+        35: '...........KgGGGKbbbbbbbbbbbbbYYYYbbbbbbbbbbbbbK',
+        36: '...........KSSSSKbbbbbbbbbbbbbYYYYbbbbbbbbbbbbbK',
+        37: '...........KSSSKgKgggGGGGGGgGGGGGGGGgGGGGGGGGGKGK',
+        38: '...........KKKKKgKgggGGGGGGgGGGGGGGGgGGGGGGGGGKGK',
+        39: '...............KggKKgGGGGGGgGGGGGGGGgGGGGGGGKKGGK',
+        40: '..............KgggggKKKKKKKKKKKKKKKKKKKKKKKKGGGGGK',
+        41: '..............KgggggKpPPPPPKGGGGGGKpPPPPPKGGGGGGGK',
+        42: '..............KgggggKpPPPPPKGGGGGGKpPPPPPKGGGGGGGK',
+        43: '.............KggggggKpPPPPPKGGGGGGKpPPPPPKGGGGGGGGK',
+        44: '.............KggggggKpPPPPPKGGGGGGKpPPPPPKGGGGGGGGK',
+        45: '.............KKKKKKKKpPPPPPKKKKKKKKpPPPPPKKKKKKKKKK',
+        46: '....................KpPPPPPK......KpPPPPPK',
+        47: '....................KpPPPPPK......KpPPPPPK',
+        48: '....................KpPPPPPK......KpPPPPPK',
+        49: '....................KKKKKKKK......KKKKKKKK',
+        50: '....................KdddddddK.....KdddddddK',
+        51: '...................KdddddddddK...KdddddddddK',
+    },
+};
+
 // --- Pose de especial ---
 // Gerada a partir do sprite parado: recorta o braço da frente (e a arma, se estiver nele)
 // e cola mais para cima, como se o personagem erguesse o braço para soltar o poder.
@@ -1518,12 +1620,13 @@ const SPECIAL_POSE = {
     aegis: { x0: 43, x1: 58, y0: 15, y1: 56, lift: 8 }, // grade 64x64
     rhino: { x0: 44, x1: 53, y0: 22, y1: 38, lift: 14 }, // grade 64x64
     anchor: { x0: 43, x1: 61, y0: 7, y1: 54, lift: 6 }, // grade 64x64
+    sina: { x0: 42, x1: 56, y0: 24, y1: 52, lift: 12 }, // grade 64x64
 };
 
 // Linha onde as pernas se separam em cada sprite (abaixo do short, da saia ou do casaco)
 const LEG_START = {
     titan: 23, spark: 19, hades: 22, jack: 21, kaze: 20, kenji: 21, craque: 20, akane: 19,
-    fenris: 20, zarek: 20, celestia: 30, flora: 23, nyx: 22, mamba: 20, gear: 20, roxy: 19, weaver: 37, aegis: 37, rhino: 37, anchor: 37,
+    fenris: 20, zarek: 20, celestia: 30, flora: 23, nyx: 22, mamba: 20, gear: 20, roxy: 19, weaver: 37, aegis: 37, rhino: 37, anchor: 37, sina: 46,
 };
 for (const [type, row] of Object.entries(LEG_START)) pixelCharacters[type].legStart = row;
 for (const [type, area] of Object.entries(SPECIAL_POSE)) {

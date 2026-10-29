@@ -111,6 +111,13 @@ const sfx = (() => {
         laser: t => { zap(t, 1800, 2400, 0.9, -24, 'sine'); zap(t + 0.1, 900, 1200, 0.8, -26, 'square'); },
         chomp: t => { thump(t, 'E2', -8, 0.12); clang(t, 500, -20, 0.05); whoosh(t, 2500, 600, 0.08, -16, 1); },
         glass: t => { clang(t, 2400, -14, 0.15); clang(t + 0.03, 3200, -18, 0.2); whoosh(t, 8000, 3000, 0.2, -16, 2); },
+        // Capitã Sina
+        sina_special: t => { for (let i = 0; i < 3; i++) clang(t + i * 0.05, 1800 + i * 400, -22, 0.08); whoosh(t, 900, 4000, 0.3, -16, 1); },
+        sina_tick: t => clang(t, 2600, -28, 0.03),
+        sina_parrot: t => { zap(t, 1800, 2600, 0.09, -20, 'sawtooth'); zap(t + 0.11, 2200, 1500, 0.12, -20, 'sawtooth'); },
+        sina_shark: t => { whoosh(t, 600, 2500, 0.4, -10, 1); thump(t, 'G1', -8, 0.2); },
+        sina_boat_warning: t => { whoosh(t, 200, 1200, 0.8, -10, 0.6); zap(t, 110, 220, 0.8, -22, 'sine'); },
+        sina_boat: t => { thump(t, 'A0', 0, 0.9); whoosh(t, 3000, 200, 1.2, -4, 0.4); whoosh(t + 0.1, 6000, 1500, 0.8, -10, 0.6); },
         zarek_transform: t => { thump(t, 'A0', -2, 1); zap(t, 100, 900, 0.8, -12, 'sawtooth'); whoosh(t, 300, 6000, 0.9, -8, 0.8); },
     };
 

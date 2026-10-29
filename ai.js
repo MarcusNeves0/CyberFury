@@ -83,7 +83,7 @@ class AI {
         const d = distance(me, opponent);
         const meleeRange = (isBladeUser(me) ? BLADE_REACH : PUNCH_REACH) + me.radius + opponent.radius - 6;
         // Só tenta o especial se tiver a energia de verdade (antes tentava com 45 e perdia a vez)
-        const canUseSpecial = !['zarek', 'celestia', 'flora', 'spark', 'nyx', 'mamba', 'gear', 'roxy', 'weaver', 'aegis', 'rhino', 'anchor'].includes(me.characterType) &&
+        const canUseSpecial = !['zarek', 'celestia', 'flora', 'spark', 'nyx', 'mamba', 'gear', 'roxy', 'weaver', 'aegis', 'rhino', 'anchor', 'sina'].includes(me.characterType) &&
             me.energy >= specialCost(me.characterType) && me.specialCooldown <= 0;
         if (Math.random() < 0.1) this.strafeSign *= -1;
 
@@ -107,6 +107,13 @@ class AI {
                 else me.attack('punch'); // fica parado batendo até quebrar
                 return;
             }
+        }
+
+        // Barco da Sina caindo em cima: quem percebe a sombra a tempo sai correndo (nem sempre percebe)
+        const boat = sinaBoats.find(b => b.timer > 0 && b.owner.team !== me.team && Math.hypot(me.x - b.x, me.y - b.y) < SINA_BOAT_RADIUS + me.radius + 10);
+        if (boat && Math.random() < 0.5) {
+            this.moveAway(boat);
+            return;
         }
 
         // Ação defensiva (menos provável)
@@ -229,6 +236,15 @@ class AI {
                     me.attack('special');
                     return;
                 }
+            }
+        }
+
+        // Capitã Sina: gira a roleta com o alvo a uma distância que serve para as três armas
+        // (pistola, tubarão e barco alcançam ~400); enquanto gira, continua lutando com a faca
+        if (me.characterType === 'sina') {
+            if (me.energy >= SINA_ULT_COST && me.specialCooldown <= 0 && me.sinaSpinTimer <= 0 && d < SINA_BOAT_RANGE * 0.85) {
+                me.attack('special');
+                return;
             }
         }
 

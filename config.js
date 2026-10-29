@@ -56,6 +56,7 @@ const CHARACTERS = [
     { id: 'aegis', name: 'Aegis' },
     { id: 'rhino', name: 'Rhino' },
     { id: 'anchor', name: 'Anchor' },
+    { id: 'sina', name: 'Capitã Sina' },
 ];
 
 // Teclas (cada ação aceita uma lista). Contra a IA o jogador pode andar com WASD ou setas;
@@ -204,6 +205,29 @@ const ANCHOR_HOOK_RANGE = 380;
 const ANCHOR_HOOK_SPEED = 20;         // pixels por passo voando atrás da âncora
 const ANCHOR_HOOK_DAMAGE = 60;
 const ANCHOR_HOOK_STUN = 90;          // 1,5 s atordoado quando ele chega
+// Capitã Sina: faca rápida e a Roleta da Sina (pistola, tubarão ou o raro barco de água)
+const SINA_KNIFE_DAMAGE = 20;
+const SINA_KNIFE_COOLDOWN = 14;       // cortes mais rápidos que o soco comum (20)
+const SINA_STAB_DAMAGE = 35;          // soco forte: estocada com um passo à frente
+const SINA_STAB_LUNGE = 5;
+const SINA_ULT_COST = 100;
+const SINA_ULT_COOLDOWN = 360;        // 6 segundos
+const SINA_SPIN_FRAMES = 60;          // a roleta gira por 1 s em cima da cabeça dela
+const SINA_RESULT_FRAMES = 40;        // o resultado fica à mostra mais um pouco
+const SINA_CHANCES = { pistol: 0.6, shark: 0.3, boat: 0.1 };
+const SINA_PITY_AFTER = 3;            // depois de 3 giros seguidos sem barco...
+const SINA_BOAT_PITY = 0.05;          // ...cada giro a mais sem barco aumenta a chance do próximo em 5%
+const SINA_PISTOL_SHOTS = 4;
+const SINA_PISTOL_DAMAGE = 25;
+const SINA_PISTOL_INTERVAL = 8;       // passos entre os tiros
+const SINA_SHARK_DAMAGE = 130;        // atravessa e empurra todos no caminho
+const SINA_SHARK_SPEED = 9;
+const SINA_BOAT_DAMAGE = 300;
+const SINA_BOAT_RADIUS = 110;
+const SINA_BOAT_STUN = 72;            // 1,2 s atordoado
+const SINA_BOAT_WARNING = 48;         // 0,8 s de sombra no chão antes de cair
+const SINA_BOAT_RANGE = 420;
+let sinaBoats = [];
 const MAMBA_SHOT_DAMAGE = 22;
 const MAMBA_STRONG_DAMAGE = 45;
 const MAMBA_POISON_CHANCE = 0.2;      // 20% dos tiros envenenam
@@ -235,7 +259,7 @@ const GARDEN_PICKUP_HEAL = 120;   // cura da flor que nasce no jardim
 // Vida máxima de cada personagem (tanques aguentam mais, quem ataca de longe aguenta menos)
 const HEALTH_BY_CHARACTER = {
     titan: 1200, zarek: 1200, fenris: 1150, spark: 1100,
-    hades: 1000, jack: 1000, kenji: 1000, akane: 950, kaze: 950, craque: 950, weaver: 950,
+    hades: 1000, jack: 1000, kenji: 1000, akane: 950, kaze: 950, craque: 950, weaver: 950, sina: 950,
     aegis: 1600, rhino: 1450, anchor: 1450,
     mamba: 900, gear: 750, roxy: 850, celestia: 950, nyx: 950, flora: 900,
 };

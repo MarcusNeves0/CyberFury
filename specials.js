@@ -230,6 +230,91 @@ Object.assign(Fighter.prototype, {
         }
     },
 
+    // Capitã Sina: Roleta da Sina — gira 1 s em cima da cabeça (todos veem) e sai uma das três armas.
+    // O resultado é sorteado no começo; a roleta só desacelera até parar na fatia sorteada.
+    startSinaRoulette() {
+        this.isAttacking = false;
+        if (this.sinaSpinTimer > 0 || this.energy < SINA_ULT_COST || this.specialCooldown > 0) return;
+        this.energy -= SINA_ULT_COST;
+        this.specialCooldown = SINA_ULT_COOLDOWN;
+        // Chances deste giro: depois de vários giros sem barco, a chance dele sobe (proteção contra azar);
+        // o resto fica entre pistola e tubarão na mesma proporção de sempre (2 para 1)
+        const boat = Math.min(1, SINA_CHANCES.boat + Math.max(0, this.sinaMisses - SINA_PITY_AFTER) * SINA_BOAT_PITY);
+        const pistolShare = SINA_CHANCES.pistol / (SINA_CHANCES.pistol + SINA_CHANCES.shark);
+        const chances = { pistol: (1 - boat) * pistolShare, shark: (1 - boat) * (1 - pistolShare), boat };
+        const roll = Math.random();
+        this.sinaResult = roll < chances.boat ? 'boat' : roll < chances.boat + chances.pistol ? 'pistol' : 'shark';
+        this.sinaMisses = this.sinaResult === 'boat' ? 0 : this.sinaMisses + 1;
+        // Fatias da roleta do tamanho de cada chance; para com o ponteiro (em cima) num ponto da fatia sorteada
+        let from = 0;
+        this.sinaSlices = ['pistol', 'shark', 'boat'].map(type => {
+            const size = chances[type] * Math.PI * 2;
+            const slice = { type, from, to: from + size };
+            from += size;
+            return slice;
+        });
+        const chosen = this.sinaSlices.find(s => s.type === this.sinaResult);
+        const spot = (chosen.from + chosen.to) / 2 + (Math.random() - 0.5) * (chosen.to - chosen.from) * 0.6;
+        this.sinaSpinFinal = -Math.PI / 2 - spot + Math.PI * 2 * 5; // 5 voltas e para no ponteiro
+        this.sinaSpinTimer = SINA_SPIN_FRAMES;
+        this.sinaResultTimer = 0;
+        this.poseSpecial();
+        sfx.play('sina_special');
+    },
+
+    // Roda todo passo: giro da roleta, tiros da pistola e o grito do papagaio
+    updateSina() {
+        const ready = this.energy >= SINA_ULT_COST && this.specialCooldown <= 0 && this.sinaSpinTimer <= 0;
+        if (ready && !this.sinaUltWasReady) {
+            floatingTexts.push(new FloatingText(this.x, this.y - this.height - 18, '🦜 RRÁÁ!', '#ffe34a'));
+            sfx.play('sina_parrot');
+        }
+        this.sinaUltWasReady = ready;
+
+        if (this.sinaSpinTimer > 0) {
+            this.sinaSpinTimer--;
+            // "Tic" de cada fatia passando, cada vez mais espaçado
+            const elapsed = SINA_SPIN_FRAMES - this.sinaSpinTimer;
+            if (elapsed % (2 + Math.floor(elapsed / 10)) === 0) sfx.play('sina_tick');
+            if (this.sinaSpinTimer === 0) this.resolveSinaRoulette();
+        }
+        if (this.sinaResultTimer > 0) this.sinaResultTimer--;
+
+        if (this.sinaPistolShots > 0 && !this.isParalyzed && !this.isInsideOpponent) {
+            if (--this.sinaPistolTimer <= 0) {
+                this.sinaPistolShots--;
+                this.sinaPistolTimer = SINA_PISTOL_INTERVAL;
+                projectiles.push(new Projectile(this, 'sina_bullet', SINA_PISTOL_DAMAGE, leadAim(this, 15), 15));
+                sfx.play('pistol_shot');
+                this.specialPoseTimer = Math.max(this.specialPoseTimer, 8);
+            }
+        }
+    },
+
+    resolveSinaRoulette() {
+        this.sinaResultTimer = SINA_RESULT_FRAMES;
+        const labels = { pistol: ['🔫 PISTOLA', '#ffd23f'], shark: ['🦈 TUBARÃO!', '#4fd1ff'], boat: ['🌊 BARCO!!!', '#6aa8ff'] };
+        const [text, color] = labels[this.sinaResult];
+        floatingTexts.push(new FloatingText(this.x, this.y - this.height - 40, text, color));
+        this.poseSpecial();
+        if (this.sinaResult === 'pistol') {
+            this.sinaPistolShots = SINA_PISTOL_SHOTS;
+            this.sinaPistolTimer = 0;
+        } else if (this.sinaResult === 'shark') {
+            projectiles.push(new Projectile(this, 'shark', SINA_SHARK_DAMAGE, leadAim(this, SINA_SHARK_SPEED), SINA_SHARK_SPEED));
+            sfx.play('sina_shark');
+        } else {
+            // Barco de água: cai onde o alvo vai estar (até o alcance máximo); a sombra avisa antes
+            let spot = alive(this.target) ? predictPosition(this.target, SINA_BOAT_WARNING * 0.5) : { x: this.x + this.aim.x * 200, y: this.y + this.aim.y * 200 };
+            const d = Math.hypot(spot.x - this.x, spot.y - this.y);
+            if (d > SINA_BOAT_RANGE) spot = { x: this.x + (spot.x - this.x) / d * SINA_BOAT_RANGE, y: this.y + (spot.y - this.y) / d * SINA_BOAT_RANGE };
+            spot.x = Math.max(arena.left, Math.min(arena.right, spot.x));
+            spot.y = Math.max(arena.top, Math.min(arena.bottom, spot.y));
+            sinaBoats.push({ x: spot.x, y: spot.y, timer: SINA_BOAT_WARNING, splash: 0, owner: this });
+            sfx.play('sina_boat_warning');
+        }
+    },
+
     // Torretas do Gear ainda de pé, da mais antiga para a mais nova
     myTurrets() {
         return turrets.filter(t => t.owner === this && !t.done);

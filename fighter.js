@@ -157,6 +157,16 @@ class Fighter {
         // Anchor
         this.hookTarget = null;      // inimigo enganchado (o Anchor voa até ele)
         this.hookTimer = 0;
+
+        // Capitã Sina: Roleta da Sina
+        this.sinaSpinTimer = 0;      // girando (passos que faltam)
+        this.sinaResult = null;      // 'pistol', 'shark' ou 'boat' (sorteado ao começar o giro)
+        this.sinaResultTimer = 0;    // resultado ainda à mostra em cima da cabeça
+        this.sinaSpinFinal = 0;      // ângulo em que a roleta vai parar
+        this.sinaMisses = 0;         // giros seguidos sem barco (proteção contra azar)
+        this.sinaPistolShots = 0;    // tiros da pistola que faltam
+        this.sinaPistolTimer = 0;
+        this.sinaUltWasReady = false; // o papagaio grita quando a roleta fica pronta
     }
 
     applyPoison(stacks) {
@@ -716,9 +726,9 @@ class Fighter {
                     this.attackTimer = 8;
                     sfx.play('blade_swing');
                 } else {
-                    this.attackCooldown = (this.characterType === 'weaver' ? WEAVER_PUNCH_COOLDOWN : 20) / this.attackSpeedMultiplier;
+                    this.attackCooldown = (this.characterType === 'weaver' ? WEAVER_PUNCH_COOLDOWN : this.characterType === 'sina' ? SINA_KNIFE_COOLDOWN : 20) / this.attackSpeedMultiplier;
                     this.attackTimer = 6;
-                    sfx.play(this.characterType === 'kaze' ? 'blade_swing' : 'swing');
+                    sfx.play(this.characterType === 'kaze' || this.characterType === 'sina' ? 'blade_swing' : 'swing');
                 }
                 this.attackWindup = 2; // puxa o braço por um instante antes de acertar
                 break;
@@ -738,6 +748,7 @@ class Fighter {
                 this.attackCooldown = 45;
                 this.attackTimer = 8;
                 this.attackWindup = 4; // o soco forte puxa mais o braço
+                if (this.characterType === 'sina') this.push(this.aim, SINA_STAB_LUNGE); // estocada: dá um passo à frente
                 sfx.play(isBladeUser(this) ? 'blade_swing' : 'swing_heavy');
                 break;
             case 'special':
@@ -788,6 +799,10 @@ class Fighter {
                 }
                 if (this.characterType === 'anchor') {
                     this.startAnchorHook();
+                    return;
+                }
+                if (this.characterType === 'sina') {
+                    this.startSinaRoulette();
                     return;
                 }
                 const energyCost = specialCost(this.characterType);
@@ -887,7 +902,7 @@ function tryMelee(attacker) {
     if (isBladeUser(attacker)) effect.sound = 'blade_hit';
     switch (attacker.attackType) {
         case 'punch':
-            damage = (attacker.characterType === 'akane') ? 14 : (attacker.characterType === 'nyx') ? NYX_PUNCH_DAMAGE : (attacker.characterType === 'kaze') ? KAZE_PUNCH_DAMAGE : (attacker.characterType === 'weaver') ? WEAVER_PUNCH_DAMAGE : (attacker.characterType === 'kenji') ? KENJI_PUNCH_DAMAGE : (attacker.characterType === 'aegis') ? AEGIS_PUNCH_DAMAGE : (attacker.characterType === 'rhino') ? RHINO_PUNCH_DAMAGE : (attacker.characterType === 'anchor') ? ANCHOR_PUNCH_DAMAGE : 10;
+            damage = (attacker.characterType === 'akane') ? 14 : (attacker.characterType === 'nyx') ? NYX_PUNCH_DAMAGE : (attacker.characterType === 'kaze') ? KAZE_PUNCH_DAMAGE : (attacker.characterType === 'weaver') ? WEAVER_PUNCH_DAMAGE : (attacker.characterType === 'kenji') ? KENJI_PUNCH_DAMAGE : (attacker.characterType === 'aegis') ? AEGIS_PUNCH_DAMAGE : (attacker.characterType === 'rhino') ? RHINO_PUNCH_DAMAGE : (attacker.characterType === 'anchor') ? ANCHOR_PUNCH_DAMAGE : (attacker.characterType === 'sina') ? SINA_KNIFE_DAMAGE : 10;
             if (attacker.zarekForm === 'red') damage = 12;
             if (attacker.zarekForm === 'blue') damage = ZAREK_BLUE_PUNCH;
             if (attacker.characterType === 'akane') {
@@ -919,6 +934,7 @@ function tryMelee(attacker) {
             damage = (attacker.zarekForm === 'red') ? 30 : (attacker.zarekForm === 'blue') ? ZAREK_BLUE_STRONG : 25;
             if (attacker.characterType === 'titan') damage = 35; // braço robótico: lento, mas pesado
             if (attacker.characterType === 'anchor') damage = 40; // âncora com as duas mãos
+            if (attacker.characterType === 'sina') damage = SINA_STAB_DAMAGE; // estocada com a faca
             if (attacker.characterType === 'hades') { effect.type = 'burn'; }
             if (attacker.characterType === 'jack') { defender.applyCurse(attacker); }
             break;
@@ -948,7 +964,7 @@ function specialCost(characterType) {
         akane: 150, fenris: 300, craque: 150, kaze: 100, kenji: 100, jack: 90,
         zarek: ZAREK_ULT_COST, celestia: CELESTIA_ULT_COST, flora: FLORA_FLOWER_COST, nyx: NYX_LINK_COST,
         mamba: MAMBA_CLOUD_COST, gear: GEAR_TURRET_COST, roxy: ROXY_FRENZY_COST, weaver: WEAVER_PULL_COST,
-        aegis: AEGIS_WALL_COST, rhino: RHINO_CHARGE_COST, anchor: ANCHOR_HOOK_COST,
+        aegis: AEGIS_WALL_COST, rhino: RHINO_CHARGE_COST, anchor: ANCHOR_HOOK_COST, sina: SINA_ULT_COST,
     }[characterType] || 45;
 }
 
@@ -958,5 +974,5 @@ function isRangedFighter(fighter) {
 }
 
 function isBladeUser(fighter) {
-    return ['jack', 'akane', 'fenris', 'kaze', 'zarek'].includes(fighter.characterType);
+    return ['jack', 'akane', 'fenris', 'kaze', 'zarek', 'sina'].includes(fighter.characterType);
 }

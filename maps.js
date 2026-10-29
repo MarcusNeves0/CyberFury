@@ -177,6 +177,8 @@ const inBush = f => bushes.some(b => Math.hypot(f.x - b.x, f.y - b.y) < b.r - 6)
 function isHiddenFrom(f, viewer) {
     if (mapId !== 'garden' || !inBush(f)) return false;
     if (f.isAttacking || f.hitFlash > 0) return false; // atacar ou apanhar revela
+    // O papagaio da Capitã Sina enxerga quem está no arbusto perto dela e avisa o time
+    if (viewer && fighters.some(s => alive(s) && s.characterType === 'sina' && s.team === viewer.team && distance(s, f) < 300)) return false;
     return !viewer || distance(f, viewer) > 120;
 }
 

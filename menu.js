@@ -115,7 +115,7 @@ function openSelection() {
 }
 
 // Classe, estilo e ultimate de cada lutador (painel de destaque da seleção)
-const CLASS_NAMES = { melee: 'Corpo a corpo', shooter: 'Atirador', healer: 'Healer', tank: 'Tanque' };
+const CLASS_NAMES = { melee: 'Corpo a corpo', shooter: 'Atirador', healer: 'Healer', tank: 'Tanque', random: 'Sorte' };
 const ROSTER_INFO = {
     titan: { cls: 'melee', style: 'Ex-soldado com braço robótico', ult: 'Soco-foguete com onda de choque' },
     spark: { cls: 'melee', style: 'Robô de segurança abandonado', ult: 'Corrente elétrica que dobra de dano' },
@@ -127,6 +127,7 @@ const ROSTER_INFO = {
     fenris: { cls: 'melee', style: 'Fera sombria', ult: 'Salta e dispara lâminas do céu' },
     zarek: { cls: 'melee', style: 'Muda de forma na luta: Rubra 🔴 ou Umbral 🔵', ult: 'Entra no corpo do inimigo e sai rasgando' },
     weaver: { cls: 'melee', style: 'Acrobata com teia e sentido aranha', ult: 'Puxão de teia e chute para cima' },
+    sina: { cls: 'melee', style: 'Pirata apostadora de faca; o papagaio revela quem se esconde', ult: 'Roleta da Sina: 🔫 pistola, 🦈 tubarão ou 🌊 barco de água' },
     mamba: { cls: 'shooter', style: 'Rifle tóxico de longo alcance', ult: 'Nuvem de veneno' },
     gear: { cls: 'shooter', style: 'Mecânico de pregos', ult: 'Monta até 3 torretas' },
     roxy: { cls: 'shooter', style: 'Duas pistolas, a adrenalina acelera os tiros', ult: 'Frenesi: cada pistola escolhe um alvo' },
@@ -140,22 +141,26 @@ const ROSTER_INFO = {
 };
 const MAX_HEALTH_SHOWN = Math.max(...Object.values(HEALTH_BY_CHARACTER));
 
+// Card "Aleatório": no destaque aparece um "?" em vez de um lutador
+const RANDOM_INFO = { cls: 'random', style: 'A sorte escolhe um lutador livre para você', ult: '???' };
+
 // Mostra no painel de destaque o lutador do card (mouse ou controle em cima)
 function showPreview(card) {
     const id = card.id.replace('select-', '');
-    const info = ROSTER_INFO[id];
+    const info = id === 'random' ? RANDOM_INFO : ROSTER_INFO[id];
     if (!info) return;
     document.querySelectorAll('.character-card.active').forEach(c => c.classList.remove('active'));
     card.classList.add('active');
     const preview = document.getElementById('selection-preview');
     preview.classList.remove(...Object.keys(CLASS_NAMES));
     preview.classList.add(info.cls);
-    const health = HEALTH_BY_CHARACTER[id] || 1000;
-    document.getElementById('preview-name').innerText = card.querySelector('h2').innerText;
+    const health = HEALTH_BY_CHARACTER[id];
+    const character = CHARACTERS.find(c => c.id === id);
+    document.getElementById('preview-name').innerText = character ? character.name.toUpperCase() : card.querySelector('h2').innerText;
     document.getElementById('preview-class').innerText = CLASS_NAMES[info.cls];
     document.getElementById('preview-style').innerText = info.style;
-    document.getElementById('preview-hp').innerText = health;
-    document.getElementById('preview-hp-fill').style.width = `${(health / MAX_HEALTH_SHOWN) * 100}%`;
+    document.getElementById('preview-hp').innerText = health || '???';
+    document.getElementById('preview-hp-fill').style.width = `${((health || 0) / MAX_HEALTH_SHOWN) * 100}%`;
     document.getElementById('preview-ult').innerText = info.ult;
     document.getElementById('preview-lore').innerText = card.dataset.lore;
     const canvas = document.getElementById('preview-canvas');
@@ -163,14 +168,32 @@ function showPreview(card) {
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, 192, 192);
     ctx.imageSmoothingEnabled = false;
-    if (characterArt[id]) characterArt[id](ctx, 48, 0, 96, 192, null);
+    if (characterArt[id]) {
+        characterArt[id](ctx, 48, 0, 96, 192, null);
+    } else {
+        ctx.font = 'bold 120px Orbitron, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffd23f';
+        ctx.fillText('?', 96, 100);
+    }
+}
+
+// Lutadores que ainda podem ser escolhidos (o outro jogador já pode ter pegado algum)
+function freeCharacterIds() {
+    return CHARACTERS.map(c => c.id).filter(id => !match.picks.includes(id));
 }
 
 function setupSelectionScreen() {
     drawThumbnails();
     document.querySelectorAll('.character-card').forEach(card => {
         card.addEventListener('click', () => {
-            match.picks.push(card.id.replace('select-', ''));
+            let id = card.id.replace('select-', '');
+            if (id === 'random') {
+                const free = freeCharacterIds();
+                id = free[Math.floor(Math.random() * free.length)];
+            }
+            match.picks.push(id);
             const humans = match.vs === 'pvp' ? 2 : 1;
             if (match.picks.length < humans) {
                 openSelection(); // vez do jogador 2

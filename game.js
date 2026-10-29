@@ -74,6 +74,7 @@ function step() {
         if (alive(f) && f.characterType === 'mamba') f.updateMambaCloud();
         if (alive(f) && f.characterType === 'roxy') f.updateRoxy();
         if (alive(f) && f.characterType === 'weaver') { f.updateWeaverPull(); f.updateWeaverKick(); }
+        if (alive(f) && f.characterType === 'sina') f.updateSina();
     }
     turrets.forEach(t => t.update());
     turrets = turrets.filter(t => !t.done);
@@ -88,6 +89,7 @@ function step() {
     updateProjectiles();
     updateWalls();
     updateHazards();
+    updateSinaBoats();
     updateMap();
     shockwaves.forEach(w => w.life--);
     shockwaves = shockwaves.filter(w => w.life > 0);
@@ -130,6 +132,7 @@ function draw() {
     // Áreas de cura, avisos de explosão e bolas no chão ficam por baixo de tudo
     fighters.forEach(f => { if (alive(f) && f.characterType === 'celestia') drawCelestiaAura(f); });
     drawHazards();
+    drawSinaBoatShadows();
     drawShockwaves();
     drawWalls();
     fighters.forEach(f => { if (alive(f) && f.mambaCloudTimer > 0) drawMambaCloud(f); });
@@ -161,6 +164,8 @@ function draw() {
 
     projectiles.forEach(p => p.draw());
     particles.forEach(p => p.draw());
+    drawSinaBoatShips();
+    fighters.forEach(f => { if (alive(f) && f.characterType === 'sina') drawSinaRoulette(f); });
     healingFlowers.forEach(flower => flower.draw());
     floatingTexts.forEach(t => t.draw());
     drawMapOverlay();
@@ -268,6 +273,7 @@ function stopMatch() {
     floatingTexts = [];
     groundBalls = [];
     hazards = [];
+    sinaBoats = [];
     walls = [];
     lifeOrbs = [];
     turrets = [];

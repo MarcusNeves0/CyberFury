@@ -365,6 +365,7 @@ body {
 .shooter { --class-color: #00e5ff; }
 .healer { --class-color: #5dff8a; }
 .tank { --class-color: #b07bff; }
+.random { --class-color: #ffd23f; }
 
 /* Painel do lutador em destaque */
 .selection-preview {
@@ -509,11 +510,11 @@ body {
     overflow: hidden;
 }
 
-/* Elenco: 2 fileiras de 10, com o nome da classe em cima de cada grupo */
+/* Elenco: 2 fileiras de 11, com o nome da classe em cima de cada grupo */
 .selection-grid {
     flex: 0 0 auto;
     display: grid;
-    grid-template-columns: repeat(10, 1fr);
+    grid-template-columns: repeat(11, 1fr);
     gap: 0.8cqh 0.7cqw;
     width: 100%;
 }
@@ -562,6 +563,21 @@ body {
     max-height: 9cqh;
     object-fit: contain;
     image-rendering: pixelated;
+}
+
+/* Card "Aleatório": um ponto de interrogação no lugar do retrato */
+.random-icon {
+    width: 100%;
+    max-height: 9cqh;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 6cqh;
+    font-weight: 700;
+    color: var(--class-color);
+    text-shadow: 0 0 10px var(--class-color);
 }
 
 .character-card h2 {

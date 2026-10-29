@@ -13,9 +13,10 @@ class Projectile {
         this.y = shooter.y + direction.y * (FIGHTER_RADIUS + 6);
         this.vx = direction.x * speed;
         this.vy = direction.y * speed;
-        this.radius = { pumpkin: 22, rocket_punch: 14, tornado: 16, football: 13, fenris_blade: 10, mamba_shot: 7, nail: 6, turret_shot: 6, pistol_shot: 6, web: 9 }[type] || 12;
+        this.radius = { pumpkin: 22, rocket_punch: 14, tornado: 16, football: 13, fenris_blade: 10, mamba_shot: 7, nail: 6, turret_shot: 6, pistol_shot: 6, web: 9, sina_bullet: 6, shark: 20 }[type] || 12;
         // Duração em passos (com a velocidade, define o alcance dos tiros)
-        this.life = { football: 200, mamba_shot: 34, nail: 30, turret_shot: 34, pistol_shot: 29, web: 30 }[type] || 150;
+        this.life = { football: 200, mamba_shot: 34, nail: 30, turret_shot: 34, pistol_shot: 29, web: 30, sina_bullet: 30, shark: 60 }[type] || 150;
+        if (type === 'shark') this.hits = new Set(); // o tubarão atravessa: cada inimigo leva uma vez
         this.bounces = 0;
         this.isReturning = false;
         this.returnSpeed = 7; // bola puxada pelo especial volta mais rápido
@@ -49,6 +50,10 @@ class Projectile {
         }
         this.x += this.vx;
         this.y += this.vy;
+        // Rastro de água do tubarão
+        if (this.type === 'shark' && this.life % 2 === 0) {
+            particles.push(new Particle(this.x, this.y - 22, 'rgba(120, 200, 255, 0.7)', 0, { x: -this.vx * 0.2 + (Math.random() - 0.5), y: -Math.random() * 1.5 }));
+        }
 
         if (this.isReturning) return;
         if (this.life <= 0) {
@@ -84,8 +89,8 @@ class Projectile {
             }
         }
 
-        // Obstáculos: árvores bloqueiam, caixas bloqueiam e levam dano
-        for (const o of obstacles) {
+        // Obstáculos: árvores bloqueiam, caixas bloqueiam e levam dano (o tubarão arremessado passa por cima)
+        for (const o of (this.type === 'shark' ? [] : obstacles)) {
             if (!circleHitsObstacle(this.x, this.y, this.radius, o)) continue;
             if (o.hp !== undefined) damageBox(o, this.damage);
             const center = obstacleCenter(o);
@@ -116,7 +121,21 @@ class Projectile {
             nail: { color: '#cfd6e6', length: 10, width: 2 },
             turret_shot: { color: '#3ff6ff', length: 12, width: 3 },
             pistol_shot: { color: '#ff4fa3', length: 11, width: 3 },
+            sina_bullet: { color: '#ffd23f', length: 14, width: 3 },
         };
+        if (this.type === 'shark') {
+            // Tubarão voando: o emoji olha para a esquerda, então espelha quando vai para a direita
+            ctx.save();
+            ctx.translate(this.x, this.y - 30);
+            if (this.vx > 0) ctx.scale(-1, 1);
+            ctx.rotate(Math.atan2(this.vy, Math.abs(this.vx)) * (this.vx > 0 ? -1 : 1));
+            ctx.font = '40px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🦈', 0, 0);
+            ctx.restore();
+            return;
+        }
         if (this.type === 'web') {
             // Bolinha de teia: círculo branco com fios saindo
             ctx.save();
@@ -283,6 +302,7 @@ function updateProjectiles() {
             else projectile.done = true;
             continue;
         }
+        if (projectile.type === 'shark') { sharkBite(projectile); continue; }
         const target = enemiesOf(projectile.shooter).find(enemy =>
             !enemy.isInsideOpponent && distance(projectile, enemy) < projectile.radius + enemy.radius + 4);
         if (!target) continue;
@@ -347,6 +367,174 @@ function updateProjectiles() {
         if (craque) { craque.ballCount++; ball.taken = true; }
     }
     groundBalls = groundBalls.filter(b => !b.taken);
+}
+
+// Tubarão da Sina: atravessa todos no caminho, mordendo e empurrando cada um uma vez
+function sharkBite(shark) {
+    const dir = normalize(shark.vx, shark.vy);
+    for (const enemy of enemiesOf(shark.shooter)) {
+        if (enemy.isInsideOpponent || shark.hits.has(enemy)) continue;
+        if (distance(shark, enemy) >= shark.radius + enemy.radius + 4) continue;
+        shark.hits.add(enemy);
+        const defended = enemy.takeDamage(shark.damage, { sound: 'hit_heavy' }, shark.shooter);
+        enemy.push(dir, defended ? 4 : 10);
+        sfx.play('chomp');
+        for (let i = 0; i < 8; i++) particles.push(new Particle(enemy.x, enemy.chestY, i % 2 ? '#6ec8ff' : '#e8fbff', 0, { x: dir.x * 3 + (Math.random() - 0.5) * 3, y: (Math.random() - 0.5) * 3 }));
+    }
+}
+
+// Barco de água da Sina: sombra e onda no chão durante o aviso; depois cai atingindo todos na área
+function updateSinaBoats() {
+    for (const boat of sinaBoats) {
+        if (boat.timer > 0) {
+            if (--boat.timer > 0) continue;
+            const owner = boat.owner;
+            for (const enemy of fighters) {
+                if (!alive(enemy) || enemy.team === owner.team || enemy.isInsideOpponent) continue;
+                const d = Math.hypot(enemy.x - boat.x, enemy.y - boat.y);
+                if (d > SINA_BOAT_RADIUS + enemy.radius) continue;
+                enemy.takeDamage(SINA_BOAT_DAMAGE, { unblockable: true, sound: 'hit_heavy' }, owner);
+                enemy.isParalyzed = true;
+                enemy.paralysisTimer = Math.max(enemy.paralysisTimer, SINA_BOAT_STUN);
+                enemy.push(d > 0 ? { x: (enemy.x - boat.x) / d, y: (enemy.y - boat.y) / d } : { x: 1, y: 0 }, 7);
+            }
+            turrets.filter(t => t.team !== owner.team && !t.done && Math.hypot(t.x - boat.x, t.y - boat.y) < SINA_BOAT_RADIUS + t.radius)
+                .forEach(t => t.destroy(true));
+            for (const box of obstacles.filter(o => o.hp !== undefined)) {
+                if (circleHitsObstacle(boat.x, boat.y, SINA_BOAT_RADIUS, box)) damageBox(box, 999);
+            }
+            for (let i = 0; i < 46; i++) {
+                const a = Math.random() * Math.PI * 2, speed = 2 + Math.random() * 5;
+                particles.push(new Particle(boat.x + Math.cos(a) * 20, boat.y - 10, i % 3 ? '#5ab8ff' : '#e8fbff', 0, { x: Math.cos(a) * speed, y: Math.sin(a) * speed * 0.6 - 2 }));
+            }
+            screenShake = Math.max(screenShake, 12);
+            sfx.play('sina_boat');
+            boat.splash = 24;
+        } else if (boat.splash > 0) {
+            boat.splash--;
+        }
+    }
+    sinaBoats = sinaBoats.filter(b => b.timer > 0 || b.splash > 0);
+}
+
+// Por baixo dos lutadores: área do impacto enchendo e, depois, a onda se espalhando
+function drawSinaBoatShadows() {
+    for (const boat of sinaBoats) {
+        ctx.save();
+        if (boat.timer > 0) {
+            const progress = 1 - boat.timer / SINA_BOAT_WARNING;
+            ctx.fillStyle = `rgba(30, 120, 255, ${0.12 + progress * 0.22})`;
+            ctx.beginPath();
+            ctx.arc(boat.x, boat.y, SINA_BOAT_RADIUS, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(140, 210, 255, 0.9)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([10, 6]);
+            ctx.lineDashOffset = -Date.now() / 30;
+            ctx.stroke();
+            ctx.setLineDash([]);
+            // Sombra do barco crescendo conforme ele se aproxima
+            ctx.fillStyle = `rgba(5, 10, 40, ${0.25 + progress * 0.3})`;
+            ctx.beginPath();
+            ctx.ellipse(boat.x, boat.y, 60 * (0.4 + progress * 0.6), 18 * (0.4 + progress * 0.6), 0, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            const progress = 1 - boat.splash / 24;
+            ctx.strokeStyle = `rgba(120, 200, 255, ${1 - progress})`;
+            ctx.lineWidth = 6 - progress * 4;
+            ctx.beginPath();
+            ctx.arc(boat.x, boat.y, SINA_BOAT_RADIUS * (0.6 + progress * 0.6), 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.fillStyle = `rgba(60, 160, 255, ${0.35 * (1 - progress)})`;
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+}
+
+// Por cima de tudo: o barco feito de água caindo do céu
+function drawSinaBoatShips() {
+    for (const boat of sinaBoats) {
+        if (boat.timer <= 0) continue;
+        const progress = 1 - boat.timer / SINA_BOAT_WARNING;
+        const scale = 0.7 + progress * 0.6;
+        ctx.save();
+        ctx.translate(boat.x, boat.y - 24 - (1 - progress) ** 2 * 300);
+        ctx.scale(scale, scale);
+        ctx.globalAlpha = 0.85;
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#d8f2ff';
+        ctx.lineWidth = 2;
+        // Vela e mastro
+        ctx.fillStyle = 'rgba(150, 215, 255, 0.85)';
+        ctx.beginPath(); ctx.moveTo(4, -62); ctx.lineTo(4, -12); ctx.lineTo(40, -16); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-2, -58); ctx.lineTo(-2, -14); ctx.lineTo(-30, -18); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#9fdcff';
+        ctx.fillRect(-1, -70, 4, 62);
+        // Casco
+        ctx.fillStyle = 'rgba(40, 140, 255, 0.9)';
+        ctx.beginPath(); ctx.moveTo(-54, -10); ctx.lineTo(54, -10); ctx.lineTo(38, 14); ctx.lineTo(-38, 14); ctx.closePath(); ctx.fill(); ctx.stroke();
+        // Espuma pingando do casco
+        ctx.fillStyle = '#e8fbff';
+        for (let i = -3; i <= 3; i++) {
+            ctx.beginPath();
+            ctx.arc(i * 12, 16 + Math.sin(Date.now() / 90 + i) * 3, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+}
+
+// Roleta da Sina em cima da cabeça: fatias do tamanho de cada chance, ponteiro em cima
+const SINA_SLICE_STYLE = { pistol: { color: '#ffb81f', icon: '🔫' }, shark: { color: '#3fb6ff', icon: '🦈' }, boat: { color: '#2448ff', icon: '🌊' } };
+function drawSinaRoulette(sina) {
+    if (!sina.sinaSlices || (sina.sinaSpinTimer <= 0 && sina.sinaResultTimer <= 0)) return;
+    const spinning = sina.sinaSpinTimer > 0;
+    const t = 1 - sina.sinaSpinTimer / SINA_SPIN_FRAMES;
+    const angle = spinning ? sina.sinaSpinFinal * (1 - (1 - t) ** 3) : sina.sinaSpinFinal; // desacelera até parar
+    const r = spinning ? 26 : 28 + Math.sin(sina.sinaResultTimer / 3) * 1.5;
+    const cx = sina.x, cy = sina.y - sina.z - sina.height - 44;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.fillStyle = 'rgba(10, 5, 20, 0.85)';
+    ctx.beginPath(); ctx.arc(0, 0, r + 4, 0, Math.PI * 2); ctx.fill();
+    for (const slice of sina.sinaSlices) {
+        const style = SINA_SLICE_STYLE[slice.type];
+        const won = !spinning && slice.type === sina.sinaResult;
+        ctx.fillStyle = style.color;
+        ctx.globalAlpha = spinning || won ? 1 : 0.35;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, r, slice.from + angle, slice.to + angle);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#1a1024';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        // Ícone da fatia (só se couber)
+        if (slice.to - slice.from > 0.5) {
+            const mid = (slice.from + slice.to) / 2 + angle;
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(style.icon, Math.cos(mid) * r * 0.6, Math.sin(mid) * r * 0.6);
+        }
+    }
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = '#ffd23f';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(0, 0, r + 2, 0, Math.PI * 2); ctx.stroke();
+    // Ponteiro
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.moveTo(-5, -r - 8); ctx.lineTo(5, -r - 8); ctx.lineTo(0, -r + 2); ctx.closePath(); ctx.fill();
+    // Resultado em destaque
+    if (!spinning) {
+        ctx.font = '32px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(SINA_SLICE_STYLE[sina.sinaResult].icon, 0, 0);
+    }
+    ctx.restore();
 }
 
 // Distância de um ponto até o segmento da Muralha
