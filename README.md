@@ -4,7 +4,7 @@
 
 **Briga de rua cyberpunk vista de cima, com 21 lutadores, 4 arenas cheias de perigo e partidas de 1v1 até 3v3.**
 
-<img width="900" alt="Cybernetic Fury: diferentes estilos, um só objetivo" src="assets/capa.png" />
+<img width="900" alt="Cybernetic Fury: quatro estilos, um só objetivo" src="assets/capa.png" />
 
 ### 🎮 [JOGAR AGORA NO NAVEGADOR](https://marcusneves0.github.io/CyberFury/) 🎮
 
@@ -68,6 +68,11 @@ Neo-Cidade está tomada por neon, chuva e gente disposta a brigar por qualquer m
 | 🌙 | **Nyx** | Rouba vida batendo e manda para o time | Laço de vida com o inimigo |
 
 ### Tanques
+
+<div align="center">
+<img width="700" alt="Aegis, Rhino e Anchor" src="assets/tanques.jpg" />
+</div>
+
 | | Lutador | Estilo | Ultimate |
 |---|---|---|---|
 | 🛡️ | **Aegis** | 1600 de vida, o escudo segura os tiros do time | Muralha de energia |
