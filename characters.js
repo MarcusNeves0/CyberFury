@@ -2401,6 +2401,126 @@ pixelCharacters.coleone = {
     },
 };
 
+// --- Bershow: cavaleiro negro de espadão; na fúria o visor fecha e as rachaduras da armadura acendem ---
+pixelCharacters.bershow = {
+    size: 64,
+    palette: { K: OUTLINE, A: '#2b2a35', a: '#1c1b24', g: '#5d5f72', R: '#4a1c26', C: '#16121c', c: '#241c2c', H: '#0e0c14', L: '#5a5f6e', l: '#b4bac8', G: '#7a6a4a', D: '#3a2a22', d: '#2a1e18', B: '#121118', E: '#1a1018', V: '#c08a6a', U: '#d9a07a', X: '#d9a07a', W: '#2a1e18', Z: '#8a4a3a' },
+    // Fúria: a pele do rosto vira placa de metal, a fenda e as rachaduras acendem em vermelho
+    forms: {
+        normal: {},
+        fury: { R: '#ff2a2a', E: '#ff3b3b', X: '#ff2a2a', V: '#1c1b24', U: '#2b2a35', W: '#2b2a35', Z: '#2b2a35', g: '#7a5f6a' },
+    },
+    idle: [
+        '..KKKKKKKKKKKK',
+        '..KLLLllLLLLLLKK',
+        '..KLLLLlllLLLLLLK...............K',
+        '..KLLLLLlllLLLLLLK..........KKKKgKKKK',
+        '..KLLLLLLLllLLKLLLKK......KKAAAAAAAAAKK',
+        '..KKKKLLLLLlllLLKKKLK....KAAAAAAAAAAAAAK',
+        '......KLLLLLlllLLKHKKKK.KAAAAAAAAAAAAAAAK',
+        '.......KLLLLLLllLLKHHHK.KAAAAAAAAAAAAAAAK',
+        '........KKLLLLLlllLKKHKKaAAAAAgVVUUUUUUUUK',
+        '..........KLLLLLlllLLKHKaAAAAAgVVZUUUUUUUK',
+        '...........KLLLLLlllLKHKRAAAAAgVVUZWWWWWWK',
+        '............KLKLLLKKKHHKRRAAAAgVVUUZUUUUUK',
+        '.............KKKKKHHHHHHKARAAAgVXXXXZEEXXK',
+        '..............KKLLKKKHHKaRAAAAgVVUUUZEEEUK',
+        '..............KKKLLLLKKKRAAAAAgVVUUUUZEUUK....KK',
+        '..............KgKKKLLLLKKAAAAAgVVUUUUUZUUK...KAK....KK',
+        '.......KKK....KaK..KLLLLKRAAAAgVVUUUUUUZK....KAK...KAK',
+        '.......KaaK...KaaK..KLLLKRRAAAgVVUUUUUUUK....KAK..KAAK',
+        '........KaaK..KKaK...KLLLKARAAgAAAAAAAAK.....KKKKKAAAK',
+        '........KaaKKKKgKKKK..KKLLKKARgAAAAAAKK.....KKKgKKKAAK',
+        '......KKKKKgggggggggK...KLKaKKKKAKKKKKLK...KgggggggKKK',
+        '......KcCKaaaaRaaaaRaKKKKKKaaaaaKaaaaKKKKKKARAAAARAAKK',
+        '......KCCKaaaRaaaaRaaKAAAAKKKKKKKKKKKKAAAAKRAAKKKAAAK',
+        '......KCKaaaRaaaaRaaaaKAAAAAAAAggAAAAAAAAKRAAKGGKAAARK',
+        '......KCCKaRaaaaRaaaaKRAAAAAAAAggAAAAAAARRKKKKKKKKARK',
+        '......KCCKRaaaaRaaaaRKRRAAAAAAAggAAAAAARRAKKaAAAAKRAK',
+        '......KCCcKaaaRaaaaRKAAARAAAAAAggAAAAAAARAAKaAAAAKAK',
+        '......KCcCKKKKKaKKKKaaaRaaaaaaaggaaaaaaaaRaKaAAAAKK',
+        '......KcCCKaAAAKaaaaaARAAAAAAAAggAAAAAAAAAKKaAAAAK',
+        '......KCCCKaAAAKaaaaaRAAAAAAAAAggAAAAAAARKGKaAKKKK',
+        '......KCCCKaAAAKaaaaaARRAAAAAARggAAAAAARKGGKKKAAAK',
+        '......KCCCKDDDDKaaaaaAARRAAAARAggAAAAARAKGGKKgggggK',
+        '......KCCCKDDDDKaaaaaAAAARAARAAggAAAAAAKGGKAKAAAAAK',
+        '......KCCcKggggKaaaaaAAARAARAAAggAAAAAAKGGKAAKAAAKKK',
+        '......KCcCKDDDDDKaaaaAAARAAARAAggAAAAAAKKKAAAAKKKDKK',
+        '......KcCCKDDDDDKaaaaAARAAAAARAggAAAAAAAARAAAAAKKdKKK',
+        '......KCCCKKKKKKKKKaaAAAAAAAAAAggAAAAAAAAAAAAKKK.KKKGK',
+        '......KCCCCCcCCCCKDKKKKKKKKKKKKKKKKKKKKKKKKKKDKK..KKGK',
+        '......KCCCCcCCCCCKAAAAAaAAAAAaAAAAAaAAAAAaAAAAKK...KK',
+        '......KCCCcCCCCCCKAAAAAaAAAAAaAAAAAaAAAAAaAAAAK',
+        '......KKCcCCKCCCcKAAAAAaAAAAAaAAAAAaAAAAAaAAAAK',
+        '......K.KKCK.KKcKKAAAAAaAAAAAaAAAAAaAAAAAaAAAAK',
+        '........K.KK.K.KKKAAAAAaAAAAAaAAAAAaAAAAAaAAAAK',
+        '..........K....K.KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK',
+        '...................KKaAKKAAKK.KKK.KKKAAKKK.KK',
+        '...................KKaAKKAAKK..KK.KKKAAKKKKKK',
+        '....................KaAAKKKK......KaAAKKKK',
+        '....................KKKKKKKK......KKKKKKKK',
+        '....................KggggggK......KggggggK',
+        '....................KaAARAAK......KaAARAAK',
+        '....................KaAARAAK......KaAARAAK',
+        '....................KaAAAAAK......KaAAAAAK',
+        '....................KaAAAAAK......KaAAAAAK',
+        '....................KaAAAAAK......KaAAAAAK',
+        '....................KaAAAAAK......KaAAAAAK',
+        '....................KKKKKKKK......KKKKKKKK',
+        '....................KAAAAAAAK.....KAAAAAAAK',
+        '...................KgggggggggK...KgggggggggK',
+        '...................KAAAAAAAAAK...KAAAAAAAAAK',
+        '...................KAAAAAAAAAK...KAAAAAAAAAK',
+        '...................KAAAAAAAAAK...KAAAAAAAAAK',
+        '...................KAAAAAAAAAK...KAAAAAAAAAK',
+        '....................KBBBBBBBK.....KBBBBBBBK',
+        '.....................KKKKKKK.......KKKKKKK',
+    ],
+    attack: {
+        0: '',
+        1: '',
+        2: '................................K',
+        3: '............................KKKKgKKKK',
+        4: '..........................KKAAAAAAAAAKK',
+        5: '.................KK......KAAAAAAAAAAAAAK',
+        6: '.................KHKKKK.KAAAAAAAAAAAAAAAK',
+        7: '..................KHHHK.KAAAAAAAAAAAAAAAK',
+        8: '...................KKHKKaAAAAAgVVUUUUUUUUK',
+        9: '.....................KHKaAAAAAgVVZUUUUUUUK',
+        10: '.....................KHKRAAAAAgVVUZWWWWWWK',
+        11: '..................KKKHHKRRAAAAgVVUUZUUUUUK',
+        12: '..............KKKKHHHHHHKARAAAgVXXXXZEEXXK',
+        13: '..............KK..KKKHHKaRAAAAgVVUUUZEEEUK',
+        14: '..............KK.....KKKRAAAAAgVVUUUUZEUUK....KK',
+        15: '..............KgK......KKAAAAAgVVUUUUUZUUK...KAK....KK',
+        16: '.......KKK....KaK.......KRAAAAgVVUUUUUUZK....KAK...KAK',
+        17: '.......KaaK...KaaK......KRRAAAgVVUUUUUUUK....KAK..KAAK',
+        18: '........KaaK..KKaK.......KARAAgAAAAAAAAK.....KKKKKAAAK',
+        19: '........KaaKKKKgKKKK......KKARgAAAAAAKK.....KKKgKKKKAK',
+        20: '......KKKKKgggggggggK.....KaKKKKAKKKKK.....KggggKGGGKK',
+        21: '......KcCKaaaaRaaaaRaKKKKKKaaaaaKaaaaKKKKKKARAAAKGGGKK',
+        22: '......KCCKaaaRaaaaRaaKAAAAKKKKKKKKKKKKAAAAKRAAAAKGGGK........KKK',
+        23: '......KCKaaaRaaaaRaaaaKAAAAAAAAggAAAAAAAAKRAAAARKGGGKK.....KKllK',
+        24: '......KCCKaRaaaaRaaaaKRAAAAAAAAggAAAAAAARRKKKKKKKGGGKKKKKKKllllK',
+        25: '......KCCKRaaaaRaaaaRKRRAAAAAAAggAAAAAARRAKAAAADKGGGKllllllllllK',
+        26: '......KCCcKaaaRaaaaRKAAARAAAAAAggAAAAAAARAKAAAADKGGGKLLLLLLLLLLK',
+        27: '......KCcCKKKKKaKKKKaaaRaaaaaaaggaaaaaaaaRKAAAADKGGGKLLLLLLLLLLK',
+        28: '......KcCCKaAAAKaaaaaARAAAAAAAAggAAAAAAAAAKAAAADKGGGKLLLLLLLLLLK',
+        29: '......KCCCKaAAAKaaaaaRAAAAAAAAAggAAAAAAARRKAAAADKGGGKLLLLLLLLLLK',
+        30: '......KCCCKaAAAKaaaaaARRAAAAAARggAAAAAARRAKAAAADKGGGKllllllllllK',
+        31: '......KCCCKDDDDKaaaaaAARRAAAARAggAAAAARAAAKKKKKKKGGGKLLLLLLLLLLK',
+        32: '......KCCCKDDDDKaaaaaAAAARAARAAggAAAAAARAAAAAAAAKGGGKLLLLLLLLLLK',
+        33: '......KCCcKggggKaaaaaAAARAARAAAggAAAAAARRAAAAAAAKGGGKLLLLLLLLLLK',
+        34: '......KCcCKDDDDDKaaaaAAARAAARAAggAAAAAAARAAAAAAKKGGGKLLLLLLLLLLK',
+        35: '......KcCCKDDDDDKaaaaAARAAAAARAggAAAAAAAARAAAAAKKGGGKLLLLLLLLLLK',
+        36: '......KCCCKKKKKKKKKaaAAAAAAAAAAggAAAAAAAAAAAAKK.KGGGKKKKKKKKKKKK',
+        37: '......KCCCCCcCCCCKDKKKKKKKKKKKKKKKKKKKKKKKKKKDK.KGGGK',
+        38: '......KCCCCcCCCCCKAAAAAaAAAAAaAAAAAaAAAAAaAAAAK.KGGGK',
+        39: '......KCCCcCCCCCCKAAAAAaAAAAAaAAAAAaAAAAAaAAAAK.KGGGK',
+        40: '......KKCcCCKCCCcKAAAAAaAAAAAaAAAAAaAAAAAaAAAAK..KKK',
+    },
+};
+
 // --- Pose de especial ---
 // Gerada a partir do sprite parado: recorta o braço da frente (e a arma, se estiver nele)
 // e cola mais para cima, como se o personagem erguesse o braço para soltar o poder.
@@ -2438,12 +2558,13 @@ const SPECIAL_POSE = {
     anchor: { x0: 42, x1: 64, y0: 2, y1: 60, lift: 6 }, // grade 64x64
     sina: { x0: 42, x1: 56, y0: 24, y1: 52, lift: 12 }, // grade 64x64
     coleone: { x0: 42, x1: 57, y0: 24, y1: 48, lift: 16 }, // grade 64x64
+    bershow: { x0: 42, x1: 53, y0: 22, y1: 42, lift: 10 }, // grade 64x64
 };
 
 // Linha onde as pernas se separam em cada sprite (abaixo do short, da saia ou do casaco)
 const LEG_START = {
     titan: 40, spark: 19, hades: 40, jack: 42, kaze: 40, kenji: 40, craque: 40, akane: 38,
-    fenris: 40, zarek: 40, celestia: 30, flora: 23, nyx: 50, mamba: 46, gear: 41, roxy: 41, weaver: 37, aegis: 37, rhino: 39, anchor: 37, sina: 46, coleone: 47,
+    fenris: 40, zarek: 40, celestia: 30, flora: 23, nyx: 50, mamba: 46, gear: 41, roxy: 41, weaver: 37, aegis: 37, rhino: 39, anchor: 37, sina: 46, coleone: 47, bershow: 47,
 };
 for (const [type, row] of Object.entries(LEG_START)) pixelCharacters[type].legStart = row;
 for (const [type, area] of Object.entries(SPECIAL_POSE)) {
@@ -2461,8 +2582,8 @@ function makePixelArt(type) {
     const def = pixelCharacters[type];
     const spritesByForm = {};
     return (ctx, x, y, width, height, fighter) => {
-        // Personagens com formas (Zarek) trocam a paleta conforme a forma atual
-        const form = def.forms ? ((fighter && fighter.zarekForm) || 'normal') : 'normal';
+        // Personagens com formas (Zarek, Bershow na fúria) trocam a paleta conforme a forma atual
+        const form = def.forms ? ((fighter && (fighter.zarekForm || fighter.spriteForm)) || 'normal') : 'normal';
         if (!spritesByForm[form]) {
             const palette = def.forms ? { ...def.palette, ...def.forms[form] } : def.palette;
             // Sprites em 32x32 são ampliados para 64x64; os desenhados em 64 entram direto

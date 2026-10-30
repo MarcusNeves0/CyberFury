@@ -91,6 +91,8 @@ function step() {
     updateHazards();
     updateSinaBoats();
     updateColeoneBalls();
+    bershowSlashes.forEach(s => s.life--);
+    bershowSlashes = bershowSlashes.filter(s => s.life > 0);
     updateMap();
     shockwaves.forEach(w => w.life--);
     shockwaves = shockwaves.filter(w => w.life > 0);
@@ -166,6 +168,7 @@ function draw() {
 
     projectiles.forEach(p => p.draw());
     coleoneBalls.forEach(drawColeoneBall);
+    drawBershowSlashes();
     particles.forEach(p => p.draw());
     drawSinaBoatShips();
     fighters.forEach(f => { if (alive(f) && f.characterType === 'sina') drawSinaRoulette(f); });
@@ -278,6 +281,7 @@ function stopMatch() {
     hazards = [];
     sinaBoats = [];
     coleoneBalls = [];
+    bershowSlashes = [];
     walls = [];
     lifeOrbs = [];
     turrets = [];

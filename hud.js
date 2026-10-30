@@ -53,8 +53,11 @@ function updateHUD() {
         const health = Math.ceil(f.health), energy = Math.ceil(f.energy);
         setIfChanged(f.hud.health.fill.style, 'width', (health / f.maxHealth) * 100 + '%');
         setIfChanged(f.hud.health.text, 'innerText', `${health} / ${f.maxHealth}`);
-        setIfChanged(f.hud.energy.fill.style, 'width', (energy / 1000) * 100 + '%');
-        setIfChanged(f.hud.energy.text, 'innerText', `${energy} / 1000`);
+        // Barra de energia: cheia = ultimate pronta
+        const ready = !f.isDead && ultReady(f);
+        setIfChanged(f.hud.energy.fill.style, 'width', Math.min(100, (energy / f.maxEnergy) * 100) + '%');
+        setIfChanged(f.hud.energy.text, 'innerText', ready ? 'ULTIMATE PRONTA!' : `${energy} / ${f.maxEnergy}`);
+        if (f.hud.energy.fill.classList.contains('ready') !== ready) f.hud.energy.fill.classList.toggle('ready', ready);
         if (f.hud.card.classList.contains('dead') !== f.isDead) f.hud.card.classList.toggle('dead', f.isDead);
         if (f.hud.transform) updateTransformBar(f);
         updateStatusIcons(f);

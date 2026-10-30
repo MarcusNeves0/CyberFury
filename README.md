@@ -2,7 +2,7 @@
 
 # ⚡ CYBERNETIC FURY ⚡
 
-**Briga de rua cyberpunk vista de cima, com 22 lutadores, 4 arenas cheias de perigo e partidas de 1v1 até 3v3.**
+**Briga de rua cyberpunk vista de cima, com 23 lutadores, 4 arenas cheias de perigo e partidas de 1v1 até 3v3.**
 
 <img width="900" alt="Cybernetic Fury: quatro estilos, um só objetivo" src="assets/capa.png" />
 
@@ -50,6 +50,7 @@ Neo-Cidade está tomada por neon, chuva e gente disposta a brigar por qualquer m
 | 🩸 | **Zarek** | Muda de forma no meio da luta: **Rubra** 🔴 ou **Umbral** 🔵 | Entra no corpo do inimigo e sai rasgando |
 | 🕷️ | **Weaver** | Acrobata com teia e sentido aranha | Puxão de teia e chute para cima |
 | 🏴‍☠️ | **Capitã Sina** | Pirata apostadora de faca; o papagaio revela quem se esconde nos arbustos | *Roleta da Sina*: 🔫 pistola, 🦈 tubarão ou o raro 🌊 barco de água |
+| ⚔️ | **Bershow** | Cavaleiro negro de espadão que acerta todos na frente; quanto menos vida, mais forte | *Armadura da Fúria*: o visor fecha, solta o Corte Devastador e fica 5 s sem sentir dor |
 | ⚡ | **Spark** | Robô de segurança abandonado | Corrente elétrica que dobra de dano |
 
 ### Atiradores

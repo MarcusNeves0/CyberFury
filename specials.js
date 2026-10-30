@@ -388,6 +388,66 @@ Object.assign(Fighter.prototype, {
         this.dunkHoop = null;
     },
 
+    // Bershow: Armadura da Fúria — o visor fecha com barulho de metal, solta o Corte Devastador
+    // e fica 5 s sem sentir dor (nada o atordoa ou empurra, bate mais rápido e se cura batendo)
+    startBershowArmor() {
+        this.isAttacking = false;
+        if (this.armorClose > 0 || this.furyTimer > 0 || this.energy < BERSHOW_ARMOR_COST || this.specialCooldown > 0) return;
+        this.energy -= BERSHOW_ARMOR_COST;
+        this.specialCooldown = BERSHOW_ARMOR_COOLDOWN;
+        this.armorClose = BERSHOW_ARMOR_CLOSE;
+        this.isDefending = false;
+        this.isPreparingDefense = false;
+        this.isChargingPunch = false;
+        this.poseSpecial();
+        sfx.play('bershow_armor');
+    },
+
+    updateBershowClose() {
+        this.armorClose--;
+        this.spriteForm = this.armorClose % 6 < 3 ? 'fury' : null; // o visor descendo: pisca entre aberto e fechado
+        if (this.armorClose % 5 === 0) {
+            particles.push(new Particle(this.x + (Math.random() - 0.5) * 30, this.chestY, '#ff2a2a', 0, { x: (Math.random() - 0.5) * 3, y: -1 - Math.random() * 2 }));
+        }
+        if (this.armorClose > 0) return;
+        this.spriteForm = 'fury';
+        this.furyTimer = BERSHOW_ARMOR_DURATION;
+        this.isParalyzed = false;
+        floatingTexts.push(new FloatingText(this.x, this.y - this.height - 18, 'FÚRIA!', '#ff2a2a'));
+        this.devastatingSlash();
+    },
+
+    // Corte Devastador: um corte gigante em linha que atravessa todos e quebra caixas e torretas
+    devastatingSlash() {
+        const dir = alive(this.target) ? directionTo(this, this.target) : { ...this.aim };
+        this.aim = dir;
+        if (Math.abs(dir.x) > 0.05) this.facing = dir.x > 0 ? 1 : -1;
+        const inLine = (x, y, r) => {
+            const dx = x - this.x, dy = y - this.y;
+            const along = dx * dir.x + dy * dir.y;
+            const side = Math.abs(-dx * dir.y + dy * dir.x);
+            return along > -r && along < BERSHOW_SLASH_RANGE + r && side < BERSHOW_SLASH_WIDTH / 2 + r;
+        };
+        for (const enemy of enemiesOf(this)) {
+            if (enemy.isInsideOpponent || !inLine(enemy.x, enemy.y, enemy.radius)) continue;
+            const defended = enemy.takeDamage(BERSHOW_SLASH_DAMAGE, { sound: 'blade_hit' }, this);
+            enemy.push(dir, defended ? 4 : 10);
+        }
+        turrets.filter(t => t.team !== this.team && !t.done && inLine(t.x, t.y, t.radius)).forEach(t => t.destroy(true));
+        for (const box of obstacles.filter(o => o.hp !== undefined)) {
+            const c = obstacleCenter(box);
+            if (inLine(c.x, c.y, 14)) damageBox(box, 999);
+        }
+        bershowSlashes.push({ x: this.x, y: this.y - 24, dir, life: 18 });
+        // Mostra o quadro do golpe com o espadão esticado
+        this.isAttacking = true;
+        this.attackType = 'strong_punch';
+        this.attackAge = 4;
+        this.attackCooldown = Math.max(this.attackCooldown, 14);
+        screenShake = Math.max(screenShake, 10);
+        sfx.play('bershow_slash');
+    },
+
     // Capitã Sina: Roleta da Sina — gira 1 s em cima da cabeça (todos veem) e sai uma das três armas.
     // O resultado é sorteado no começo; a roleta só desacelera até parar na fatia sorteada.
     startSinaRoulette() {

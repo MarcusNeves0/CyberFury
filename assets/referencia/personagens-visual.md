@@ -36,6 +36,7 @@ Use junto com a imagem `sprites-referencia.png` desta pasta, que mostra o sprite
 | **Zarek** | Assassino jovem de **capuz escuro**, roupa preta com detalhes cinza e uma **foice com lâmina em meia-lua** e cabo de madeira. Duas formas: **Rubra** (aura e detalhes vermelhos, feroz) e **Umbral** (aura e detalhes azuis, sombria). |
 | **Weaver** | Acrobata de **traje preto com teia neon ciano**, máscara de olhos brancos grandes, detalhe roxo no peito e **lançadores de teia nos pulsos**. |
 | **Capitã Sina** | Pirata apostadora. **Casaco verde** com botões dourados e babados brancos, **tricórnio vermelho** com pontas levantadas, cabelo castanho comprido, botas marrons, **arara azul e amarela no ombro** e uma **faca de pirata**. Atrás dela, uma **roleta de cassino** com três fatias: pistola 🔫, tubarão 🦈 e barco de água 🌊. |
+| **Bershow** | Cavaleiro negro mercenário. **Armadura de placas preta e rachada** (rachaduras vermelho-escuras), **ombreiras com espinhos**, manoplas com garras, joelheiras pontudas e saiote de placas serrilhado. **Elmo aberto** mostrando o rosto com uma **cicatriz** e cabelo preto escapando. **Capa preta rasgada** e um **espadão largo** apoiado no ombro. Na ultimate, o **visor fecha**, as rachaduras **acendem em vermelho** e ele solta um **corte gigante** vermelho e branco. |
 
 ## 🎯 Atiradores
 

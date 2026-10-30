@@ -785,6 +785,17 @@ body {
     transition: width 0.3s;
 }
 
+/* Ultimate pronta: a barra fica dourada e pisca */
+.energy-bar-inner.ready {
+    background: linear-gradient(90deg, #ffd23f, #ffef8a);
+    animation: ult-ready 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes ult-ready {
+    from { box-shadow: 0 0 2px #ffd23f; }
+    to { box-shadow: 0 0 10px #ffd23f; }
+}
+
 /* Barra de transformação do Zarek */
 .transform-bar-outer {
     width: 100%;

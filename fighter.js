@@ -42,8 +42,8 @@ class Fighter {
 
         this.maxHealth = HEALTH_BY_CHARACTER[characterType] || MAX_HEALTH;
         this.health = this.maxHealth;
-        this.energy = 50;
-        this.maxEnergy = 1000;
+        this.maxEnergy = maxEnergyFor(characterType); // barra cheia = ultimate pronta
+        this.energy = Math.round(this.maxEnergy * 0.3);
         this.isAttacking = false;
         this.attackType = null;
         this.attackTimer = 0;   // passos em que o golpe ainda pode acertar
@@ -177,6 +177,11 @@ class Fighter {
         this.dunkHoop = null;        // cesta holográfica onde ele vai enterrar
         this.heldBy = null;          // agarrado pelo Coleone: vira a bola
         this.heldSpin = 0;           // giro de quem está sendo carregado
+
+        // Bershow: Armadura da Fúria
+        this.armorClose = 0;         // visor fechando (antes do Corte Devastador)
+        this.furyTimer = 0;          // armadura fechada: sem atordoamento nem empurrão, golpes rápidos, cura batendo
+        this.spriteForm = null;      // 'fury' troca a paleta do sprite (rosto coberto, rachaduras acesas)
     }
 
     applyPoison(stacks) {
@@ -295,6 +300,17 @@ class Fighter {
             ctx.arc(this.x, this.chestY, 42, 0, Math.PI * 2);
             ctx.fill();
         }
+        if (this.furyTimer > 0 || this.armorClose > 0) {
+            // Armadura da Fúria: aura vermelha pulsando
+            const pulse = 0.3 + Math.sin(Date.now() / 90) * 0.1;
+            const aura = ctx.createRadialGradient(this.x, this.chestY, 6, this.x, this.chestY, 48);
+            aura.addColorStop(0, `rgba(255, 30, 40, ${pulse})`);
+            aura.addColorStop(1, 'rgba(255, 30, 40, 0)');
+            ctx.fillStyle = aura;
+            ctx.beginPath();
+            ctx.arc(this.x, this.chestY, 48, 0, Math.PI * 2);
+            ctx.fill();
+        }
         // Levando dano: inclina para trás
         const hurtTilt = this.hitFlash > 0 ? -0.14 * (this.hitFlash / 12) : 0;
 
@@ -407,6 +423,7 @@ class Fighter {
         if (this.slowTimer > 0) this.slowTimer--;
         if (this.spiderSenseCooldown > 0) this.spiderSenseCooldown--;
         if (this.dunkHoop && --this.dunkHoop.life <= 0) this.dunkHoop = null;
+        if (this.furyTimer > 0 && --this.furyTimer === 0) this.spriteForm = null; // a armadura volta a abrir
 
         // Agarrado pelo Coleone: quem mexe nele é o Coleone (se o Coleone cair, ele é solto)
         if (this.heldBy && (!alive(this.heldBy) || this.heldBy.dunkTarget !== this)) {
@@ -452,6 +469,12 @@ class Fighter {
             this.updateColeoneDunk();
             return;
         }
+        // Bershow: parado enquanto o visor fecha; com a armadura fechada, nada o atordoa
+        if (this.armorClose > 0) {
+            this.updateBershowClose();
+            return;
+        }
+        if (this.furyTimer > 0) this.isParalyzed = false;
 
         if (this.isBladeDancing) {
             this.updateBladeDance();
@@ -661,6 +684,7 @@ class Fighter {
     // Empurra numa direção (o empurrão decai sozinho, ~5x a força em pixels)
     push(direction, force) {
         if (this.characterType === 'anchor') return; // Anchor: plantado no chão
+        if (this.furyTimer > 0 || this.armorClose > 0) return; // Bershow com a armadura fechada
         this.kbx += direction.x * force;
         this.kby += direction.y * force;
     }
@@ -751,7 +775,11 @@ class Fighter {
                     projectiles.push(new Projectile(this, 'football', 20, leadAim(this, 11), 11));
                     break;
                 }
-                if (this.characterType === 'jack' || this.characterType === 'akane' || this.characterType === 'fenris' || this.characterType === 'zarek' || this.characterType === 'anchor') {
+                if (this.characterType === 'bershow') {
+                    this.attackCooldown = this.furyTimer > 0 ? BERSHOW_ARMOR_SWORD_COOLDOWN : BERSHOW_SWORD_COOLDOWN;
+                    this.attackTimer = 8;
+                    sfx.play('swing_heavy');
+                } else if (this.characterType === 'jack' || this.characterType === 'akane' || this.characterType === 'fenris' || this.characterType === 'zarek' || this.characterType === 'anchor') {
                     this.attackCooldown = 30;
                     this.attackTimer = 8;
                     sfx.play('blade_swing');
@@ -775,7 +803,7 @@ class Fighter {
                     this.shoot(true);
                     break;
                 }
-                this.attackCooldown = 45;
+                this.attackCooldown = this.characterType === 'bershow' && this.furyTimer > 0 ? 30 : 45;
                 this.attackTimer = 8;
                 this.attackWindup = 4; // o soco forte puxa mais o braço
                 if (this.characterType === 'sina') this.push(this.aim, SINA_STAB_LUNGE); // estocada: dá um passo à frente
@@ -837,6 +865,10 @@ class Fighter {
                 }
                 if (this.characterType === 'coleone') {
                     this.startColeoneDunk();
+                    return;
+                }
+                if (this.characterType === 'bershow') {
+                    this.startBershowArmor();
                     return;
                 }
                 const energyCost = specialCost(this.characterType);
@@ -936,7 +968,7 @@ function tryMelee(attacker) {
     if (isBladeUser(attacker)) effect.sound = 'blade_hit';
     switch (attacker.attackType) {
         case 'punch':
-            damage = (attacker.characterType === 'akane') ? 14 : (attacker.characterType === 'nyx') ? NYX_PUNCH_DAMAGE : (attacker.characterType === 'kaze') ? KAZE_PUNCH_DAMAGE : (attacker.characterType === 'weaver') ? WEAVER_PUNCH_DAMAGE : (attacker.characterType === 'kenji') ? KENJI_PUNCH_DAMAGE : (attacker.characterType === 'aegis') ? AEGIS_PUNCH_DAMAGE : (attacker.characterType === 'rhino') ? RHINO_PUNCH_DAMAGE : (attacker.characterType === 'anchor') ? ANCHOR_PUNCH_DAMAGE : (attacker.characterType === 'sina') ? SINA_KNIFE_DAMAGE : (attacker.characterType === 'coleone') ? COLEONE_PUNCH_DAMAGE : 10;
+            damage = (attacker.characterType === 'akane') ? 14 : (attacker.characterType === 'nyx') ? NYX_PUNCH_DAMAGE : (attacker.characterType === 'kaze') ? KAZE_PUNCH_DAMAGE : (attacker.characterType === 'weaver') ? WEAVER_PUNCH_DAMAGE : (attacker.characterType === 'kenji') ? KENJI_PUNCH_DAMAGE : (attacker.characterType === 'aegis') ? AEGIS_PUNCH_DAMAGE : (attacker.characterType === 'rhino') ? RHINO_PUNCH_DAMAGE : (attacker.characterType === 'anchor') ? ANCHOR_PUNCH_DAMAGE : (attacker.characterType === 'sina') ? SINA_KNIFE_DAMAGE : (attacker.characterType === 'coleone') ? COLEONE_PUNCH_DAMAGE : (attacker.characterType === 'bershow') ? BERSHOW_SWORD_DAMAGE : 10;
             if (attacker.zarekForm === 'red') damage = 12;
             if (attacker.zarekForm === 'blue') damage = ZAREK_BLUE_PUNCH;
             if (attacker.characterType === 'akane') {
@@ -970,6 +1002,7 @@ function tryMelee(attacker) {
             if (attacker.characterType === 'anchor') damage = 40; // âncora com as duas mãos
             if (attacker.characterType === 'sina') damage = SINA_STAB_DAMAGE; // estocada com a faca
             if (attacker.characterType === 'coleone') damage = COLEONE_STRONG_DAMAGE; // toco que manda para longe
+            if (attacker.characterType === 'bershow') damage = BERSHOW_STRONG_DAMAGE; // espadão com as duas mãos
             if (attacker.characterType === 'hades') { effect.type = 'burn'; }
             if (attacker.characterType === 'jack') { defender.applyCurse(attacker); }
             break;
@@ -978,18 +1011,28 @@ function tryMelee(attacker) {
     // Rhino com embalo: o golpe tira mais e empurra forte (e gasta o embalo)
     const rhinoCharged = attacker.characterType === 'rhino' && attacker.rhinoRun >= RHINO_RUN_STEPS;
     if (rhinoCharged) { damage += RHINO_RUN_BONUS; attacker.rhinoRun = 0; }
-    const defended = defender.takeDamage(damage, effect, attacker);
-    if (defended) {
-        attacker.energy = Math.min(1000, attacker.energy + 7.5);
-    } else if (damage > 0) {
-        attacker.energy = Math.min(1000, attacker.energy + 15);
-        const pushForce = rhinoCharged ? 12 : attacker.characterType === 'aegis' ? 6
-            : attacker.characterType === 'coleone' && attacker.attackType === 'strong_punch' ? 9 // toco: manda para longe
-            : attacker.attackType === 'strong_punch' ? 4 : 1.5;
-        defender.push(attacker.aim, pushForce);
-        // Nyx: cada acerto rouba vida e manda um orbe para o aliado mais ferido
-        if (attacker.characterType === 'nyx') {
-            lifeOrbs.push(new LifeOrb(defender, attacker, attacker.attackType === 'strong_punch' ? NYX_STRONG_HEAL : NYX_PUNCH_HEAL));
+    // Bershow: o espadão acerta todos dentro do arco, e a Fúria aumenta o dano conforme a vida dele cai
+    let targets = [defender];
+    if (attacker.characterType === 'bershow') {
+        targets = enemiesOf(attacker).filter(e => !e.isInsideOpponent && inArc(e.x, e.y, e.radius));
+        damage = Math.round(damage * bershowRage(attacker));
+    }
+    for (const target of targets) {
+        const defended = target.takeDamage(damage, effect, attacker);
+        if (defended) {
+            attacker.energy = Math.min(attacker.maxEnergy, attacker.energy + 7.5);
+        } else if (damage > 0) {
+            attacker.energy = Math.min(attacker.maxEnergy, attacker.energy + 15);
+            const pushForce = rhinoCharged ? 12 : attacker.characterType === 'aegis' ? 6
+                : attacker.characterType === 'coleone' && attacker.attackType === 'strong_punch' ? 9 // toco: manda para longe
+                : attacker.attackType === 'strong_punch' ? 4 : 1.5;
+            target.push(attacker.aim, pushForce);
+            // Nyx: cada acerto rouba vida e manda um orbe para o aliado mais ferido
+            if (attacker.characterType === 'nyx') {
+                lifeOrbs.push(new LifeOrb(target, attacker, attacker.attackType === 'strong_punch' ? NYX_STRONG_HEAL : NYX_PUNCH_HEAL));
+            }
+            // Bershow com a armadura fechada: cura parte do dano de cada golpe
+            if (attacker.furyTimer > 0) attacker.heal(damage * BERSHOW_ARMOR_LIFESTEAL, null);
         }
     }
     attacker.attackHit = true;
@@ -998,12 +1041,26 @@ function tryMelee(attacker) {
 // Energia gasta pelo especial de cada personagem (Spark, Zarek e healers têm regras próprias)
 function specialCost(characterType) {
     return {
-        akane: 150, fenris: 300, craque: 150, kaze: 100, kenji: 100, jack: 90,
+        akane: 150, fenris: 220, craque: 150, kaze: 100, kenji: 75, jack: 55, titan: 22,
         zarek: ZAREK_ULT_COST, celestia: CELESTIA_ULT_COST, flora: FLORA_FLOWER_COST, nyx: NYX_LINK_COST,
         mamba: MAMBA_CLOUD_COST, gear: GEAR_TURRET_COST, roxy: ROXY_FRENZY_COST, weaver: WEAVER_PULL_COST,
         aegis: AEGIS_WALL_COST, rhino: RHINO_CHARGE_COST, anchor: ANCHOR_HOOK_COST, sina: SINA_ULT_COST,
-        coleone: COLEONE_DUNK_COST,
+        coleone: COLEONE_DUNK_COST, bershow: BERSHOW_ARMOR_COST,
     }[characterType] || 45;
+}
+
+// Tamanho da barra de energia: o custo da ultimate (barra cheia = pronta). O Gear guarda energia
+// para as 3 torretas, a Flora para 2 flores; o Spark só precisa de um pouco para ligar o choque.
+function maxEnergyFor(characterType) {
+    if (characterType === 'gear') return GEAR_TURRET_COST * GEAR_MAX_TURRETS;
+    if (characterType === 'flora') return FLORA_FLOWER_COST * 2;
+    if (characterType === 'spark') return 100;
+    return specialCost(characterType);
+}
+
+// Ultimate pronta para usar agora (energia e trava curta)
+function ultReady(fighter) {
+    return fighter.energy >= specialCost(fighter.characterType) && fighter.specialCooldown <= 0;
 }
 
 // Quem luta de longe (atiradores, Craque e Flora)
@@ -1012,5 +1069,10 @@ function isRangedFighter(fighter) {
 }
 
 function isBladeUser(fighter) {
-    return ['jack', 'akane', 'fenris', 'kaze', 'zarek', 'sina'].includes(fighter.characterType);
+    return ['jack', 'akane', 'fenris', 'kaze', 'zarek', 'sina', 'bershow'].includes(fighter.characterType);
+}
+
+// Bershow: Fúria — quanto menos vida, mais dano (até +50% com a vida quase no fim)
+function bershowRage(fighter) {
+    return 1 + BERSHOW_RAGE_MAX * (1 - Math.max(0, fighter.health) / fighter.maxHealth);
 }

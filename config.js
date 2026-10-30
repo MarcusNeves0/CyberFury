@@ -58,6 +58,7 @@ const CHARACTERS = [
     { id: 'anchor', name: 'Anchor' },
     { id: 'sina', name: 'Capitã Sina' },
     { id: 'coleone', name: 'Coleone' },
+    { id: 'bershow', name: 'Bershow' },
 ];
 
 // Teclas (cada ação aceita uma lista). Contra a IA o jogador pode andar com WASD ou setas;
@@ -114,8 +115,8 @@ const AIM_ERROR = 0.08;        // erro aleatório da mira com previsão (radiano
 const ZAREK_CHARGE_MAX = 200;      // barra de transformação
 const ZAREK_CHARGE_ON_HIT = 4;     // ganha ao acertar
 const ZAREK_CHARGE_ON_HURT = 3;    // ganha ao levar dano
-const ZAREK_ULT_COST = 120;        // energia da ultimate
-const ZAREK_ULT_COOLDOWN = 360;    // 6 segundos entre ultimates
+const ZAREK_ULT_COST = 150;        // energia da ultimate (a barra de energia vai até aqui)
+const ZAREK_ULT_COOLDOWN = 60;     // trava curta: quem manda no ritmo é a barra de energia
 const ZAREK_ULT_DURATION = 90;     // 1,5 segundo dentro do oponente
 const ZAREK_ULT_RANGE = 260;       // distância máxima para entrar no oponente
 const ZAREK_ULT_DAMAGE = 120;      // dano base da ultimate (forma vermelha: 3x)
@@ -133,16 +134,16 @@ const CELESTIA_HEAL_ALLY = 15;        // cura por segundo em cada aliado dentro 
 const CELESTIA_HEAL_SELF = 9;         // cura por segundo nela mesma
 const CELESTIA_ULT_MULTIPLIER = 3;    // ultimate: área 3x maior
 const CELESTIA_ULT_DURATION = 360;    // 6 segundos
-const CELESTIA_ULT_COST = 150;
-const CELESTIA_ULT_COOLDOWN = 600;    // 10 segundos
+const CELESTIA_ULT_COST = 240;
+const CELESTIA_ULT_COOLDOWN = 360;    // a duração da área grande (não sobrepõe)
 const FLORA_FLOWER_COST = 100;        // energia por flor (~1 flor a cada 3,3 s)
 const FLORA_HEAL = 90;                // cura da flor num aliado
 const FLORA_SELF_HEAL = 40;           // cura da flor quando volta para ela (sem aliados)
 const NYX_PUNCH_DAMAGE = 12;          // garras um pouco mais fortes que um soco comum
 const NYX_PUNCH_HEAL = 15;            // cada acerto manda um orbe que cura isso no aliado mais ferido
 const NYX_STRONG_HEAL = 35;           // orbe do soco forte
-const NYX_LINK_COST = 120;            // Laço de Sangue
-const NYX_LINK_COOLDOWN = 480;        // 8 segundos
+const NYX_LINK_COST = 180;            // Laço de Sangue
+const NYX_LINK_COOLDOWN = 180;        // a duração do laço (não sobrepõe)
 const NYX_LINK_DURATION = 180;        // 3 segundos
 const NYX_LINK_RANGE = 300;           // alcance para prender o inimigo (arrebenta um pouco além)
 const NYX_LINK_TICK = 10;             // a cada meio segundo: inimigo perde isso, aliado recupera isso (20/s)
@@ -156,8 +157,8 @@ const ROXY_SPEED = 1.15;             // anda 15% mais rápido
 const ROXY_HEIGHT = 0.85;            // é desenhada menor que os outros
 const ROXY_ADRENALINE_PER_HIT = 0.1; // cada acerto; 1 = adrenalina máxima (+50% de velocidade de tiro)
 const ROXY_ADRENALINE_HOLD = 60;     // 1 s sem acertar zera a adrenalina
-const ROXY_FRENZY_COST = 120;
-const ROXY_FRENZY_COOLDOWN = 480;    // 8 segundos
+const ROXY_FRENZY_COST = 180;
+const ROXY_FRENZY_COOLDOWN = 180;    // a duração do Frenesi (não sobrepõe)
 const ROXY_FRENZY_DURATION = 180;    // 3 segundos atirando sozinha, no dobro da velocidade
 // Weaver: teia que deixa lento, sentido aranha e Puxão
 const WEB_DAMAGE = 25;
@@ -165,8 +166,8 @@ const WEAVER_PUNCH_DAMAGE = 30;      // combo rápido de socos e chutes
 const WEB_SLOW_DURATION = 120;        // 2 segundos com 50% da velocidade
 const SPIDER_SENSE_CHANCE = 0.25;     // chance de desviar sozinho de um golpe ou tiro
 const SPIDER_SENSE_COOLDOWN = 180;    // 3 segundos
-const WEAVER_PULL_COST = 100;
-const WEAVER_PULL_COOLDOWN = 360;     // 6 segundos
+const WEAVER_PULL_COST = 150;
+const WEAVER_PULL_COOLDOWN = 60;      // trava curta
 const WEAVER_PULL_RANGE = 380;
 const WEAVER_PULL_SPEED = 18;         // pixels por passo enquanto o alvo é puxado
 const WEAVER_PULL_DAMAGE = 35;
@@ -181,8 +182,8 @@ const TANK_ARMOR = 0.2;
 const AEGIS_SPEED = 0.85;           // pesado: anda um pouco mais devagar
 const AEGIS_PUNCH_DAMAGE = 28;      // pancada com o escudo (empurra)
 const AEGIS_SHIELD_REACH = 38;      // defendendo, segura os tiros que passam na frente do escudo
-const AEGIS_WALL_COST = 100;
-const AEGIS_WALL_COOLDOWN = 480;    // 8 segundos
+const AEGIS_WALL_COST = 180;
+const AEGIS_WALL_COOLDOWN = 240;    // a duração da Muralha (não sobrepõe)
 const AEGIS_WALL_DURATION = 240;    // a parede dura 4 segundos
 const AEGIS_WALL_LENGTH = 150;
 const AEGIS_WALL_TICK_DAMAGE = 12;  // quem encosta na Muralha leva dano a cada 0,5 s
@@ -192,16 +193,16 @@ const RHINO_PUNCH_DAMAGE = 24;
 const RHINO_RUN_STEPS = 60;           // 1 s correndo sem parar para pegar embalo
 const RHINO_RUN_SPEED = 1.25;         // com embalo: 25% mais rápido
 const RHINO_RUN_BONUS = 10;           // com embalo: o próximo golpe tira +10 e empurra forte
-const RHINO_CHARGE_COST = 120;
-const RHINO_CHARGE_COOLDOWN = 420;    // 7 segundos
+const RHINO_CHARGE_COST = 150;
+const RHINO_CHARGE_COOLDOWN = 60;     // trava curta
 const RHINO_CHARGE_DISTANCE = 520;
 const RHINO_CHARGE_SPEED = 12;
 const RHINO_CHARGE_DAMAGE = 90;
 const RHINO_CHARGE_STUN = 40;
 // Anchor: não sai do lugar com empurrões e Gancho (a corrente leva o Anchor até o inimigo)
 const ANCHOR_PUNCH_DAMAGE = 28;       // golpe de âncora: lento e pesado
-const ANCHOR_HOOK_COST = 100;
-const ANCHOR_HOOK_COOLDOWN = 420;     // 7 segundos
+const ANCHOR_HOOK_COST = 120;
+const ANCHOR_HOOK_COOLDOWN = 60;      // trava curta
 const ANCHOR_HOOK_RANGE = 380;
 const ANCHOR_HOOK_SPEED = 20;         // pixels por passo voando atrás da âncora
 const ANCHOR_HOOK_DAMAGE = 60;
@@ -209,8 +210,8 @@ const ANCHOR_HOOK_STUN = 90;          // 1,5 s atordoado quando ele chega
 // Coleone: pivô de basquete; agarra o inimigo, voa com ele e enterra no chão (Enterrada)
 const COLEONE_PUNCH_DAMAGE = 20;      // tapa de toco
 const COLEONE_STRONG_DAMAGE = 34;     // soco forte: toco que manda o inimigo para longe
-const COLEONE_DUNK_COST = 100;
-const COLEONE_DUNK_COOLDOWN = 480;    // 8 segundos
+const COLEONE_DUNK_COST = 180;
+const COLEONE_DUNK_COOLDOWN = 60;     // trava curta
 const COLEONE_DUNK_RANGE = 300;       // distância máxima para ir buscar o inimigo
 const COLEONE_DUNK_RUSH = 16;         // pixels por passo correndo para agarrar
 const COLEONE_DUNK_JUMP = 13;         // impulso do salto com o inimigo nas mãos (~1 s no ar)
@@ -223,13 +224,28 @@ const COLEONE_BALL_RANGE = 380;       // ninguém perto para agarrar: salta sozi
 const COLEONE_BALL_DAMAGE = 70;       // explosão da bola em área (dá para bloquear)
 const COLEONE_BALL_FALL = 24;         // passos que a bola leva da mão dele, passando pela cesta, até o chão
 let coleoneBalls = [];
+// Bershow: cavaleiro negro de espadão; Fúria (bate mais forte com menos vida) e Armadura da Fúria
+const BERSHOW_SWORD_DAMAGE = 22;       // espadão: acerta todos dentro do arco
+const BERSHOW_STRONG_DAMAGE = 40;
+const BERSHOW_SWORD_COOLDOWN = 32;     // golpe lento e pesado...
+const BERSHOW_ARMOR_SWORD_COOLDOWN = 20; // ...mas com a armadura fechada ele bate bem mais rápido
+const BERSHOW_RAGE_MAX = 0.5;          // Fúria: com a vida quase no fim, +50% de dano
+const BERSHOW_ARMOR_COST = 270;
+const BERSHOW_ARMOR_COOLDOWN = 330;    // a duração da armadura (não sobrepõe)
+const BERSHOW_ARMOR_CLOSE = 30;        // 0,5 s com o visor fechando (barulho de metal) antes do corte
+const BERSHOW_ARMOR_DURATION = 300;    // 5 s de armadura: sem atordoamento nem empurrão, golpes rápidos, cura batendo
+const BERSHOW_ARMOR_LIFESTEAL = 0.3;   // com a armadura, cura 30% do dano dos golpes
+const BERSHOW_SLASH_RANGE = 340;       // Corte Devastador: comprimento do corte
+const BERSHOW_SLASH_WIDTH = 70;
+const BERSHOW_SLASH_DAMAGE = 90;
+let bershowSlashes = [];               // rastros do Corte Devastador (só visual)
 // Capitã Sina: faca rápida e a Roleta da Sina (pistola, tubarão ou o raro barco de água)
 const SINA_KNIFE_DAMAGE = 20;
 const SINA_KNIFE_COOLDOWN = 14;       // cortes mais rápidos que o soco comum (20)
 const SINA_STAB_DAMAGE = 35;          // soco forte: estocada com um passo à frente
 const SINA_STAB_LUNGE = 5;
-const SINA_ULT_COST = 100;
-const SINA_ULT_COOLDOWN = 360;        // 6 segundos
+const SINA_ULT_COST = 170;
+const SINA_ULT_COOLDOWN = 120;        // a roleta girando e o resultado (não sobrepõe)
 const SINA_SPIN_FRAMES = 60;          // a roleta gira por 1 s em cima da cabeça dela
 const SINA_RESULT_FRAMES = 40;        // o resultado fica à mostra mais um pouco
 const SINA_CHANCES = { pistol: 0.6, shark: 0.3, boat: 0.1 };
@@ -250,8 +266,8 @@ const MAMBA_SHOT_DAMAGE = 22;
 const MAMBA_STRONG_DAMAGE = 45;
 const MAMBA_POISON_CHANCE = 0.2;      // 20% dos tiros envenenam
 // Ultimate da Mamba: nuvem tóxica que anda com ela e obriga quem está perto a se afastar
-const MAMBA_CLOUD_COST = 120;
-const MAMBA_CLOUD_COOLDOWN = 480;     // 8 segundos
+const MAMBA_CLOUD_COST = 200;
+const MAMBA_CLOUD_COOLDOWN = 300;     // a duração da nuvem (não sobrepõe)
 const MAMBA_CLOUD_DURATION = 300;     // 5 segundos
 const MAMBA_CLOUD_RADIUS = 140;
 const MAMBA_CLOUD_TICK_DAMAGE = 15;   // a cada 0,5 s (30 por segundo)
@@ -276,7 +292,7 @@ const CHOMPER_REACH = 56;         // alcance da mordida da planta carnívora
 const GARDEN_PICKUP_HEAL = 120;   // cura da flor que nasce no jardim
 // Vida máxima de cada personagem (tanques aguentam mais, quem ataca de longe aguenta menos)
 const HEALTH_BY_CHARACTER = {
-    titan: 1200, zarek: 1200, fenris: 1150, spark: 1100,
+    titan: 1200, zarek: 1200, fenris: 1150, bershow: 1150, spark: 1100,
     hades: 1000, jack: 1000, kenji: 1000, akane: 950, kaze: 950, craque: 950, weaver: 950, sina: 950,
     aegis: 1600, rhino: 1450, anchor: 1450, coleone: 1450,
     mamba: 900, gear: 750, roxy: 850, celestia: 950, nyx: 950, flora: 900,

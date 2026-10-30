@@ -126,6 +126,9 @@ const sfx = (() => {
         coleone_special: t => { zap(t, 1900, 2600, 0.07, -18, 'sine'); zap(t + 0.09, 2100, 2900, 0.07, -18, 'sine'); whoosh(t, 500, 2500, 0.3, -12, 0.8); },
         coleone_grab: t => { thump(t, 'D2', -6, 0.15); whoosh(t + 0.05, 300, 3000, 0.6, -10, 0.7); },
         coleone_dunk: t => { thump(t, 'A0', 0, 0.8); clang(t, 260, -10, 0.4); whoosh(t, 2500, 150, 0.9, -4, 0.4); whoosh(t + 0.15, 7000, 3500, 0.35, -14, 2); },
+        // Bershow: placas da armadura fechando (metal pesado) e o Corte Devastador
+        bershow_armor: t => { for (let i = 0; i < 4; i++) clang(t + i * 0.09, 140 + i * 35, -8, 0.25); thump(t + 0.38, 'C1', -4, 0.4); zap(t + 0.3, 90, 40, 0.5, -16, 'sawtooth'); },
+        bershow_slash: t => { whoosh(t, 400, 6000, 0.25, -4, 1.2); clang(t, 500, -10, 0.4); thump(t + 0.05, 'A0', -2, 0.6); whoosh(t + 0.1, 3000, 200, 0.6, -8, 0.5); },
         zarek_transform: t => { thump(t, 'A0', -2, 1); zap(t, 100, 900, 0.8, -12, 'sawtooth'); whoosh(t, 300, 6000, 0.9, -8, 0.8); },
     };
 

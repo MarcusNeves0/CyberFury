@@ -668,6 +668,30 @@ function drawWalls() {
     }
 }
 
+// Corte Devastador do Bershow: uma faixa de corte vermelha e branca que some rápido
+function drawBershowSlashes() {
+    for (const slash of bershowSlashes) {
+        const fade = slash.life / 18;
+        const grow = Math.min(1, (18 - slash.life) / 4 + 0.25); // estica em poucos quadros
+        const length = BERSHOW_SLASH_RANGE * grow;
+        ctx.save();
+        ctx.translate(slash.x, slash.y);
+        ctx.rotate(Math.atan2(slash.dir.y, slash.dir.x));
+        ctx.globalAlpha = fade;
+        // Meia-lua comprida: borda vermelha, miolo branco
+        for (const [width, color] of [[BERSHOW_SLASH_WIDTH * 0.9, 'rgba(255, 30, 40, 0.55)'], [BERSHOW_SLASH_WIDTH * 0.45, 'rgba(255, 120, 120, 0.8)'], [BERSHOW_SLASH_WIDTH * 0.15, '#ffffff']]) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(0, -width / 2);
+            ctx.quadraticCurveTo(length * 0.6, -width * 0.8, length, 0);
+            ctx.quadraticCurveTo(length * 0.6, width * 0.8, 0, width / 2);
+            ctx.closePath();
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+}
+
 // Cesta holográfica da Enterrada do Coleone: aparece onde ele vai cair, com a área da batida marcada no chão
 function drawDunkHoop(hoop) {
     const fade = hoop.slam ? Math.min(1, hoop.life / 15) : 1;
