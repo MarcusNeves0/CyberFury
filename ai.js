@@ -83,7 +83,7 @@ class AI {
         const d = distance(me, opponent);
         const meleeRange = (isBladeUser(me) ? BLADE_REACH : PUNCH_REACH) + me.radius + opponent.radius - 6;
         // Só tenta o especial se tiver a energia de verdade (antes tentava com 45 e perdia a vez)
-        const canUseSpecial = !['zarek', 'celestia', 'flora', 'spark', 'nyx', 'mamba', 'gear', 'roxy', 'weaver', 'aegis', 'rhino', 'anchor', 'sina'].includes(me.characterType) &&
+        const canUseSpecial = !['zarek', 'celestia', 'flora', 'spark', 'nyx', 'mamba', 'gear', 'roxy', 'weaver', 'aegis', 'rhino', 'anchor', 'sina', 'coleone'].includes(me.characterType) &&
             me.energy >= specialCost(me.characterType) && me.specialCooldown <= 0;
         if (Math.random() < 0.1) this.strafeSign *= -1;
 
@@ -233,6 +233,25 @@ class AI {
                 const prey = backline.sort((a, b) => a.health - b.health)[0] || inRange.find(e => e === opponent);
                 if (prey) {
                     me.target = prey;
+                    me.attack('special');
+                    return;
+                }
+            }
+        }
+
+        // Coleone: vai buscar quem estiver no alcance (de preferência atirador ou healer) e enterra
+        if (me.characterType === 'coleone') {
+            if (me.energy >= COLEONE_DUNK_COST && me.specialCooldown <= 0 && !me.dunkPhase) {
+                const inRange = enemiesOf(me).filter(e => !e.isInsideOpponent && !e.heldBy && distance(me, e) <= COLEONE_DUNK_RANGE * 0.9);
+                const backline = inRange.filter(e => isRangedFighter(e) || HEALERS.includes(e.characterType));
+                const prey = backline.sort((a, b) => a.health - b.health)[0] || inRange.find(e => e === opponent) || inRange[0];
+                if (prey) {
+                    me.target = prey;
+                    me.attack('special');
+                    return;
+                }
+                // Ninguém para agarrar, mas o alvo está a meia distância: às vezes enterra só a bola nele
+                if (d < COLEONE_BALL_RANGE * 0.85 && Math.random() < 0.25) {
                     me.attack('special');
                     return;
                 }

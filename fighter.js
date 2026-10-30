@@ -167,6 +167,16 @@ class Fighter {
         this.sinaPistolShots = 0;    // tiros da pistola que faltam
         this.sinaPistolTimer = 0;
         this.sinaUltWasReady = false; // o papagaio grita quando a roleta fica pronta
+
+        // Coleone: Enterrada
+        this.dunkTarget = null;      // inimigo que ele vai agarrar (e depois carrega)
+        this.dunkPhase = null;       // 'rush' (correndo para agarrar), 'air' (voando com ele) ou 'ball' (enterrando só a bola)
+        this.dunkBallThrown = false;
+        this.dunkTimer = 0;
+        this.dunkDir = null;
+        this.dunkHoop = null;        // cesta holográfica onde ele vai enterrar
+        this.heldBy = null;          // agarrado pelo Coleone: vira a bola
+        this.heldSpin = 0;           // giro de quem está sendo carregado
     }
 
     applyPoison(stacks) {
@@ -270,7 +280,7 @@ class Fighter {
         // Especiais: pose de poder; investidas e canalizações usam o quadro de golpe
         const special = this.specialPoseTimer > 0 || this.isCelebrating;
         if (special && !isMeleeStrike) this.spriteFrame = 'special';
-        if (this.isDashing || this.isBladeDancing || this.isChannelingSpecial) this.spriteFrame = 'attack';
+        if (this.isDashing || this.isBladeDancing || this.isChannelingSpecial || this.dunkPhase === 'rush') this.spriteFrame = 'attack';
         if (this.frenzyTimer > 0 && this.specialPoseTimer <= 0) this.spriteFrame = 'attack'; // Frenesi: pistolas sempre apontadas
         if (!isWalking && this.spriteFrame === null) this.spriteFrame = 'idle';
         if (special) {
@@ -292,6 +302,12 @@ class Fighter {
         ctx.translate(this.x + shake + lean * this.facing, this.y - this.z - bob);
         if (this.facing === -1) ctx.scale(-1, 1);
         ctx.rotate(hurtTilt);
+        if (this.heldSpin) {
+            // Carregado pelo Coleone: gira em volta do meio do corpo
+            ctx.translate(0, -this.height / 2);
+            ctx.rotate(this.heldSpin);
+            ctx.translate(0, this.height / 2);
+        }
         ctx.scale(squashX, squashY);
         const possessor = fighters.find(f => f.isInsideOpponent && f.zarekHost === this);
         if (this.hitFlash > 0 && this.hitFlash % 4 < 2) {
@@ -390,6 +406,14 @@ class Fighter {
         if (this.specialPoseTimer > 0) this.specialPoseTimer--;
         if (this.slowTimer > 0) this.slowTimer--;
         if (this.spiderSenseCooldown > 0) this.spiderSenseCooldown--;
+        if (this.dunkHoop && --this.dunkHoop.life <= 0) this.dunkHoop = null;
+
+        // Agarrado pelo Coleone: quem mexe nele é o Coleone (se o Coleone cair, ele é solto)
+        if (this.heldBy && (!alive(this.heldBy) || this.heldBy.dunkTarget !== this)) {
+            this.heldBy = null;
+            this.heldSpin = 0;
+        }
+        if (this.heldBy) return;
 
         if (this.isInsideOpponent) {
             this.updateZarekUltimate();
@@ -422,6 +446,12 @@ class Fighter {
         }
         this.moveX = 0;
         this.moveY = 0;
+
+        // Enterrada: depois de começar, nada interrompe (nem atordoamento)
+        if (this.dunkTarget || this.dunkPhase) {
+            this.updateColeoneDunk();
+            return;
+        }
 
         if (this.isBladeDancing) {
             this.updateBladeDance();
@@ -805,6 +835,10 @@ class Fighter {
                     this.startSinaRoulette();
                     return;
                 }
+                if (this.characterType === 'coleone') {
+                    this.startColeoneDunk();
+                    return;
+                }
                 const energyCost = specialCost(this.characterType);
                 if (this.energy < energyCost || this.specialCooldown > 0) { this.isAttacking = false; return; }
                 // A explosão do Hades precisa de um alvo por perto (senão não gasta energia)
@@ -902,7 +936,7 @@ function tryMelee(attacker) {
     if (isBladeUser(attacker)) effect.sound = 'blade_hit';
     switch (attacker.attackType) {
         case 'punch':
-            damage = (attacker.characterType === 'akane') ? 14 : (attacker.characterType === 'nyx') ? NYX_PUNCH_DAMAGE : (attacker.characterType === 'kaze') ? KAZE_PUNCH_DAMAGE : (attacker.characterType === 'weaver') ? WEAVER_PUNCH_DAMAGE : (attacker.characterType === 'kenji') ? KENJI_PUNCH_DAMAGE : (attacker.characterType === 'aegis') ? AEGIS_PUNCH_DAMAGE : (attacker.characterType === 'rhino') ? RHINO_PUNCH_DAMAGE : (attacker.characterType === 'anchor') ? ANCHOR_PUNCH_DAMAGE : (attacker.characterType === 'sina') ? SINA_KNIFE_DAMAGE : 10;
+            damage = (attacker.characterType === 'akane') ? 14 : (attacker.characterType === 'nyx') ? NYX_PUNCH_DAMAGE : (attacker.characterType === 'kaze') ? KAZE_PUNCH_DAMAGE : (attacker.characterType === 'weaver') ? WEAVER_PUNCH_DAMAGE : (attacker.characterType === 'kenji') ? KENJI_PUNCH_DAMAGE : (attacker.characterType === 'aegis') ? AEGIS_PUNCH_DAMAGE : (attacker.characterType === 'rhino') ? RHINO_PUNCH_DAMAGE : (attacker.characterType === 'anchor') ? ANCHOR_PUNCH_DAMAGE : (attacker.characterType === 'sina') ? SINA_KNIFE_DAMAGE : (attacker.characterType === 'coleone') ? COLEONE_PUNCH_DAMAGE : 10;
             if (attacker.zarekForm === 'red') damage = 12;
             if (attacker.zarekForm === 'blue') damage = ZAREK_BLUE_PUNCH;
             if (attacker.characterType === 'akane') {
@@ -935,6 +969,7 @@ function tryMelee(attacker) {
             if (attacker.characterType === 'titan') damage = 35; // braço robótico: lento, mas pesado
             if (attacker.characterType === 'anchor') damage = 40; // âncora com as duas mãos
             if (attacker.characterType === 'sina') damage = SINA_STAB_DAMAGE; // estocada com a faca
+            if (attacker.characterType === 'coleone') damage = COLEONE_STRONG_DAMAGE; // toco que manda para longe
             if (attacker.characterType === 'hades') { effect.type = 'burn'; }
             if (attacker.characterType === 'jack') { defender.applyCurse(attacker); }
             break;
@@ -948,7 +983,9 @@ function tryMelee(attacker) {
         attacker.energy = Math.min(1000, attacker.energy + 7.5);
     } else if (damage > 0) {
         attacker.energy = Math.min(1000, attacker.energy + 15);
-        const pushForce = rhinoCharged ? 12 : attacker.characterType === 'aegis' ? 6 : attacker.attackType === 'strong_punch' ? 4 : 1.5;
+        const pushForce = rhinoCharged ? 12 : attacker.characterType === 'aegis' ? 6
+            : attacker.characterType === 'coleone' && attacker.attackType === 'strong_punch' ? 9 // toco: manda para longe
+            : attacker.attackType === 'strong_punch' ? 4 : 1.5;
         defender.push(attacker.aim, pushForce);
         // Nyx: cada acerto rouba vida e manda um orbe para o aliado mais ferido
         if (attacker.characterType === 'nyx') {
@@ -965,6 +1002,7 @@ function specialCost(characterType) {
         zarek: ZAREK_ULT_COST, celestia: CELESTIA_ULT_COST, flora: FLORA_FLOWER_COST, nyx: NYX_LINK_COST,
         mamba: MAMBA_CLOUD_COST, gear: GEAR_TURRET_COST, roxy: ROXY_FRENZY_COST, weaver: WEAVER_PULL_COST,
         aegis: AEGIS_WALL_COST, rhino: RHINO_CHARGE_COST, anchor: ANCHOR_HOOK_COST, sina: SINA_ULT_COST,
+        coleone: COLEONE_DUNK_COST,
     }[characterType] || 45;
 }
 

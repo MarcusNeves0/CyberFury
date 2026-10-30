@@ -417,6 +417,78 @@ function updateSinaBoats() {
     sinaBoats = sinaBoats.filter(b => b.timer > 0 || b.splash > 0);
 }
 
+// Bola da enterrada do Coleone: desce do alto até a cesta e explode em área ao bater no chão
+function updateColeoneBalls() {
+    for (const ball of coleoneBalls) {
+        // Primeiro voa até em cima do aro (com um arco), depois cai por dentro da rede até o chão
+        const p = ++ball.t / COLEONE_BALL_FALL;
+        const RIM = 150, split = 0.6;
+        if (p < split) {
+            const q = p / split;
+            ball.x = ball.x0 + (ball.tx - ball.x0) * q;
+            ball.y = ball.y0 + (ball.ty - ball.y0) * q;
+            ball.z = ball.z0 + (RIM + 20 - ball.z0) * q + Math.sin(q * Math.PI) * 50;
+        } else {
+            const q = (p - split) / (1 - split);
+            ball.x = ball.tx;
+            ball.y = ball.ty;
+            ball.z = (RIM + 20) * (1 - q * q); // acelera caindo
+        }
+        if (ball.t < COLEONE_BALL_FALL) continue;
+        const owner = ball.owner;
+        for (const enemy of fighters) {
+            if (!alive(enemy) || enemy.team === owner.team || enemy.isInsideOpponent || enemy.heldBy) continue;
+            const d = Math.hypot(enemy.x - ball.tx, enemy.y - ball.ty);
+            if (d > COLEONE_SLAM_RADIUS + enemy.radius) continue;
+            const defended = enemy.takeDamage(COLEONE_BALL_DAMAGE, { sound: 'hit_heavy' }, owner);
+            enemy.push(d > 0 ? { x: (enemy.x - ball.tx) / d, y: (enemy.y - ball.ty) / d } : { x: 1, y: 0 }, defended ? 4 : 9);
+        }
+        for (const box of obstacles.filter(o => o.hp !== undefined)) {
+            if (circleHitsObstacle(ball.tx, ball.ty, COLEONE_SLAM_RADIUS * 0.6, box)) damageBox(box, 40);
+        }
+        shockwaves.push({ x: ball.tx, y: ball.ty, life: 20, radius: COLEONE_SLAM_RADIUS });
+        for (let i = 0; i < 22; i++) {
+            const a = Math.random() * Math.PI * 2, speed = 2 + Math.random() * 4;
+            particles.push(new Particle(ball.tx, ball.ty - 6, i % 3 ? '#ff7a1a' : '#f4f6fb', 0, { x: Math.cos(a) * speed, y: Math.sin(a) * speed * 0.6 - 2 }));
+        }
+        floatingTexts.push(new FloatingText(ball.tx, ball.ty - 70, 'SWISH!', '#ff7a1a'));
+        screenShake = Math.max(screenShake, 9);
+        if (owner.dunkHoop) owner.dunkHoop.slam = owner.dunkHoop.life = 30; // a rede balança
+        sfx.play('coleone_dunk');
+        ball.done = true;
+    }
+    coleoneBalls = coleoneBalls.filter(b => !b.done);
+}
+
+function drawColeoneBall(ball) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(5, 0, 15, 0.45)';
+    ctx.beginPath();
+    ctx.ellipse(ball.x, ball.y, 9, 3.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    const y = ball.y - ball.z;
+    ctx.translate(ball.x, y);
+    ctx.rotate(ball.t * 0.5);
+    ctx.fillStyle = '#e0661c';
+    ctx.strokeStyle = '#3a1a0a';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(0, 0, 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-10, 0); ctx.lineTo(10, 0);
+    ctx.moveTo(0, -10); ctx.lineTo(0, 10);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(-13, 0, 9, -0.75, 0.75);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(13, 0, 9, Math.PI - 0.75, Math.PI + 0.75);
+    ctx.stroke();
+    ctx.restore();
+}
+
 // Por baixo dos lutadores: área do impacto enchendo e, depois, a onda se espalhando
 function drawSinaBoatShadows() {
     for (const boat of sinaBoats) {
@@ -596,6 +668,55 @@ function drawWalls() {
     }
 }
 
+// Cesta holográfica da Enterrada do Coleone: aparece onde ele vai cair, com a área da batida marcada no chão
+function drawDunkHoop(hoop) {
+    const fade = hoop.slam ? Math.min(1, hoop.life / 15) : 1;
+    const flicker = 0.75 + Math.sin(Date.now() / 40) * 0.15;
+    const rimY = hoop.y - 150;
+    ctx.save();
+    ctx.globalAlpha = fade * flicker;
+    if (!hoop.slam) {
+        // Área da batida no chão
+        ctx.setLineDash([8, 6]);
+        ctx.strokeStyle = 'rgba(255, 122, 26, 0.7)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(hoop.x, hoop.y, COLEONE_SLAM_RADIUS, COLEONE_SLAM_RADIUS * 0.6, 0, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+    // Poste e tabela
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = 'rgba(63, 246, 255, 0.5)';
+    ctx.beginPath();
+    ctx.moveTo(hoop.x, hoop.y);
+    ctx.lineTo(hoop.x, rimY - 12);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(63, 246, 255, 0.15)';
+    ctx.strokeStyle = '#3ff6ff';
+    ctx.lineWidth = 2;
+    ctx.fillRect(hoop.x - 32, rimY - 48, 64, 40);
+    ctx.strokeRect(hoop.x - 32, rimY - 48, 64, 40);
+    ctx.strokeRect(hoop.x - 12, rimY - 30, 24, 18);
+    // Rede (balança depois da enterrada) e aro
+    const sway = hoop.slam ? Math.sin(hoop.life * 0.8) * 5 * (hoop.life / 30) : 0;
+    ctx.strokeStyle = 'rgba(244, 246, 251, 0.8)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 6; i++) {
+        const top = hoop.x - 18 + i * 6;
+        ctx.beginPath();
+        ctx.moveTo(top, rimY);
+        ctx.lineTo(hoop.x - 10 + i * (20 / 6) + sway, rimY + 22);
+        ctx.stroke();
+    }
+    ctx.strokeStyle = '#ff7a1a';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(hoop.x, rimY, 18, 6, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+}
+
 // Corrente do Anchor esticada até o inimigo enganchado
 function drawAnchorChain(anchor, target) {
     ctx.save();
@@ -628,11 +749,12 @@ function titanShockwave(x, y, titan, directHit) {
 function drawShockwaves() {
     for (const wave of shockwaves) {
         const progress = 1 - wave.life / 20;
+        const radius = wave.radius || TITAN_SHOCKWAVE_RADIUS;
         ctx.save();
         ctx.strokeStyle = `rgba(255, 150, 40, ${1 - progress})`;
         ctx.lineWidth = 4 - progress * 3;
         ctx.beginPath();
-        ctx.ellipse(wave.x, wave.y, TITAN_SHOCKWAVE_RADIUS * progress, TITAN_SHOCKWAVE_RADIUS * progress * 0.6, 0, 0, Math.PI * 2);
+        ctx.ellipse(wave.x, wave.y, radius * progress, radius * progress * 0.6, 0, 0, Math.PI * 2);
         ctx.stroke();
         ctx.restore();
     }

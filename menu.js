@@ -168,6 +168,7 @@ const ROSTER_INFO = {
     aegis: { cls: 'tank', style: 'Escudo que segura os tiros do time', ult: 'Muralha de energia' },
     rhino: { cls: 'tank', style: 'Ganha embalo correndo', ult: 'Estouro: atropela tudo, quebra caixas e torretas' },
     anchor: { cls: 'tank', style: 'Não sai do lugar com empurrões', ult: 'Gancho: a corrente arrasta ele até o inimigo e o atordoa' },
+    coleone: { cls: 'tank', style: 'Pivô de rua, o toco manda o inimigo para longe', ult: 'Enterrada: agarra o inimigo e enterra no chão; sem ninguém perto, enterra a bola em área' },
 };
 const MAX_HEALTH_SHOWN = Math.max(...Object.values(HEALTH_BY_CHARACTER));
 

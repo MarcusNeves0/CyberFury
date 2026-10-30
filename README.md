@@ -2,7 +2,7 @@
 
 # ⚡ CYBERNETIC FURY ⚡
 
-**Briga de rua cyberpunk vista de cima, com 21 lutadores, 4 arenas cheias de perigo e partidas de 1v1 até 3v3.**
+**Briga de rua cyberpunk vista de cima, com 22 lutadores, 4 arenas cheias de perigo e partidas de 1v1 até 3v3.**
 
 <img width="900" alt="Cybernetic Fury: quatro estilos, um só objetivo" src="assets/capa.png" />
 
@@ -78,6 +78,7 @@ Neo-Cidade está tomada por neon, chuva e gente disposta a brigar por qualquer m
 | 🛡️ | **Aegis** | 1600 de vida, o escudo segura os tiros do time | Muralha de energia |
 | 🦏 | **Rhino** | Ganha embalo correndo | Estouro: atropela tudo, quebra caixas e torretas |
 | ⚓ | **Anchor** | Não sai do lugar com empurrões | Gancho: a corrente arrasta ele até o inimigo e o atordoa |
+| 🏀 | **Coleone** | Pivô de rua, o toco manda o inimigo para longe | *Enterrada*: agarra o inimigo, voa até a cesta e enterra ele no chão; sem ninguém perto, salta e enterra a bola, que explode em área |
 
 > Passe o mouse sobre cada lutador na tela de seleção para ler a história dele.
 

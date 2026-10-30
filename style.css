@@ -543,11 +543,11 @@ body {
     overflow: hidden;
 }
 
-/* Elenco: 2 fileiras de 11, com o nome da classe em cima de cada grupo */
+/* Elenco: 2 fileiras de 12, com o nome da classe em cima de cada grupo */
 .selection-grid {
     flex: 0 0 auto;
     display: grid;
-    grid-template-columns: repeat(11, 1fr);
+    grid-template-columns: repeat(12, 1fr);
     gap: 0.8cqh 0.7cqw;
     width: 100%;
 }

@@ -57,6 +57,7 @@ const CHARACTERS = [
     { id: 'rhino', name: 'Rhino' },
     { id: 'anchor', name: 'Anchor' },
     { id: 'sina', name: 'Capitã Sina' },
+    { id: 'coleone', name: 'Coleone' },
 ];
 
 // Teclas (cada ação aceita uma lista). Contra a IA o jogador pode andar com WASD ou setas;
@@ -174,7 +175,7 @@ const WEAVER_KICK_DELAY = 12;         // ~0,2 s depois de puxar, chute para cima
 const WEAVER_KICK_DAMAGE = 30;
 const WEAVER_PUNCH_COOLDOWN = 16;     // combo mais rápido que o soco comum (20)
 // Tanques: recebem menos dano de tudo (golpes, tiros e dano contínuo)
-const TANKS = ['aegis', 'rhino', 'anchor'];
+const TANKS = ['aegis', 'rhino', 'anchor', 'coleone'];
 const TANK_ARMOR = 0.2;
 // Aegis: escudo que segura tiros e Muralha de energia
 const AEGIS_SPEED = 0.85;           // pesado: anda um pouco mais devagar
@@ -205,6 +206,23 @@ const ANCHOR_HOOK_RANGE = 380;
 const ANCHOR_HOOK_SPEED = 20;         // pixels por passo voando atrás da âncora
 const ANCHOR_HOOK_DAMAGE = 60;
 const ANCHOR_HOOK_STUN = 90;          // 1,5 s atordoado quando ele chega
+// Coleone: pivô de basquete; agarra o inimigo, voa com ele e enterra no chão (Enterrada)
+const COLEONE_PUNCH_DAMAGE = 20;      // tapa de toco
+const COLEONE_STRONG_DAMAGE = 34;     // soco forte: toco que manda o inimigo para longe
+const COLEONE_DUNK_COST = 100;
+const COLEONE_DUNK_COOLDOWN = 480;    // 8 segundos
+const COLEONE_DUNK_RANGE = 300;       // distância máxima para ir buscar o inimigo
+const COLEONE_DUNK_RUSH = 16;         // pixels por passo correndo para agarrar
+const COLEONE_DUNK_JUMP = 13;         // impulso do salto com o inimigo nas mãos (~1 s no ar)
+const COLEONE_DUNK_CARRY = 140;       // quanto ele voa para a frente com o inimigo
+const COLEONE_DUNK_DAMAGE = 90;       // no inimigo enterrado (não dá para bloquear)
+const COLEONE_DUNK_STUN = 36;         // 0,6 s atordoado depois da enterrada
+const COLEONE_SLAM_RADIUS = 100;      // onda de choque da batida no chão
+const COLEONE_SLAM_DAMAGE = 60;       // em quem estiver perto da batida
+const COLEONE_BALL_RANGE = 380;       // ninguém perto para agarrar: salta sozinho e enterra só a bola até aqui
+const COLEONE_BALL_DAMAGE = 70;       // explosão da bola em área (dá para bloquear)
+const COLEONE_BALL_FALL = 24;         // passos que a bola leva da mão dele, passando pela cesta, até o chão
+let coleoneBalls = [];
 // Capitã Sina: faca rápida e a Roleta da Sina (pistola, tubarão ou o raro barco de água)
 const SINA_KNIFE_DAMAGE = 20;
 const SINA_KNIFE_COOLDOWN = 14;       // cortes mais rápidos que o soco comum (20)
@@ -260,7 +278,7 @@ const GARDEN_PICKUP_HEAL = 120;   // cura da flor que nasce no jardim
 const HEALTH_BY_CHARACTER = {
     titan: 1200, zarek: 1200, fenris: 1150, spark: 1100,
     hades: 1000, jack: 1000, kenji: 1000, akane: 950, kaze: 950, craque: 950, weaver: 950, sina: 950,
-    aegis: 1600, rhino: 1450, anchor: 1450,
+    aegis: 1600, rhino: 1450, anchor: 1450, coleone: 1450,
     mamba: 900, gear: 750, roxy: 850, celestia: 950, nyx: 950, flora: 900,
 };
 const HEALERS = ['celestia', 'flora', 'nyx'];

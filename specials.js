@@ -230,6 +230,164 @@ Object.assign(Fighter.prototype, {
         }
     },
 
+    // Coleone: Enterrada — corre até o inimigo, agarra, voa com ele como se fosse a bola e enterra no chão
+    // (sem ninguém perto para agarrar, salta sozinho e enterra só a bola)
+    startColeoneDunk() {
+        this.isAttacking = false;
+        if (this.dunkPhase || this.energy < COLEONE_DUNK_COST || this.specialCooldown > 0) return;
+        const target = this.target;
+        this.energy -= COLEONE_DUNK_COST;
+        this.specialCooldown = COLEONE_DUNK_COOLDOWN;
+        if (!alive(target) || target.isInsideOpponent || target.heldBy || distance(this, target) > COLEONE_DUNK_RANGE) {
+            this.startBallDunk();
+            return;
+        }
+        this.dunkTarget = target;
+        this.dunkPhase = 'rush';
+        this.dunkTimer = 30; // no máximo ~0,5 s correndo (se ficar preso num obstáculo, desiste)
+        sfx.play('coleone_special');
+    },
+
+    // Enterrada só com a bola: salta no lugar e, lá do alto, enterra a bola na cesta onde o alvo vai estar
+    startBallDunk() {
+        const target = this.target;
+        const airTime = 2 * COLEONE_DUNK_JUMP / 0.7;
+        let spot = alive(target) && !target.isInsideOpponent
+            ? predictPosition(target, airTime / 2 + COLEONE_BALL_FALL)
+            : { x: this.x + this.aim.x * 200, y: this.y + this.aim.y * 200 };
+        const d = Math.hypot(spot.x - this.x, spot.y - this.y);
+        if (d > COLEONE_BALL_RANGE) spot = { x: this.x + (spot.x - this.x) / d * COLEONE_BALL_RANGE, y: this.y + (spot.y - this.y) / d * COLEONE_BALL_RANGE };
+        spot.x = Math.max(arena.left, Math.min(arena.right, spot.x));
+        spot.y = Math.max(arena.top, Math.min(arena.bottom, spot.y));
+        this.dunkPhase = 'ball';
+        this.dunkTimer = 0;
+        this.dunkBallThrown = false;
+        this.vz = COLEONE_DUNK_JUMP;
+        this.dunkHoop = { x: spot.x, y: spot.y, life: Math.round(airTime) + 40, slam: 0 };
+        this.poseSpecial();
+        sfx.play('coleone_grab');
+    },
+
+    updateBallDunk() {
+        this.dunkTimer++;
+        this.specialPoseTimer = Math.max(this.specialPoseTimer, 4); // bola erguida
+        if (this.dunkHoop) this.facing = this.dunkHoop.x >= this.x ? 1 : -1;
+        // No topo do salto, enterra a bola lá do alto
+        if (!this.dunkBallThrown && this.vz <= 0 && this.dunkHoop) {
+            this.dunkBallThrown = true;
+            coleoneBalls.push({ x0: this.x + this.facing * 14, y0: this.y, z0: this.z + this.height, x: this.x, y: this.y, z: this.z + this.height,
+                tx: this.dunkHoop.x, ty: this.dunkHoop.y, t: 0, owner: this });
+            sfx.play('swing_heavy');
+        }
+        if (this.z <= 0 && this.dunkTimer > 3) this.dunkPhase = null; // voltou ao chão
+    },
+
+    updateColeoneDunk() {
+        if (this.dunkPhase === 'ball') { this.updateBallDunk(); return; }
+        const target = this.dunkTarget;
+        if (!alive(target) || target.isInsideOpponent) { this.dropDunk(); return; }
+        const airTime = 2 * COLEONE_DUNK_JUMP / 0.7; // passos no ar (sobe e desce com a gravidade normal)
+        if (this.dunkPhase === 'rush') {
+            const stopDistance = this.radius + target.radius + 6;
+            const d = distance(this, target);
+            this.dunkTimer--;
+            if (d > stopDistance && this.dunkTimer > 0) {
+                const dir = directionTo(this, target);
+                const step = Math.min(COLEONE_DUNK_RUSH, d - stopDistance);
+                this.x += dir.x * step;
+                this.y += dir.y * step;
+                this.facing = dir.x >= 0 ? 1 : -1;
+                if (this.dunkTimer % 3 === 0) spawnStepDust(this);
+                return;
+            }
+            if (d > stopDistance + 20) { this.dropDunk(); return; } // não chegou (bateu em algo no caminho)
+            // Agarrou: salta com o inimigo nas mãos, seguindo na direção em que vinha correndo
+            this.dunkPhase = 'air';
+            this.dunkDir = d > 0 ? directionTo(this, target) : { ...this.aim };
+            this.vz = COLEONE_DUNK_JUMP;
+            this.dunkTimer = 0;
+            target.heldBy = this;
+            target.isDefending = false;
+            target.isPreparingDefense = false;
+            target.isChargingPunch = false;
+            if (target.isBladeDancing) target.endBladeDance();
+            if (target.isChannelingSpecial) target.stopChanneling();
+            const spot = {
+                x: Math.max(arena.left, Math.min(arena.right, this.x + this.dunkDir.x * COLEONE_DUNK_CARRY)),
+                y: Math.max(arena.top, Math.min(arena.bottom, this.y + this.dunkDir.y * COLEONE_DUNK_CARRY)),
+            };
+            this.dunkHoop = { x: spot.x, y: spot.y, life: Math.round(airTime) + 30, slam: 0 };
+            floatingTexts.push(new FloatingText(this.x, this.y - this.height - 16, 'PEGOU!', '#ff7a1a'));
+            sfx.play('coleone_grab');
+        }
+        // No ar: carrega o inimigo acima da cabeça e voa até a cesta
+        this.dunkTimer++;
+        const speed = COLEONE_DUNK_CARRY / airTime;
+        this.x += this.dunkDir.x * speed;
+        this.y += this.dunkDir.y * speed;
+        this.facing = this.dunkDir.x >= 0 ? 1 : -1;
+        this.specialPoseTimer = Math.max(this.specialPoseTimer, 4); // braços para cima
+        this.holdDunkTarget(airTime);
+        if (this.z > 0 || this.dunkTimer < 3) return;
+        this.slamDunk();
+    },
+
+    // Quem foi agarrado fica acima da cabeça do Coleone, virando de ponta-cabeça até o topo do salto
+    holdDunkTarget(airTime) {
+        const target = this.dunkTarget;
+        target.x = this.x + this.facing * 4;
+        target.y = this.y + 1; // um pouco à frente na ordem de desenho
+        target.z = this.z + this.height * 0.8;
+        target.vz = 0;
+        target.kbx = 0;
+        target.kby = 0;
+        target.heldSpin = Math.PI * Math.min(1, this.dunkTimer / (airTime / 2)) * this.facing;
+        target.isParalyzed = true;
+        target.paralysisTimer = Math.max(target.paralysisTimer, 2);
+    },
+
+    // Batida no chão: dano alto em quem foi enterrado e onda de choque em volta
+    slamDunk() {
+        const target = this.dunkTarget;
+        this.dunkTarget = null;
+        this.dunkPhase = null;
+        target.heldBy = null;
+        target.heldSpin = 0;
+        target.z = 0;
+        target.vz = 5; // quica no chão
+        target.x = this.x + this.dunkDir.x * (this.radius + target.radius);
+        target.y = this.y + this.dunkDir.y * (this.radius + target.radius);
+        target.isParalyzed = true;
+        target.paralysisTimer = Math.max(target.paralysisTimer, COLEONE_DUNK_STUN);
+        target.takeDamage(COLEONE_DUNK_DAMAGE, { unblockable: true, sound: 'hit_heavy' }, this);
+        for (const enemy of enemiesOf(this)) {
+            if (enemy === target || enemy.isInsideOpponent || distance(enemy, target) > COLEONE_SLAM_RADIUS + enemy.radius) continue;
+            const defended = enemy.takeDamage(COLEONE_SLAM_DAMAGE, { sound: 'hit_heavy' }, this);
+            enemy.push(directionTo(target, enemy), defended ? 4 : 9);
+        }
+        shockwaves.push({ x: target.x, y: target.y, life: 20, radius: COLEONE_SLAM_RADIUS });
+        screenShake = Math.max(screenShake, 12);
+        for (let i = 0; i < 18; i++) {
+            particles.push(new Particle(target.x, target.y - 6, i % 3 ? '#ff7a1a' : '#f4f6fb', 0, { x: (Math.random() - 0.5) * 9, y: -Math.random() * 5 }));
+        }
+        floatingTexts.push(new FloatingText(target.x, target.y - target.height - 20, 'ENTERRADA!', '#ff7a1a'));
+        if (this.dunkHoop) this.dunkHoop.slam = this.dunkHoop.life = 30; // a rede balança mais um pouco
+        this.attackCooldown = Math.max(this.attackCooldown, 12);
+        sfx.play('coleone_dunk');
+    },
+
+    // Desiste da enterrada (alvo sumiu ou não deu para chegar); quem estava no ar cai sozinho
+    dropDunk() {
+        const target = this.dunkTarget;
+        if (target && target.heldBy === this) {
+            target.heldBy = null;
+            target.heldSpin = 0;
+        }
+        this.dunkTarget = null;
+        this.dunkPhase = null;
+        this.dunkHoop = null;
+    },
+
     // Capitã Sina: Roleta da Sina — gira 1 s em cima da cabeça (todos veem) e sai uma das três armas.
     // O resultado é sorteado no começo; a roleta só desacelera até parar na fatia sorteada.
     startSinaRoulette() {

@@ -60,6 +60,7 @@ Use junto com a imagem `sprites-referencia.png` desta pasta, que mostra o sprite
 |---|---|
 | **Aegis** | Policial de choque. **Capacete azul com visor ciano**, armadura azul-marinho pesada com distintivo dourado e um **escudo de energia** azul translúcido. |
 | **Rhino** | Mercenário blindado. **Capacete de rinoceronte** com focinho comprido, **chifre curvo cor de marfim** (e um menor atrás), olho vermelho em fenda. Armadura cinza de placas com **núcleo laranja brilhando** no peito, ombreiras grandes e **manoplas enormes**. |
+| **Coleone** | Pivô de basquete de rua, alto e forte, pele morena. **Uniforme laranja**: regata com o **número 33** em branco e acabamento azul-marinho, short largo laranja com faixa azul-marinho do lado. Cabelo preto **flat-top** com as laterais raspadas, **faixa branca na testa** com risca laranja, cavanhaque. **Antebraço cibernético** com linha ciano, **joelheiras cibernéticas** com molas, meião branco e **tênis cano alto** branco e laranja. Segura uma **bola de basquete**. Na ultimate, agarra o inimigo e enterra ele numa **cesta holográfica** ciano (ou, sem ninguém perto, enterra a bola, que explode no chão). |
 | **Anchor** | Velho capitão ciborgue. **Quepe de marinheiro** branco, barba castanha, **olho cibernético ciano**, **camisa listrada azul e branca** e casaco azul-marinho. Segura uma **âncora grossa** de metal com corrente. |
 
 ## Rivalidades e detalhes que dão vida à cena
@@ -68,3 +69,4 @@ Use junto com a imagem `sprites-referencia.png` desta pasta, que mostra o sprite
 - **Gear** sempre com uma torreta perto.
 - **Zarek** pode aparecer duas vezes (Rubra e Umbral).
 - **Hades** e **Titan** combinam numa cena de soco contra soco (fogo × metal).
+- **Coleone** fica ótimo no meio de uma enterrada, segurando um inimigo de ponta-cabeça acima da cabeça como se fosse a bola.

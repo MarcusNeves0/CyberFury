@@ -5,7 +5,7 @@
 // --- Física ---
 // Mantém todos dentro da arena, fora dos obstáculos e sem sobrepor uns aos outros
 function resolveCollisions() {
-    const solid = fighters.filter(f => alive(f) && !f.isInsideOpponent);
+    const solid = fighters.filter(f => alive(f) && !f.isInsideOpponent && !f.heldBy); // quem o Coleone carrega não colide
     for (let i = 0; i < solid.length; i++) {
         for (let j = i + 1; j < solid.length; j++) {
             const a = solid[i], b = solid[j];
@@ -90,6 +90,7 @@ function step() {
     updateWalls();
     updateHazards();
     updateSinaBoats();
+    updateColeoneBalls();
     updateMap();
     shockwaves.forEach(w => w.life--);
     shockwaves = shockwaves.filter(w => w.life > 0);
@@ -140,6 +141,7 @@ function draw() {
     ctx.textAlign = 'center';
     groundBalls.forEach(ball => ctx.fillText('⚽️', ball.x, ball.y));
     ctx.textAlign = 'start';
+    fighters.forEach(f => { if (f.dunkHoop) drawDunkHoop(f.dunkHoop); });
 
     // Quem está mais embaixo na tela é desenhado na frente
     const drawables = [
@@ -163,6 +165,7 @@ function draw() {
     lifeOrbs.forEach(orb => orb.draw());
 
     projectiles.forEach(p => p.draw());
+    coleoneBalls.forEach(drawColeoneBall);
     particles.forEach(p => p.draw());
     drawSinaBoatShips();
     fighters.forEach(f => { if (alive(f) && f.characterType === 'sina') drawSinaRoulette(f); });
@@ -274,6 +277,7 @@ function stopMatch() {
     groundBalls = [];
     hazards = [];
     sinaBoats = [];
+    coleoneBalls = [];
     walls = [];
     lifeOrbs = [];
     turrets = [];
