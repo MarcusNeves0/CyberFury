@@ -129,6 +129,9 @@ const sfx = (() => {
         // Bershow: placas da armadura fechando (metal pesado) e o Corte Devastador
         bershow_armor: t => { for (let i = 0; i < 4; i++) clang(t + i * 0.09, 140 + i * 35, -8, 0.25); thump(t + 0.38, 'C1', -4, 0.4); zap(t + 0.3, 90, 40, 0.5, -16, 'sawtooth'); },
         bershow_slash: t => { whoosh(t, 400, 6000, 0.25, -4, 1.2); clang(t, 500, -10, 0.4); thump(t + 0.05, 'A0', -2, 0.6); whoosh(t + 0.1, 3000, 200, 0.6, -8, 0.5); },
+        // Aspas the Darkness: passo na sombra e o exército saindo do chão
+        aspas_step: t => { whoosh(t, 5000, 600, 0.18, -10, 2); zap(t, 400, 120, 0.15, -20, 'sine'); },
+        aspas_army: t => { thump(t, 'A0', -4, 0.7); zap(t, 70, 140, 0.9, -12, 'sawtooth'); whoosh(t, 200, 2400, 0.9, -8, 0.8); zap(t + 0.2, 220, 110, 0.7, -18, 'triangle'); },
         zarek_transform: t => { thump(t, 'A0', -2, 1); zap(t, 100, 900, 0.8, -12, 'sawtooth'); whoosh(t, 300, 6000, 0.9, -8, 0.8); },
     };
 

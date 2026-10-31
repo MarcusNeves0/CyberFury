@@ -139,6 +139,8 @@ class Fighter {
             this.height = Math.round(FIGHTER_HEIGHT * ROXY_HEIGHT);
             this.radius = 14;
         }
+        if (characterType === 'aspas') this.height = Math.round(FIGHTER_HEIGHT * ASPAS_HEIGHT);
+        this.shadowBonus = 0;        // Aspas: soldados a mais no exército (+1 por inimigo derrotado)
 
         // Weaver / teia
         this.slowTimer = 0;          // grudado na teia: anda na metade da velocidade
@@ -784,9 +786,10 @@ class Fighter {
                     this.attackTimer = 8;
                     sfx.play('blade_swing');
                 } else {
-                    this.attackCooldown = (this.characterType === 'weaver' ? WEAVER_PUNCH_COOLDOWN : this.characterType === 'sina' ? SINA_KNIFE_COOLDOWN : 20) / this.attackSpeedMultiplier;
+                    this.attackCooldown = (this.characterType === 'weaver' ? WEAVER_PUNCH_COOLDOWN : this.characterType === 'sina' ? SINA_KNIFE_COOLDOWN
+                        : this.characterType === 'aspas' ? ASPAS_DAGGER_COOLDOWN : 20) / this.attackSpeedMultiplier;
                     this.attackTimer = 6;
-                    sfx.play(this.characterType === 'kaze' || this.characterType === 'sina' ? 'blade_swing' : 'swing');
+                    sfx.play(['kaze', 'sina', 'aspas'].includes(this.characterType) ? 'blade_swing' : 'swing');
                 }
                 this.attackWindup = 2; // puxa o braço por um instante antes de acertar
                 break;
@@ -807,6 +810,7 @@ class Fighter {
                 this.attackTimer = 8;
                 this.attackWindup = 4; // o soco forte puxa mais o braço
                 if (this.characterType === 'sina') this.push(this.aim, SINA_STAB_LUNGE); // estocada: dá um passo à frente
+                if (this.characterType === 'aspas') this.shadowStep(); // some e reaparece atrás do alvo
                 sfx.play(isBladeUser(this) ? 'blade_swing' : 'swing_heavy');
                 break;
             case 'special':
@@ -869,6 +873,10 @@ class Fighter {
                 }
                 if (this.characterType === 'bershow') {
                     this.startBershowArmor();
+                    return;
+                }
+                if (this.characterType === 'aspas') {
+                    this.summonShadowArmy();
                     return;
                 }
                 const energyCost = specialCost(this.characterType);
@@ -968,7 +976,7 @@ function tryMelee(attacker) {
     if (isBladeUser(attacker)) effect.sound = 'blade_hit';
     switch (attacker.attackType) {
         case 'punch':
-            damage = (attacker.characterType === 'akane') ? 14 : (attacker.characterType === 'nyx') ? NYX_PUNCH_DAMAGE : (attacker.characterType === 'kaze') ? KAZE_PUNCH_DAMAGE : (attacker.characterType === 'weaver') ? WEAVER_PUNCH_DAMAGE : (attacker.characterType === 'kenji') ? KENJI_PUNCH_DAMAGE : (attacker.characterType === 'aegis') ? AEGIS_PUNCH_DAMAGE : (attacker.characterType === 'rhino') ? RHINO_PUNCH_DAMAGE : (attacker.characterType === 'anchor') ? ANCHOR_PUNCH_DAMAGE : (attacker.characterType === 'sina') ? SINA_KNIFE_DAMAGE : (attacker.characterType === 'coleone') ? COLEONE_PUNCH_DAMAGE : (attacker.characterType === 'bershow') ? BERSHOW_SWORD_DAMAGE : 10;
+            damage = (attacker.characterType === 'akane') ? 14 : (attacker.characterType === 'nyx') ? NYX_PUNCH_DAMAGE : (attacker.characterType === 'kaze') ? KAZE_PUNCH_DAMAGE : (attacker.characterType === 'weaver') ? WEAVER_PUNCH_DAMAGE : (attacker.characterType === 'kenji') ? KENJI_PUNCH_DAMAGE : (attacker.characterType === 'aegis') ? AEGIS_PUNCH_DAMAGE : (attacker.characterType === 'rhino') ? RHINO_PUNCH_DAMAGE : (attacker.characterType === 'anchor') ? ANCHOR_PUNCH_DAMAGE : (attacker.characterType === 'sina') ? SINA_KNIFE_DAMAGE : (attacker.characterType === 'coleone') ? COLEONE_PUNCH_DAMAGE : (attacker.characterType === 'bershow') ? BERSHOW_SWORD_DAMAGE : (attacker.characterType === 'aspas') ? ASPAS_DAGGER_DAMAGE : 10;
             if (attacker.zarekForm === 'red') damage = 12;
             if (attacker.zarekForm === 'blue') damage = ZAREK_BLUE_PUNCH;
             if (attacker.characterType === 'akane') {
@@ -1003,6 +1011,7 @@ function tryMelee(attacker) {
             if (attacker.characterType === 'sina') damage = SINA_STAB_DAMAGE; // estocada com a faca
             if (attacker.characterType === 'coleone') damage = COLEONE_STRONG_DAMAGE; // toco que manda para longe
             if (attacker.characterType === 'bershow') damage = BERSHOW_STRONG_DAMAGE; // espadão com as duas mãos
+            if (attacker.characterType === 'aspas') damage = ASPAS_STEP_DAMAGE; // corte pelas costas
             if (attacker.characterType === 'hades') { effect.type = 'burn'; }
             if (attacker.characterType === 'jack') { defender.applyCurse(attacker); }
             break;
@@ -1045,7 +1054,7 @@ function specialCost(characterType) {
         zarek: ZAREK_ULT_COST, celestia: CELESTIA_ULT_COST, flora: FLORA_FLOWER_COST, nyx: NYX_LINK_COST,
         mamba: MAMBA_CLOUD_COST, gear: GEAR_TURRET_COST, roxy: ROXY_FRENZY_COST, weaver: WEAVER_PULL_COST,
         aegis: AEGIS_WALL_COST, rhino: RHINO_CHARGE_COST, anchor: ANCHOR_HOOK_COST, sina: SINA_ULT_COST,
-        coleone: COLEONE_DUNK_COST, bershow: BERSHOW_ARMOR_COST,
+        coleone: COLEONE_DUNK_COST, bershow: BERSHOW_ARMOR_COST, aspas: ASPAS_ARMY_COST,
     }[characterType] || 45;
 }
 
@@ -1069,7 +1078,7 @@ function isRangedFighter(fighter) {
 }
 
 function isBladeUser(fighter) {
-    return ['jack', 'akane', 'fenris', 'kaze', 'zarek', 'sina', 'bershow'].includes(fighter.characterType);
+    return ['jack', 'akane', 'fenris', 'kaze', 'zarek', 'sina', 'bershow', 'aspas'].includes(fighter.characterType);
 }
 
 // Bershow: Fúria — quanto menos vida, mais dano (até +50% com a vida quase no fim)

@@ -37,6 +37,7 @@ Use junto com a imagem `sprites-referencia.png` desta pasta, que mostra o sprite
 | **Weaver** | Acrobata de **traje preto com teia neon ciano**, máscara de olhos brancos grandes, detalhe roxo no peito e **lançadores de teia nos pulsos**. |
 | **Capitã Sina** | Pirata apostadora. **Casaco verde** com botões dourados e babados brancos, **tricórnio vermelho** com pontas levantadas, cabelo castanho comprido, botas marrons, **arara azul e amarela no ombro** e uma **faca de pirata**. Atrás dela, uma **roleta de cassino** com três fatias: pistola 🔫, tubarão 🦈 e barco de água 🌊. |
 | **Bershow** | Cavaleiro negro mercenário. **Armadura de placas preta e rachada** (rachaduras vermelho-escuras), **ombreiras com espinhos**, manoplas com garras, joelheiras pontudas e saiote de placas serrilhado. **Elmo aberto** mostrando o rosto com uma **cicatriz** e cabelo preto escapando. **Capa preta rasgada** e um **espadão largo** apoiado no ombro. Na ultimate, o **visor fecha**, as rachaduras **acendem em vermelho** e ele solta um **corte gigante** vermelho e branco. |
+| **Aspas the Darkness** | Caçador das sombras **alto e magro**. **Sobretudo preto longo** com gola alta levantada e **forro roxo** aparecendo na abertura, roupa preta por baixo e cinto com fivela prateada. Cabelo preto bagunçado, rosto pálido e **olho roxo brilhando**. Duas **adagas escuras com fio roxo**, em pegada invertida. Na ultimate, **soldados de sombra** (cavaleiros de fumaça escura com olhos roxos, que terminam em fiapos no lugar dos pés) saem do chão em volta dele. |
 
 ## 🎯 Atiradores
 

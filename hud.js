@@ -110,6 +110,16 @@ function knockOut(fighter) {
     if (fighter.isInsideOpponent && fighter.zarekHost) fighter.exitHost(fighter.zarekHost);
     turrets.filter(t => t.owner === fighter).forEach(t => t.destroy(true)); // as torretas caem junto com o Gear
     fighter.mambaCloudTimer = 0;
+    // Aspas: cada inimigo derrotado reforça o próximo Exército das Sombras (a sombra dele voa até o Aspas)
+    for (const aspas of fighters.filter(f => alive(f) && f.characterType === 'aspas' && f.team !== fighter.team)) {
+        if (aspas.shadowBonus >= ASPAS_ARMY_BONUS_MAX) continue;
+        aspas.shadowBonus++;
+        floatingTexts.push(new FloatingText(aspas.x, aspas.y - aspas.height - 18, '+1 SOMBRA', '#b28cff'));
+        const dx = aspas.x - fighter.x, dy = aspas.chestY - fighter.chestY;
+        for (let i = 0; i < 12; i++) {
+            particles.push(new Particle(fighter.x, fighter.chestY, i % 2 ? '#7a4dff' : '#1a1030', 0, { x: dx / 40 + (Math.random() - 0.5) * 2, y: dy / 40 + (Math.random() - 0.5) * 2 }));
+        }
+    }
     sfx.play('ko');
     for (let i = 0; i < 25; i++) {
         particles.push(new Particle(fighter.x, fighter.chestY, TEAM_COLORS[fighter.team], 0, { x: (Math.random() - 0.5) * 7, y: (Math.random() - 0.5) * 7 }));

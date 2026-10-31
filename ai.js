@@ -83,7 +83,7 @@ class AI {
         const d = distance(me, opponent);
         const meleeRange = (isBladeUser(me) ? BLADE_REACH : PUNCH_REACH) + me.radius + opponent.radius - 6;
         // Só tenta o especial se tiver a energia de verdade (antes tentava com 45 e perdia a vez)
-        const canUseSpecial = !['zarek', 'celestia', 'flora', 'spark', 'nyx', 'mamba', 'gear', 'roxy', 'weaver', 'aegis', 'rhino', 'anchor', 'sina', 'coleone', 'bershow'].includes(me.characterType) &&
+        const canUseSpecial = !['zarek', 'celestia', 'flora', 'spark', 'nyx', 'mamba', 'gear', 'roxy', 'weaver', 'aegis', 'rhino', 'anchor', 'sina', 'coleone', 'bershow', 'aspas'].includes(me.characterType) &&
             me.energy >= specialCost(me.characterType) && me.specialCooldown <= 0;
         if (Math.random() < 0.1) this.strafeSign *= -1;
 
@@ -261,6 +261,14 @@ class AI {
         // Bershow: fecha a armadura com o alvo na linha do Corte Devastador
         if (me.characterType === 'bershow') {
             if (me.energy >= BERSHOW_ARMOR_COST && me.specialCooldown <= 0 && me.furyTimer <= 0 && d < BERSHOW_SLASH_RANGE * 0.8) {
+                me.attack('special');
+                return;
+            }
+        }
+
+        // Aspas: chama o Exército das Sombras quando há inimigo por perto para os soldados caçarem
+        if (me.characterType === 'aspas') {
+            if (me.energy >= ASPAS_ARMY_COST && me.specialCooldown <= 0 && d < 400) {
                 me.attack('special');
                 return;
             }

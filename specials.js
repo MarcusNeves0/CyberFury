@@ -448,6 +448,42 @@ Object.assign(Fighter.prototype, {
         sfx.play('bershow_slash');
     },
 
+    // Aspas: Passo Sombrio — some num rastro de fumaça e reaparece atrás do alvo (o corte forte sai pelas costas)
+    shadowStep() {
+        const target = this.target;
+        if (!alive(target) || target.isInsideOpponent || target.heldBy || distance(this, target) > ASPAS_STEP_RANGE) return;
+        const dir = directionTo(this, target);
+        const puff = (x, y) => {
+            for (let i = 0; i < 10; i++) {
+                particles.push(new Particle(x + (Math.random() - 0.5) * 20, y - 20 - Math.random() * 30, i % 2 ? '#7a4dff' : '#1a1030', 0, { x: (Math.random() - 0.5) * 2, y: -Math.random() * 2 }));
+            }
+        };
+        puff(this.x, this.y);
+        const gap = this.radius + target.radius + 6;
+        this.x = Math.max(arena.left, Math.min(arena.right, target.x + dir.x * gap));
+        this.y = Math.max(arena.top, Math.min(arena.bottom, target.y + dir.y * gap));
+        this.aim = { x: -dir.x, y: -dir.y };
+        if (Math.abs(dir.x) > 0.05) this.facing = dir.x > 0 ? -1 : 1;
+        puff(this.x, this.y);
+        sfx.play('aspas_step');
+    },
+
+    // Aspas: Exército das Sombras — soldados de sombra saem do chão em volta dele e caçam os inimigos
+    summonShadowArmy() {
+        this.isAttacking = false;
+        if (this.energy < ASPAS_ARMY_COST || this.specialCooldown > 0) return;
+        this.energy -= ASPAS_ARMY_COST;
+        this.specialCooldown = ASPAS_ARMY_DURATION;
+        const count = ASPAS_ARMY_SIZE + this.shadowBonus;
+        for (let i = 0; i < count; i++) {
+            const angle = (i / count) * Math.PI * 2 + Math.random() * 0.4;
+            shadowSoldiers.push(new ShadowSoldier(this, this.x + Math.cos(angle) * 55, this.y + Math.sin(angle) * 38));
+        }
+        floatingTexts.push(new FloatingText(this.x, this.y - this.height - 18, `SOMBRAS x${count}`, '#b28cff'));
+        this.poseSpecial();
+        sfx.play('aspas_army');
+    },
+
     // Capitã Sina: Roleta da Sina — gira 1 s em cima da cabeça (todos veem) e sai uma das três armas.
     // O resultado é sorteado no começo; a roleta só desacelera até parar na fatia sorteada.
     startSinaRoulette() {
@@ -909,6 +945,81 @@ class HealingFlower {
 }
 
 // Torreta do Gear: atira sozinha no inimigo mais próximo; pode ser destruída
+// Soldado de sombra do Aspas: sai do chão, persegue o inimigo mais perto e corta; some depois de alguns segundos
+class ShadowSoldier {
+    constructor(owner, x, y) {
+        this.owner = owner;
+        this.team = owner.team;
+        this.x = Math.max(arena.left, Math.min(arena.right, x));
+        this.y = Math.max(arena.top, Math.min(arena.bottom, y));
+        this.radius = 14;
+        this.life = ASPAS_ARMY_DURATION;
+        this.rise = 15;               // passos saindo do chão
+        this.hitTimer = 8 + Math.floor(Math.random() * 16);
+        this.strike = 0;              // mostra o quadro do golpe
+        this.facing = owner.facing;
+    }
+
+    get done() { return this.life <= 0; }
+
+    update() {
+        this.life--;
+        if (!alive(this.owner)) this.life = Math.min(this.life, 15); // o Aspas caiu: as sombras se desfazem
+        if (this.rise > 0) { this.rise--; return; }
+        if (this.strike > 0) this.strike--;
+        const target = fighters.filter(f => alive(f) && f.team !== this.team && !f.isInsideOpponent && !f.heldBy)
+            .sort((a, b) => Math.hypot(a.x - this.x, a.y - this.y) - Math.hypot(b.x - this.x, b.y - this.y))[0];
+        // Não se empilham: um empurra o outro para os lados (assim eles cercam o alvo)
+        for (const other of shadowSoldiers) {
+            if (other === this) continue;
+            const ox = this.x - other.x, oy = this.y - other.y;
+            const od = Math.hypot(ox, oy);
+            if (od > 0 && od < this.radius * 2) {
+                this.x += ox / od * (this.radius * 2 - od) / 2;
+                this.y += oy / od * (this.radius * 2 - od) / 2;
+            }
+        }
+        if (!target) return;
+        const dx = target.x - this.x, dy = target.y - this.y;
+        const d = Math.hypot(dx, dy) || 1;
+        const dir = { x: dx / d, y: dy / d };
+        if (Math.abs(dir.x) > 0.05) this.facing = dir.x > 0 ? 1 : -1;
+        if (d > this.radius + target.radius + SHADOW_REACH * 0.6) {
+            this.x += dir.x * SHADOW_SPEED;
+            this.y += dir.y * SHADOW_SPEED;
+            return;
+        }
+        if (--this.hitTimer > 0) return;
+        this.hitTimer = SHADOW_HIT_INTERVAL;
+        this.strike = 10;
+        const defended = target.takeDamage(SHADOW_DAMAGE, { sound: 'blade_hit' }, this.owner);
+        if (!defended) target.push(dir, 1.5);
+    }
+
+    draw() {
+        const h = 54;
+        const appear = this.rise > 0 ? 1 - this.rise / 15 : 1;
+        const fade = Math.min(1, this.life / 20);
+        ctx.save();
+        // Poça de sombra no chão
+        ctx.fillStyle = 'rgba(40, 10, 90, 0.55)';
+        ctx.beginPath();
+        ctx.ellipse(this.x, this.y, 18 * appear + 4, 7 * appear + 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Sobe de dentro do chão: o que ainda está abaixo do chão fica escondido
+        ctx.translate(this.x, this.y);
+        ctx.beginPath();
+        ctx.rect(-70, -h - 30, 140, h + 30);
+        ctx.clip();
+        ctx.translate(0, (1 - appear) * h);
+        ctx.globalAlpha = 0.9 * fade;
+        if (this.facing === -1) ctx.scale(-1, 1);
+        ctx.filter = 'drop-shadow(0 0 4px #7a4dff)';
+        characterArt.aspasShadow(ctx, -h / 4, -h, h / 2, h, { spriteFrame: this.strike > 0 ? 'attack' : 'idle', walkFrame: null });
+        ctx.restore();
+    }
+}
+
 class Turret {
     constructor(owner, x, y) {
         this.owner = owner;

@@ -78,6 +78,8 @@ function step() {
     }
     turrets.forEach(t => t.update());
     turrets = turrets.filter(t => !t.done);
+    shadowSoldiers.forEach(s => s.update());
+    shadowSoldiers = shadowSoldiers.filter(s => !s.done);
     lifeOrbs.forEach(orb => orb.update());
     lifeOrbs = lifeOrbs.filter(orb => !orb.done);
     floatingTexts.forEach(t => t.update());
@@ -154,6 +156,7 @@ function draw() {
             if (mapId === 'garden' && alive(f) && inBush(f)) { ctx.globalAlpha = 0.5; f.draw(); ctx.globalAlpha = 1; } else f.draw();
         } })),
         ...turrets.map(t => ({ y: t.y, draw: () => t.draw() })),
+        ...shadowSoldiers.map(s => ({ y: s.y, draw: () => s.draw() })),
     ].sort((a, b) => a.y - b.y);
     drawables.forEach(d => d.draw());
 
@@ -282,6 +285,7 @@ function stopMatch() {
     sinaBoats = [];
     coleoneBalls = [];
     bershowSlashes = [];
+    shadowSoldiers = [];
     walls = [];
     lifeOrbs = [];
     turrets = [];

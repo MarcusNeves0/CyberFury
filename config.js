@@ -59,6 +59,7 @@ const CHARACTERS = [
     { id: 'sina', name: 'Capitã Sina' },
     { id: 'coleone', name: 'Coleone' },
     { id: 'bershow', name: 'Bershow' },
+    { id: 'aspas', name: 'Aspas the Darkness' },
 ];
 
 // Teclas (cada ação aceita uma lista). Contra a IA o jogador pode andar com WASD ou setas;
@@ -239,6 +240,21 @@ const BERSHOW_SLASH_RANGE = 340;       // Corte Devastador: comprimento do corte
 const BERSHOW_SLASH_WIDTH = 70;
 const BERSHOW_SLASH_DAMAGE = 90;
 let bershowSlashes = [];               // rastros do Corte Devastador (só visual)
+// Aspas the Darkness: duas adagas, Passo Sombrio e o Exército das Sombras
+const ASPAS_HEIGHT = 1.1;              // alto e magro: desenhado 10% mais alto
+const ASPAS_DAGGER_DAMAGE = 14;        // combo rápido com as duas adagas
+const ASPAS_DAGGER_COOLDOWN = 13;
+const ASPAS_STEP_DAMAGE = 38;          // Passo Sombrio: some e reaparece atrás do inimigo cortando
+const ASPAS_STEP_RANGE = 220;
+const ASPAS_ARMY_COST = 220;
+const ASPAS_ARMY_SIZE = 3;             // soldados de sombra por invocação...
+const ASPAS_ARMY_BONUS_MAX = 3;        // ...+1 para cada inimigo que cair na partida (até +3)
+const ASPAS_ARMY_DURATION = 360;       // 6 s caçando (a ultimate só volta quando eles somem)
+const SHADOW_SPEED = 3.6;
+const SHADOW_DAMAGE = 12;
+const SHADOW_HIT_INTERVAL = 40;        // um corte a cada 0,7 s
+const SHADOW_REACH = 40;
+let shadowSoldiers = [];
 // Capitã Sina: faca rápida e a Roleta da Sina (pistola, tubarão ou o raro barco de água)
 const SINA_KNIFE_DAMAGE = 20;
 const SINA_KNIFE_COOLDOWN = 14;       // cortes mais rápidos que o soco comum (20)
@@ -293,7 +309,7 @@ const GARDEN_PICKUP_HEAL = 120;   // cura da flor que nasce no jardim
 // Vida máxima de cada personagem (tanques aguentam mais, quem ataca de longe aguenta menos)
 const HEALTH_BY_CHARACTER = {
     titan: 1200, zarek: 1200, fenris: 1150, bershow: 1150, spark: 1100,
-    hades: 1000, jack: 1000, kenji: 1000, akane: 950, kaze: 950, craque: 950, weaver: 950, sina: 950,
+    hades: 1000, jack: 1000, kenji: 1000, akane: 950, kaze: 950, aspas: 950, craque: 950, weaver: 950, sina: 950,
     aegis: 1600, rhino: 1450, anchor: 1450, coleone: 1450,
     mamba: 900, gear: 750, roxy: 850, celestia: 950, nyx: 950, flora: 900,
 };
