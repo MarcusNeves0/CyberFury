@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <!-- Sem zoom e sem rolar: a tela inteira é o controle -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0a0a14">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Controle — Cybernetic Fury</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap">
+    <link rel="stylesheet" href="controle.css">
+</head>
+<body>
+    <!-- Entrada: código da sala que aparece na tela do jogo -->
+    <div id="join-screen" class="screen">
+        <h1>CYBERNETIC FURY</h1>
+        <p class="join-subtitle">Controle no celular</p>
+        <label for="room-input">Código da sala</label>
+        <input id="room-input" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="7K2F">
+        <button id="join-button">ENTRAR ▶</button>
+        <p class="join-hint">O código aparece na tela do jogo, no computador.<br>Da próxima vez o celular lembra e entra sozinho.</p>
+        <p id="join-error" class="join-error"></p>
+    </div>
+
+    <!-- O controle (só na horizontal) -->
+    <div id="pad-screen" class="screen hidden">
+        <div class="pad-top">
+            <span id="pad-player" class="pad-player">--</span>
+            <span id="pad-fighter" class="pad-fighter">Conectando...</span>
+            <div class="pad-ult"><div id="pad-ult-fill"></div></div>
+            <span id="pad-status" class="pad-status" title="Conexão"></span>
+            <button id="pad-exit" class="pad-exit" aria-label="Sair">✕</button>
+        </div>
+        <!-- Metade esquerda: o analógico aparece onde o dedo encosta -->
+        <div id="stick-zone" class="stick-zone">
+            <div id="stick-base" class="stick-base hidden"><div id="stick-knob" class="stick-knob"></div></div>
+            <span class="stick-hint">arraste para andar</span>
+        </div>
+        <!-- Metade direita: botões de ação -->
+        <div class="buttons-zone">
+            <button class="action-button ult" data-action="special"><span>ULT</span></button>
+            <button class="action-button defend" data-action="defend"><span>DEFESA</span><small>segure</small></button>
+            <button class="action-button punch" data-action="punch"><span>SOCO</span><small>segure = forte</small></button>
+        </div>
+        <div id="hit-flash" class="hit-flash"></div>
+    </div>
+
+    <!-- Em pé não cabe o controle -->
+    <div id="rotate-screen" class="screen rotate-screen">
+        <div class="rotate-icon">📱</div>
+        <p>Gire o celular para a horizontal</p>
+    </div>
+
+    <!-- Modo de teste (controle.html#teste): mostra as mensagens que iriam para o jogo -->
+    <pre id="test-log" class="test-log hidden"></pre>
+
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script src="controle.js"></script>
+</body>
+</html>

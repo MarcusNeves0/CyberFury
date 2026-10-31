@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <!-- Conexão com os celulares que viram controle (sem ela o jogo segue só com teclado e controle) -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
 <body>
 
@@ -73,8 +75,10 @@
             </div>
             <div class="hub-section">
                 <h3>Controles e times</h3>
-                <!-- Uma linha por jogador humano (montadas pelo menu.js): time, teclado ou controle -->
+                <!-- Uma linha por jogador humano (montadas pelo menu.js): time, teclado, controle ou celular -->
                 <div id="input-rows"></div>
+                <!-- Código da sala para os celulares (montado pelo phone.js) -->
+                <div id="phone-room" class="phone-room"></div>
             </div>
             <button id="hub-start" class="hub-start">ESCOLHER LUTADORES ▶</button>
         </div>
@@ -262,6 +266,7 @@
     <script src="hud.js"></script>
     <script src="maps-draw.js"></script>
     <script src="input.js"></script>
+    <script src="phone.js"></script>
     <script src="menu.js"></script>
     <script src="game.js"></script>
 </body>

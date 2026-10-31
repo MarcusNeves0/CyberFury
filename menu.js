@@ -30,6 +30,7 @@ function setupHub() {
             <button class="team-toggle"></button>
             <button class="input-option" data-input="keyboard">⌨ Teclado</button>
             <button class="input-option" data-input="gamepad">🎮 Controle</button>
+            <button class="input-option" data-input="phone">📱 Celular</button>
             <span class="gamepad-status"></span>`;
         row.querySelector('.team-toggle').addEventListener('click', (e) => {
             match.inputs[player].team = 1 - match.inputs[player].team;
@@ -37,8 +38,10 @@ function setupHub() {
             renderInputStatus();
         });
         row.querySelectorAll('.input-option').forEach(button => button.addEventListener('click', () => {
-            // Escolher "Controle" sempre pede para apertar um botão de novo
-            Object.assign(match.inputs[player], { type: button.dataset.input, index: null, name: '' });
+            // Escolher "Controle" sempre pede para apertar um botão de novo; trocar o celular por outra coisa desconecta ele
+            const input = match.inputs[player];
+            if (input.type === 'phone' && input.index !== null) dropPhone(input.index);
+            Object.assign(input, { type: button.dataset.input, index: null, name: '' });
             button.blur();
             renderInputStatus();
         }));
@@ -69,6 +72,7 @@ const maxHumans = () => teamSizeOf(match.mode) * 2;
 // Sozinho, o jogador fica sempre no time ciano; com mais gente, cada um escolhe o time
 const teamOf = player => match.humans === 1 ? 0 : match.inputs[player].team;
 const waitingForGamepad = () => activePlayers().some(p => match.inputs[p].type === 'gamepad' && match.inputs[p].index === null);
+const waitingForPhone = () => activePlayers().some(p => match.inputs[p].type === 'phone' && match.inputs[p].index === null);
 
 // O que impede de começar (time com mais humanos que vagas, teclado lotado, controle sem conectar)
 function hubProblem() {
@@ -78,6 +82,7 @@ function hubProblem() {
     }
     if (players.filter(p => match.inputs[p].type === 'keyboard').length > MAX_KEYBOARD_PLAYERS) return 'NO MÁXIMO 2 NO TECLADO';
     if (waitingForGamepad()) return 'AGUARDANDO CONTROLE...';
+    if (waitingForPhone()) return 'AGUARDANDO CELULAR...';
     return null;
 }
 
@@ -129,16 +134,19 @@ function renderInputStatus() {
         row.querySelectorAll('.input-option').forEach(b => b.classList.toggle('selected', b.dataset.input === input.type));
         const status = row.querySelector('.gamepad-status');
         status.classList.remove('waiting', 'connected');
-        if (input.type !== 'gamepad') {
+        if (input.type === 'keyboard') {
             status.innerText = '';
         } else if (input.index === null) {
-            status.innerText = 'Aperte qualquer botão no controle...';
+            status.innerText = input.type === 'phone'
+                ? (roomCode ? `Abra o controle no celular e digite ${roomCode}` : 'Sala para celulares indisponível')
+                : 'Aperte qualquer botão no controle...';
             status.classList.add('waiting');
         } else {
             status.innerText = `✔ ${input.name} conectado`;
             status.classList.add('connected');
         }
     }
+    if (typeof syncPhoneTeams === 'function') syncPhoneTeams(); // a cor do time no celular acompanha
     renderControlsPanel();
     const startButton = document.getElementById('hub-start');
     const problem = hubProblem();
@@ -377,7 +385,8 @@ function renderControls() {
         <p><strong>Soco Forte:</strong> segurar □</p>
         <p><strong>Especial:</strong> △ ou R1 (Y ou RB no Xbox)</p>
         <p><strong>Defesa:</strong> segurar ◯ ou L1 (B ou LB no Xbox)</p>`;
-    const controlsFor = player => match.inputs[player].type === 'gamepad' ? padList : list(keymapFor(player));
+    const phoneList = '<p><strong>Celular:</strong> analógico à esquerda; SOCO (segure = forte), ULT e DEFESA à direita</p>';
+    const controlsFor = player => ({ gamepad: padList, phone: phoneList }[match.inputs[player].type] || list(keymapFor(player)));
     const hint = '<p class="controls-hint">A mira é automática: golpes e especiais vão no inimigo mais próximo.</p>';
     // Vários humanos: uma coluna por jogador, na cor do time
     document.getElementById('controls-content').innerHTML = match.humans > 1
@@ -404,6 +413,9 @@ function renderControlsPanel() {
         if (input.type === 'gamepad') {
             device = input.name || 'Controle (não conectado)';
             rows = compact ? '' : padRows;
+        } else if (input.type === 'phone') {
+            device = input.index !== null ? 'Celular' : 'Celular (não conectado)';
+            rows = compact ? '' : row('Botões', 'Na tela do celular');
         } else {
             const map = keymapFor(player);
             device = 'Teclado';

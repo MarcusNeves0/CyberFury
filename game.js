@@ -82,6 +82,7 @@ function step() {
     shadowSoldiers = shadowSoldiers.filter(s => !s.done);
     lifeOrbs.forEach(orb => orb.update());
     lifeOrbs = lifeOrbs.filter(orb => !orb.done);
+    updatePhones();
     floatingTexts.forEach(t => t.update());
     floatingTexts = floatingTexts.filter(t => t.life > 0);
 
@@ -228,6 +229,8 @@ function createFighters() {
                 const input = match.inputs[member.controller];
                 if (input.type === 'gamepad' && input.index !== null) {
                     f.gamepadIndex = input.index;
+                } else if (input.type === 'phone') {
+                    f.onPhone = true; // os comandos chegam pelo phone.js
                 } else {
                     // Dois jogadores no teclado dividem as teclas; sozinho no teclado usa o esquema completo
                     f.keymap = keymapFor(member.controller);
@@ -258,6 +261,7 @@ async function startGame() {
         groundBalls = [];
         setupArena();
         createFighters();
+        announceFightersToPhones();
         buildHUD();
 
         aiControllers = fighters.filter(f => !f.isPlayer).map(f => new AI(f));
@@ -348,4 +352,5 @@ window.onload = () => {
     setupVolumeControl();
     setupHub();
     setupSelectionScreen();
+    setupPhones();
 };

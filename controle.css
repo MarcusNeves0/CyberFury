@@ -1,0 +1,370 @@
+/* Controle no celular: tela de entrada, analógico, botões e aviso para girar o celular */
+:root {
+    --neon-blue: #00ffff;
+    --neon-pink: #ff4dff;
+    --team-color: #00ffff;
+    --background-dark: #0a0a14;
+    --text-color: #e8e8f0;
+}
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--background-dark);
+    color: var(--text-color);
+    font-family: 'Orbitron', sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none; /* nada de rolar ou dar zoom com os dedos */
+    overscroll-behavior: none;
+}
+
+.screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* --- Entrada --- */
+#join-screen {
+    gap: 10px;
+    background: radial-gradient(circle at 50% 30%, #1d1035, var(--background-dark) 70%);
+    touch-action: manipulation;
+}
+
+#join-screen h1 {
+    margin: 0;
+    font-size: clamp(1.4rem, 6vw, 2.4rem);
+    color: var(--neon-pink);
+    text-shadow: 0 0 12px var(--neon-pink);
+}
+
+.join-subtitle {
+    margin: 0 0 8px;
+    color: var(--neon-blue);
+    letter-spacing: 0.2em;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+#join-screen label {
+    font-size: 0.8rem;
+    color: #bbb;
+    font-family: sans-serif;
+}
+
+#room-input {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2rem;
+    width: 9ch;
+    text-align: center;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 8px;
+    border-radius: 10px;
+    border: 2px solid var(--neon-blue);
+    background: rgba(0, 0, 0, 0.5);
+    color: var(--neon-blue);
+    box-shadow: 0 0 12px rgba(0, 255, 255, 0.4);
+    user-select: text;
+    -webkit-user-select: text;
+}
+
+#join-button {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.2rem;
+    padding: 12px 36px;
+    border: none;
+    border-radius: 8px;
+    background: var(--neon-blue);
+    color: var(--background-dark);
+    box-shadow: 0 0 16px rgba(0, 255, 255, 0.6);
+}
+
+.join-hint {
+    font-family: sans-serif;
+    font-size: 0.8rem;
+    color: #999;
+    text-align: center;
+    margin: 6px 16px 0;
+}
+
+.join-error {
+    font-family: sans-serif;
+    color: #ff6b6b;
+    min-height: 1.2em;
+    margin: 0;
+}
+
+/* --- Controle --- */
+#pad-screen {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    align-items: stretch;
+    justify-content: stretch;
+    background:
+        radial-gradient(circle at 25% 60%, color-mix(in srgb, var(--team-color) 10%, transparent), transparent 55%),
+        var(--background-dark);
+}
+
+/* Barra de cima: jogador, lutador, barra da ultimate e conexão */
+.pad-top {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    border-bottom: 1px solid color-mix(in srgb, var(--team-color) 40%, transparent);
+}
+
+.pad-player {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--team-color);
+    text-shadow: 0 0 8px var(--team-color);
+}
+
+.pad-fighter {
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 30vw;
+}
+
+.pad-ult {
+    flex: 1;
+    height: 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+#pad-ult-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--neon-blue), #00aaff);
+    transition: width 0.2s;
+}
+
+#pad-ult-fill.ready {
+    background: linear-gradient(90deg, #ffd23f, #ffef8a);
+    box-shadow: 0 0 8px #ffd23f;
+}
+
+.pad-status {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ffd23f; /* amarelo: conectando */
+    box-shadow: 0 0 6px #ffd23f;
+}
+
+.pad-status.online {
+    background: #6dff8a;
+    box-shadow: 0 0 6px #6dff8a;
+}
+
+.pad-status.offline {
+    background: #ff4d4d;
+    box-shadow: 0 0 6px #ff4d4d;
+}
+
+.pad-exit {
+    border: 1px solid #555;
+    background: none;
+    color: #aaa;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 0.9rem;
+}
+
+/* Analógico: aparece onde o dedo encosta na metade esquerda */
+.stick-zone {
+    position: relative;
+}
+
+.stick-hint {
+    position: absolute;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    font-family: sans-serif;
+    font-size: 0.75rem;
+    color: #666;
+    pointer-events: none;
+}
+
+.stick-base {
+    position: absolute;
+    width: 130px;
+    height: 130px;
+    margin: -65px 0 0 -65px;
+    border-radius: 50%;
+    border: 3px solid color-mix(in srgb, var(--team-color) 70%, transparent);
+    background: color-mix(in srgb, var(--team-color) 10%, transparent);
+    box-shadow: 0 0 18px color-mix(in srgb, var(--team-color) 40%, transparent);
+    pointer-events: none;
+}
+
+.stick-knob {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 60px;
+    height: 60px;
+    margin: -30px 0 0 -30px;
+    border-radius: 50%;
+    background: var(--team-color);
+    box-shadow: 0 0 16px var(--team-color);
+    opacity: 0.85;
+}
+
+/* Botões: soco grande embaixo, defesa ao lado, ultimate em cima */
+.buttons-zone {
+    position: relative;
+}
+
+.action-button {
+    position: absolute;
+    border-radius: 50%;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border: 3px solid var(--button-color);
+    background: color-mix(in srgb, var(--button-color) 18%, rgba(0, 0, 0, 0.6));
+    box-shadow: 0 0 14px color-mix(in srgb, var(--button-color) 50%, transparent);
+    transition: transform 0.06s, background 0.06s;
+    touch-action: none;
+}
+
+.action-button small {
+    font-family: sans-serif;
+    font-weight: 400;
+    font-size: 0.6rem;
+    color: #bbb;
+}
+
+.action-button.pressed {
+    transform: scale(0.92);
+    background: color-mix(in srgb, var(--button-color) 55%, rgba(0, 0, 0, 0.4));
+}
+
+.action-button.punch {
+    --button-color: #ff3b6b;
+    width: min(34vh, 22vw);
+    height: min(34vh, 22vw);
+    right: 6%;
+    bottom: 10%;
+    font-size: 1.1rem;
+}
+
+.action-button.defend {
+    --button-color: #3fb8ff;
+    width: min(24vh, 15vw);
+    height: min(24vh, 15vw);
+    right: calc(10% + min(34vh, 22vw));
+    bottom: 6%;
+    font-size: 0.8rem;
+}
+
+.action-button.ult {
+    --button-color: #ffd23f;
+    width: min(26vh, 16vw);
+    height: min(26vh, 16vw);
+    right: calc(8% + min(17vh, 11vw));
+    top: 6%;
+    font-size: 1rem;
+    opacity: 0.55;
+}
+
+/* Ultimate pronta: botão aceso e pulsando */
+.action-button.ult.ready {
+    opacity: 1;
+    animation: ult-pulse 0.7s ease-in-out infinite alternate;
+}
+
+@keyframes ult-pulse {
+    from { box-shadow: 0 0 8px #ffd23f; }
+    to { box-shadow: 0 0 28px #ffd23f, 0 0 50px rgba(255, 210, 63, 0.4); }
+}
+
+/* Levou dano: borda vermelha piscando */
+.hit-flash {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 0 0 0 rgba(255, 40, 40, 0);
+    transition: box-shadow 0.25s;
+}
+
+.hit-flash.on {
+    box-shadow: inset 0 0 40px 8px rgba(255, 40, 40, 0.7);
+    transition: none;
+}
+
+/* --- Aviso para girar (só aparece em pé, com o controle aberto) --- */
+.rotate-screen {
+    display: none;
+    gap: 12px;
+    background: var(--background-dark);
+    z-index: 5;
+    text-align: center;
+}
+
+.rotate-icon {
+    font-size: 3rem;
+    animation: rotate-hint 1.6s ease-in-out infinite;
+}
+
+@keyframes rotate-hint {
+    0%, 30% { transform: rotate(0deg); }
+    60%, 100% { transform: rotate(-90deg); }
+}
+
+@media (orientation: portrait) {
+    body.playing .rotate-screen {
+        display: flex;
+    }
+}
+
+/* --- Modo de teste: mensagens que iriam para o jogo --- */
+.test-log {
+    position: fixed;
+    left: 50%;
+    top: 40px;
+    transform: translateX(-50%);
+    margin: 0;
+    padding: 6px 10px;
+    max-width: 46vw;
+    font-size: 0.65rem;
+    line-height: 1.3;
+    color: #6dff8a;
+    background: rgba(0, 0, 0, 0.75);
+    border: 1px solid #2a5a3a;
+    border-radius: 6px;
+    pointer-events: none;
+    z-index: 6;
+}

@@ -12,6 +12,7 @@ class Fighter {
         this.isPlayer = controller !== 'ai';
         this.keymap = null; // definido em startGame para humanos no teclado
         this.gamepadIndex = null; // definido em startGame para humanos no controle
+        this.onPhone = false;     // humano jogando pelo celular (o analógico chega pelo phone.js)
         this.padMove = { x: 0, y: 0 }; // analógico (pode ser menor que 1 para andar devagar)
         this.padPressed = {}; // botões apertados no quadro anterior
         this.target = null; // inimigo atual (mais próximo, ou escolhido pela IA)
@@ -506,7 +507,7 @@ class Fighter {
 
         // Movimento em 8 direções (mais lento atacando; parado defendendo)
         let move = { x: 0, y: 0 };
-        if (this.isPlayer && this.gamepadIndex !== null) {
+        if (this.isPlayer && (this.gamepadIndex !== null || this.onPhone)) {
             move = this.padMove;
         } else if (this.isPlayer) {
             move = normalize((this.keys.right ? 1 : 0) - (this.keys.left ? 1 : 0), (this.keys.down ? 1 : 0) - (this.keys.up ? 1 : 0));
@@ -739,6 +740,7 @@ class Fighter {
         if (this.characterType === 'zarek') addZarekCharge(this, ZAREK_CHARGE_ON_HURT);
         if (attacker && attacker.characterType === 'zarek') addZarekCharge(attacker, ZAREK_CHARGE_ON_HIT);
         this.loseHealth(damage, attacker);
+        if (this.onPhone) sendToPhone(this.controller, { t: 'hit' }); // o celular vibra
         if (effect.type === 'burn') { this.burnDuration = 180; }
         if (effect.type === 'curse') { this.applyCurse(attacker); }
         if (effect.type === 'bleed') {

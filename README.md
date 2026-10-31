@@ -24,6 +24,7 @@ Neo-Cidade está tomada por neon, chuva e gente disposta a brigar por qualquer m
 
 - 🥊 **1v1, 2v2 ou 3v3:** de 1 a **6 jogadores** no mesmo computador, cada um escolhe o time (uns contra os outros ou todos juntos contra a IA); a IA completa as vagas que sobrarem
 - 🎮 **Teclado ou controle:** suporte a controle de PS5/Xbox, inclusive para navegar nos menus
+- 📱 **Celular como controle:** abra `controle.html` no celular e digite o código que aparece no menu do jogo. O celular vira analógico + botões, vibra ao levar dano e também navega nos menus (sem instalar nada)
 - 💚 **Healer obrigatório:** no 2v2 e no 3v3, todo time tem pelo menos um curandeiro
 - 🗺️ **4 arenas** com perigos próprios, escolhidas no menu ou sorteadas a cada luta
 - 📊 **Estatísticas no fim da luta:** dano causado, dano sofrido, cura, abates e o ⭐ destaque da partida
