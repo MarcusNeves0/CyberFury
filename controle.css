@@ -222,6 +222,13 @@ html, body {
     background: color-mix(in srgb, var(--team-color) 10%, transparent);
     box-shadow: 0 0 18px color-mix(in srgb, var(--team-color) 40%, transparent);
     pointer-events: none;
+    transition: opacity 0.15s;
+}
+
+/* Parado no lugar dele, esperando o dedo: meio apagado */
+.stick-base.resting {
+    opacity: 0.45;
+    transition: opacity 0.15s, left 0.12s, top 0.12s;
 }
 
 .stick-knob {

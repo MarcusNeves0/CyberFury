@@ -270,9 +270,17 @@ stickZone.addEventListener('pointerdown', e => {
     };
     stickBase.style.left = `${stickOrigin.x - box.left}px`;
     stickBase.style.top = `${stickOrigin.y - box.top}px`;
-    stickBase.classList.remove('hidden');
+    stickBase.classList.remove('resting');
     updateStick(e);
 });
+
+// Lugar de descanso do analógico: no meio da metade esquerda, um pouco para baixo (onde o polegar fica)
+function restStick() {
+    stickBase.classList.add('resting');
+    stickBase.style.left = '50%';
+    stickBase.style.top = '58%';
+}
+restStick();
 stickZone.addEventListener('pointermove', e => { if (e.pointerId === stickPointer) updateStick(e); });
 for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
     stickZone.addEventListener(type, e => { if (e.pointerId === stickPointer) releaseStick(); });
@@ -290,7 +298,7 @@ function updateStick(e) {
 
 function releaseStick() {
     stickPointer = null;
-    stickBase.classList.add('hidden');
+    restStick();
     stickKnob.style.transform = '';
     sendMove(0, 0, true);
 }
