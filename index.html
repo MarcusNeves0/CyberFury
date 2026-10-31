@@ -35,16 +35,15 @@
                 </div>
             </div>
             <div class="hub-section">
-                <h3>Jogadores</h3>
-                <div class="hub-options" id="vs-options">
-                    <button class="hub-option selected" data-vs="ai">
-                        <span class="hub-option-title">VOCÊ vs IA</span>
-                        <span class="hub-option-desc">Aliados e inimigos controlados pela IA</span>
-                    </button>
-                    <button class="hub-option" data-vs="pvp">
-                        <span class="hub-option-title">P1 vs P2</span>
-                        <span class="hub-option-desc">Dois jogadores (teclado ou controle)</span>
-                    </button>
+                <h3>Jogadores humanos</h3>
+                <!-- Quantos humanos jogam (o resto das vagas fica com a IA); o máximo depende do modo -->
+                <div class="hub-options hub-options-count" id="humans-options">
+                    <button class="hub-option selected" data-humans="1"><span class="hub-option-title">1</span><span class="hub-option-desc">Você + IA</span></button>
+                    <button class="hub-option" data-humans="2"><span class="hub-option-title">2</span><span class="hub-option-desc">jogadores</span></button>
+                    <button class="hub-option" data-humans="3"><span class="hub-option-title">3</span><span class="hub-option-desc">jogadores</span></button>
+                    <button class="hub-option" data-humans="4"><span class="hub-option-title">4</span><span class="hub-option-desc">jogadores</span></button>
+                    <button class="hub-option" data-humans="5"><span class="hub-option-title">5</span><span class="hub-option-desc">jogadores</span></button>
+                    <button class="hub-option" data-humans="6"><span class="hub-option-title">6</span><span class="hub-option-desc">jogadores</span></button>
                 </div>
             </div>
             <div class="hub-section">
@@ -73,19 +72,9 @@
                 </div>
             </div>
             <div class="hub-section">
-                <h3>Controles</h3>
-                <div class="input-row" data-player="p1">
-                    <span class="input-label">P1</span>
-                    <button class="input-option selected" data-input="keyboard">⌨ Teclado</button>
-                    <button class="input-option" data-input="gamepad">🎮 Controle</button>
-                    <span class="gamepad-status"></span>
-                </div>
-                <div class="input-row hidden" data-player="p2">
-                    <span class="input-label">P2</span>
-                    <button class="input-option selected" data-input="keyboard">⌨ Teclado</button>
-                    <button class="input-option" data-input="gamepad">🎮 Controle</button>
-                    <span class="gamepad-status"></span>
-                </div>
+                <h3>Controles e times</h3>
+                <!-- Uma linha por jogador humano (montadas pelo menu.js): time, teclado ou controle -->
+                <div id="input-rows"></div>
             </div>
             <button id="hub-start" class="hub-start">ESCOLHER LUTADORES ▶</button>
         </div>
@@ -97,7 +86,7 @@
                 <p id="selection-title" class="selection-title"></p>
                 <div class="selection-chips">
                     <span id="selection-map" class="selection-chip"></span>
-                    <span id="selection-p1-pick" class="selection-chip hidden"><canvas id="selection-p1-portrait"></canvas><span id="selection-p1-name"></span></span>
+                    <span id="selection-picks" class="selection-picks"></span>
                 </div>
             </div>
             <!-- Lutador em destaque (o que está com o mouse ou o controle em cima) -->

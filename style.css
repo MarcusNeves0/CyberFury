@@ -42,6 +42,7 @@ body {
     background: rgba(10, 10, 20, 0.85);
     box-shadow: 0 0 14px rgba(255, 0, 255, 0.45);
     overflow-y: auto;
+    contain: size; /* fica da altura do jogo (com muitos jogadores, rola por dentro em vez de esticar a página) */
 }
 
 #controls-panel h3 {
@@ -65,8 +66,6 @@ body {
     gap: 8px;
 }
 
-.panel-player.p1 h4 { color: #00ffff; }
-.panel-player.p2 h4 { color: #ff4dff; }
 
 .panel-device {
     font-family: sans-serif;
@@ -137,7 +136,7 @@ body {
     background: rgba(10, 10, 20, 0.95);
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: safe center; /* conteúdo maior que a tela rola a partir do topo, sem cortar o começo */
     align-items: center;
     z-index: 10;
     padding: 20px;
@@ -163,7 +162,7 @@ body {
 .hub-section {
     width: 90%;
     max-width: 760px;
-    margin-bottom: 18px;
+    margin-bottom: 14px;
 }
 
 .hub-section h3 {
@@ -239,8 +238,72 @@ body {
     width: 2.2em;
 }
 
-.input-row[data-player="p1"] .input-label { color: #00ffff; }
-.input-row[data-player="p2"] .input-label { color: #ff4dff; }
+/* Time de cada jogador (clique troca entre ciano e rosa) */
+.team-toggle {
+    --team-color: #00ffff;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    min-width: 8.5em;
+    background: color-mix(in srgb, var(--team-color) 15%, rgba(0, 0, 0, 0.5));
+    border: 2px solid var(--team-color);
+    border-radius: 8px;
+    color: var(--team-color);
+    padding: 6px 10px;
+    cursor: pointer;
+}
+
+/* Quantos humanos: seis botões pequenos lado a lado */
+.hub-options-count {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+}
+
+.hub-options-count .hub-option {
+    padding: 4px;
+    gap: 0;
+}
+
+.hub-options-count .hub-option-title {
+    font-size: 1.2rem;
+}
+
+.hub-options-count .hub-option-desc {
+    font-size: 0.7rem;
+}
+
+/* Linhas dos jogadores em duas colunas (P1 e P2 lado a lado, P3 e P4...) */
+#input-rows {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 18px;
+}
+
+#input-rows .input-row {
+    margin: 0;
+    gap: 6px;
+}
+
+#input-rows .input-option,
+#input-rows .team-toggle {
+    padding: 5px 8px;
+    font-size: 0.75rem;
+    min-width: 0;
+}
+
+#input-rows .gamepad-status {
+    flex-basis: 100%;
+    font-size: 0.75rem;
+}
+
+#input-rows .gamepad-status:empty {
+    display: none;
+}
+
+.hub-option:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+    transform: none;
+}
 
 .input-option {
     font-family: 'Orbitron', sans-serif;
@@ -387,7 +450,16 @@ body {
     box-shadow: 0 0 8px color-mix(in srgb, var(--chip-color) 40%, transparent);
 }
 
-#selection-p1-portrait {
+/* Quem já escolheu (um selo por jogador, quebrando linha se forem muitos) */
+.selection-picks {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5cqh 0.5cqw;
+    max-width: 34cqw;
+}
+
+.selection-picks canvas {
     width: 3.2cqh;
     height: 3.2cqh;
     image-rendering: pixelated;
@@ -886,10 +958,10 @@ body {
     gap: 16px;
 }
 
-/* Controles na tela de carregamento (P1 vs P2 lado a lado) */
+/* Controles na tela de carregamento (vários jogadores lado a lado) */
 .controls-columns {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 10px 30px;
 }
 
@@ -897,9 +969,6 @@ body {
     margin: 0 0 6px 0;
     font-size: 1.3rem;
 }
-
-.controls-p1 h4 { color: #00ffff; }
-.controls-p2 h4 { color: #ff4dff; }
 
 .controls-hint {
     font-family: sans-serif;

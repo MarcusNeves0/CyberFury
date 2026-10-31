@@ -16,22 +16,34 @@ function setupHub() {
             apply(button.dataset[attr]);
         }));
     };
-    bindGroup('mode-options', 'mode', value => { match.mode = value; });
-    bindGroup('vs-options', 'vs', value => { match.vs = value; renderInputStatus(); });
+    bindGroup('mode-options', 'mode', value => { match.mode = value; renderInputStatus(); });
+    bindGroup('humans-options', 'humans', value => { match.humans = Number(value); renderInputStatus(); });
     bindGroup('map-options', 'map', value => { match.map = value; });
 
-    // Teclado ou controle para cada jogador
-    document.querySelectorAll('.input-row').forEach(row => {
-        const player = row.dataset.player;
-        const buttons = row.querySelectorAll('.input-option');
-        buttons.forEach(button => button.addEventListener('click', () => {
-            buttons.forEach(b => b.classList.toggle('selected', b === button));
+    // Uma linha por jogador: time, teclado ou controle
+    const rows = document.getElementById('input-rows');
+    for (const player of PLAYER_IDS) {
+        const row = document.createElement('div');
+        row.className = 'input-row';
+        row.dataset.player = player;
+        row.innerHTML = `<span class="input-label">${player.toUpperCase()}</span>
+            <button class="team-toggle"></button>
+            <button class="input-option" data-input="keyboard">⌨ Teclado</button>
+            <button class="input-option" data-input="gamepad">🎮 Controle</button>
+            <span class="gamepad-status"></span>`;
+        row.querySelector('.team-toggle').addEventListener('click', (e) => {
+            match.inputs[player].team = 1 - match.inputs[player].team;
+            e.currentTarget.blur();
+            renderInputStatus();
+        });
+        row.querySelectorAll('.input-option').forEach(button => button.addEventListener('click', () => {
             // Escolher "Controle" sempre pede para apertar um botão de novo
-            match.inputs[player] = { type: button.dataset.input, index: null, name: '' };
+            Object.assign(match.inputs[player], { type: button.dataset.input, index: null, name: '' });
             button.blur();
             renderInputStatus();
         }));
-    });
+        rows.appendChild(row);
+    }
     window.addEventListener('gamepadconnected', renderInputStatus);
     window.addEventListener('gamepaddisconnected', (e) => {
         for (const input of Object.values(match.inputs)) {
@@ -43,7 +55,7 @@ function setupHub() {
     renderInputStatus();
 
     document.getElementById('hub-start').addEventListener('click', () => {
-        if (waitingForGamepad()) return;
+        if (hubProblem()) return;
         Tone.start().catch(() => {}); // libera o som já no clique (os "tics" da seleção precisam dele)
         match.picks = [];
         openSelection();
@@ -51,8 +63,30 @@ function setupHub() {
     document.getElementById('back-to-hub').addEventListener('click', goToMenu);
 }
 
-const activePlayers = () => match.vs === 'pvp' ? ['p1', 'p2'] : ['p1'];
+// Jogadores humanos desta partida (P1, P2... até o número escolhido no HUB)
+const activePlayers = () => PLAYER_IDS.slice(0, match.humans);
+const maxHumans = () => teamSizeOf(match.mode) * 2;
+// Sozinho, o jogador fica sempre no time ciano; com mais gente, cada um escolhe o time
+const teamOf = player => match.humans === 1 ? 0 : match.inputs[player].team;
 const waitingForGamepad = () => activePlayers().some(p => match.inputs[p].type === 'gamepad' && match.inputs[p].index === null);
+
+// O que impede de começar (time com mais humanos que vagas, teclado lotado, controle sem conectar)
+function hubProblem() {
+    const players = activePlayers();
+    for (const team of [0, 1]) {
+        if (players.filter(p => teamOf(p) === team).length > teamSizeOf(match.mode)) return `${TEAM_NAMES[team]} LOTADO`;
+    }
+    if (players.filter(p => match.inputs[p].type === 'keyboard').length > MAX_KEYBOARD_PLAYERS) return 'NO MÁXIMO 2 NO TECLADO';
+    if (waitingForGamepad()) return 'AGUARDANDO CONTROLE...';
+    return null;
+}
+
+// Teclas de quem joga no teclado: sozinho usa o esquema completo; em dois, o primeiro fica com o lado esquerdo
+function keymapFor(player) {
+    const keyboard = activePlayers().filter(p => match.inputs[p].type === 'keyboard');
+    if (keyboard.length === 1) return KEYMAPS.solo;
+    return keyboard.indexOf(player) === 0 ? KEYMAPS.left : KEYMAPS.right;
+}
 
 // No menu: o primeiro controle com algum botão apertado (e que não seja do outro jogador) fica com quem está esperando
 function detectGamepads() {
@@ -75,10 +109,25 @@ function detectGamepads() {
 }
 
 function renderInputStatus() {
-    document.querySelector('.input-row[data-player="p2"]').classList.toggle('hidden', match.vs !== 'pvp');
-    for (const player of ['p1', 'p2']) {
+    // Modo menor: não cabem tantos humanos (ex.: no 1v1 são no máximo 2)
+    match.humans = Math.min(match.humans, maxHumans());
+    document.querySelectorAll('#humans-options .hub-option').forEach(button => {
+        const n = Number(button.dataset.humans);
+        button.disabled = n > maxHumans();
+        button.classList.toggle('selected', n === match.humans);
+    });
+    for (const player of PLAYER_IDS) {
         const input = match.inputs[player];
-        const status = document.querySelector(`.input-row[data-player="${player}"] .gamepad-status`);
+        const row = document.querySelector(`.input-row[data-player="${player}"]`);
+        row.classList.toggle('hidden', !activePlayers().includes(player));
+        const color = TEAM_COLORS[teamOf(player)];
+        row.querySelector('.input-label').style.color = color;
+        const toggle = row.querySelector('.team-toggle');
+        toggle.classList.toggle('hidden', match.humans === 1);
+        toggle.innerText = teamOf(player) === 0 ? 'Time Ciano' : 'Time Rosa';
+        toggle.style.setProperty('--team-color', color);
+        row.querySelectorAll('.input-option').forEach(b => b.classList.toggle('selected', b.dataset.input === input.type));
+        const status = row.querySelector('.gamepad-status');
         status.classList.remove('waiting', 'connected');
         if (input.type !== 'gamepad') {
             status.innerText = '';
@@ -92,19 +141,20 @@ function renderInputStatus() {
     }
     renderControlsPanel();
     const startButton = document.getElementById('hub-start');
-    startButton.disabled = waitingForGamepad();
-    startButton.innerText = waitingForGamepad() ? 'AGUARDANDO CONTROLE...' : 'ESCOLHER LUTADORES ▶';
+    const problem = hubProblem();
+    startButton.disabled = !!problem;
+    startButton.innerText = problem || 'ESCOLHER LUTADORES ▶';
 }
 
 // --- Lógica da Tela de Seleção ---
 function openSelection() {
     gameState = 'SELECT';
-    const humans = match.vs === 'pvp' ? 2 : 1;
+    const humans = match.humans;
     const step = match.picks.length + 1;
     selectionTitle.innerText = humans === 1
         ? `${match.mode.toUpperCase()} contra a IA`
         : `${match.mode.toUpperCase()} — vez do JOGADOR ${step}`;
-    selectionTitle.style.color = humans === 1 ? '' : TEAM_COLORS[step - 1];
+    selectionTitle.style.color = humans === 1 ? '' : TEAM_COLORS[teamOf(activePlayers()[step - 1])];
     const cards = [...document.querySelectorAll('.character-card')];
     cards.forEach(card => {
         card.classList.toggle('taken', match.picks.includes(card.id.replace('select-', '')));
@@ -116,7 +166,7 @@ function openSelection() {
     if (first) showPreview(first, true);
 }
 
-// Cabeçalho da seleção: arena escolhida no HUB e, na vez do P2, quem o P1 já pegou
+// Cabeçalho da seleção: arena escolhida no HUB e quem os jogadores anteriores já pegaram
 const MAP_CHIPS = {
     random: { icon: '🎲', name: 'SORTEIO', color: '#ffd23f' },
     plaza: { icon: '🌃', name: 'PRAÇA NEON', color: '#ff4dff' },
@@ -130,18 +180,24 @@ function renderSelectionChips() {
     mapChip.innerText = `${map.icon} ${map.name}`;
     mapChip.style.setProperty('--chip-color', map.color);
 
-    const pickChip = document.getElementById('selection-p1-pick');
-    const p1 = match.picks.length ? CHARACTERS.find(c => c.id === match.picks[0]) : null;
-    pickChip.classList.toggle('hidden', !p1);
-    if (!p1) return;
-    pickChip.style.setProperty('--chip-color', TEAM_COLORS[0]);
-    document.getElementById('selection-p1-name').innerText = `P1: ${p1.name.toUpperCase()}`;
-    const portrait = document.getElementById('selection-p1-portrait');
-    portrait.width = portrait.height = 48;
-    const g = portrait.getContext('2d');
-    g.clearRect(0, 0, 48, 48);
-    g.imageSmoothingEnabled = false;
-    if (characterArt[p1.id]) characterArt[p1.id](g, 4, 2, 40, 80, null);
+    // Um selo por jogador que já escolheu, na cor do time dele
+    const picks = document.getElementById('selection-picks');
+    picks.innerHTML = '';
+    match.picks.forEach((id, i) => {
+        const character = CHARACTERS.find(c => c.id === id);
+        const chip = document.createElement('span');
+        chip.className = 'selection-chip';
+        chip.style.setProperty('--chip-color', TEAM_COLORS[teamOf(activePlayers()[i])]);
+        const portrait = document.createElement('canvas');
+        portrait.width = portrait.height = 48;
+        const g = portrait.getContext('2d');
+        g.imageSmoothingEnabled = false;
+        if (characterArt[id]) characterArt[id](g, 4, 2, 40, 80, null);
+        const name = document.createElement('span');
+        name.innerText = `P${i + 1}: ${character.name.toUpperCase()}`;
+        chip.append(portrait, name);
+        picks.appendChild(chip);
+    });
 }
 
 // Classe, estilo e ultimate de cada lutador (painel de destaque da seleção)
@@ -294,9 +350,8 @@ function setupSelectionScreen() {
             }
             sfx.play('menu_confirm');
             match.picks.push(id);
-            const humans = match.vs === 'pvp' ? 2 : 1;
-            if (match.picks.length < humans) {
-                openSelection(); // vez do jogador 2
+            if (match.picks.length < match.humans) {
+                openSelection(); // vez do próximo jogador
             } else {
                 startGame();
             }
@@ -322,15 +377,12 @@ function renderControls() {
         <p><strong>Soco Forte:</strong> segurar □</p>
         <p><strong>Especial:</strong> △ ou R1 (Y ou RB no Xbox)</p>
         <p><strong>Defesa:</strong> segurar ◯ ou L1 (B ou LB no Xbox)</p>`;
-    const keyboardPlayers = activePlayers().filter(p => match.inputs[p].type === 'keyboard').length;
-    const controlsFor = player => match.inputs[player].type === 'gamepad'
-        ? padList
-        : list(keyboardPlayers === 2 ? KEYMAPS[player] : KEYMAPS.solo);
+    const controlsFor = player => match.inputs[player].type === 'gamepad' ? padList : list(keymapFor(player));
     const hint = '<p class="controls-hint">A mira é automática: golpes e especiais vão no inimigo mais próximo.</p>';
-    document.getElementById('controls-content').innerHTML = match.vs === 'pvp'
-        ? `<div class="controls-columns">
-               <div class="controls-p1"><h4>Jogador 1</h4>${controlsFor('p1')}</div>
-               <div class="controls-p2"><h4>Jogador 2</h4>${controlsFor('p2')}</div>
+    // Vários humanos: uma coluna por jogador, na cor do time
+    document.getElementById('controls-content').innerHTML = match.humans > 1
+        ? `<div class="controls-columns">${activePlayers().map((player, i) =>
+            `<div><h4 style="color: ${TEAM_COLORS[teamOf(player)]}">Jogador ${i + 1}</h4>${controlsFor(player)}</div>`).join('')}
            </div>${hint}`
         : `<div class="controls-grid">${controlsFor('p1')}</div>${hint}`;
 }
@@ -340,27 +392,32 @@ function renderControlsPanel() {
     const names = { arrowleft: '←', arrowright: '→', arrowup: '↑', arrowdown: '↓' };
     const keys = list => list.map(k => names[k] || k.toUpperCase()).join(' / ');
     const row = (action, key) => `<div class="panel-row"><span>${action}</span><span class="panel-key">${key}</span></div>`;
-    const keyboardPlayers = activePlayers().filter(p => match.inputs[p].type === 'keyboard').length;
 
-    const blocks = activePlayers().map(player => {
+    const padRows = row('Andar', 'Analógico / Direcional') + row('Soco', '□') + row('Soco forte', 'Segurar □') +
+        row('Especial', '△ ou R1') + row('Defesa', 'Segurar ◯ ou L1') + row('Menus', '✕ confirma, ◯ volta');
+    // Com mais de dois jogadores, quem joga no controle aparece numa linha só e os botões vêm uma vez no fim
+    const compact = match.humans > 2;
+    const blocks = activePlayers().map((player, i) => {
         const input = match.inputs[player];
-        const title = match.vs === 'pvp' ? (player === 'p1' ? 'Jogador 1' : 'Jogador 2') : 'Você';
+        const title = match.humans > 1 ? `Jogador ${i + 1}` : 'Você';
         let device, rows;
         if (input.type === 'gamepad') {
             device = input.name || 'Controle (não conectado)';
-            rows = row('Andar', 'Analógico / Direcional') + row('Soco', '□') + row('Soco forte', 'Segurar □') +
-                row('Especial', '△ ou R1') + row('Defesa', 'Segurar ◯ ou L1') + row('Menus', '✕ confirma, ◯ volta');
+            rows = compact ? '' : padRows;
         } else {
-            const map = keyboardPlayers === 2 ? KEYMAPS[player] : KEYMAPS.solo;
+            const map = keymapFor(player);
             device = 'Teclado';
-            const walk = map === KEYMAPS.solo ? 'WASD ou setas' : map === KEYMAPS.p1 ? 'WASD' : 'Setas';
+            const walk = map === KEYMAPS.solo ? 'WASD ou setas' : map === KEYMAPS.left ? 'WASD' : 'Setas';
             rows = row('Andar', walk) +
                 row('Soco', keys(map.punch)) + row('Soco forte', `Segurar ${keys(map.punch)}`) +
                 row('Especial', keys(map.special)) + row('Defesa', `Segurar ${keys(map.defend)}`);
         }
-        return `<div class="panel-player ${player}"><h4>${title} <span class="panel-device">${device}</span></h4>${rows}</div>`;
+        return `<div class="panel-player"><h4 style="color: ${TEAM_COLORS[teamOf(player)]}">${title} <span class="panel-device">${device}</span></h4>${rows}</div>`;
     });
 
+    if (compact && activePlayers().some(p => match.inputs[p].type === 'gamepad')) {
+        blocks.push(`<div class="panel-player"><h4>Controle <span class="panel-device">todos os jogadores no controle</span></h4>${padRows}</div>`);
+    }
     document.getElementById('controls-panel-content').innerHTML = blocks.join('') +
         '<p class="panel-hint">A mira é automática: golpes e especiais vão no inimigo mais próximo. ' +
         'Segure o soco para carregar o soco forte.</p>';

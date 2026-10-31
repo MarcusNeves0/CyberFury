@@ -25,11 +25,15 @@ let gameLoopId;
 let gameState = 'MENU'; // MENU, SELECT, FIGHT, GAMEOVER
 
 // --- Partida ---
-// mode: '1v1' | '2v2' | '3v3'; vs: 'ai' (você vs IA) | 'pvp' (P1 vs P2 no mesmo teclado)
-// inputs: cada humano joga no teclado ou num controle (index = qual controle o navegador detectou)
+// mode: '1v1' | '2v2' | '3v3'; humans: quantos jogadores humanos (1 a 6, até lotar os dois times; o resto é IA)
+// inputs: cada humano joga no teclado ou num controle (index = qual controle o navegador detectou) e escolhe o time
+// picks: lutador escolhido por cada humano, na ordem P1, P2...
+const PLAYER_IDS = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'];
+const MAX_KEYBOARD_PLAYERS = 2; // um de cada lado do teclado
 const match = {
-    mode: '1v1', vs: 'ai', map: 'random', picks: [],
-    inputs: { p1: { type: 'keyboard', index: null, name: '' }, p2: { type: 'keyboard', index: null, name: '' } },
+    mode: '1v1', humans: 1, map: 'random', picks: [],
+    // Padrão: P1 e P2 no teclado, os outros no controle; times alternados (P1 ciano, P2 rosa, P3 ciano...)
+    inputs: Object.fromEntries(PLAYER_IDS.map((p, i) => [p, { type: i < MAX_KEYBOARD_PLAYERS ? 'keyboard' : 'gamepad', index: null, name: '', team: i % 2 }])),
 };
 const teamSizeOf = mode => Number(mode[0]);
 const TEAM_COLORS = ['#00ffff', '#ff4dff'];
@@ -62,12 +66,12 @@ const CHARACTERS = [
     { id: 'aspas', name: 'Aspas the Darkness' },
 ];
 
-// Teclas (cada ação aceita uma lista). Contra a IA o jogador pode andar com WASD ou setas;
-// no P1 vs P2 cada um fica com um lado do teclado. Segurar o soco solta o soco forte.
+// Teclas (cada ação aceita uma lista). Sozinho no teclado o jogador pode andar com WASD ou setas;
+// com dois no teclado, o primeiro fica com o lado esquerdo e o segundo com o direito. Segurar o soco solta o soco forte.
 const KEYMAPS = {
     solo: { up: ['w', 'arrowup'], down: ['s', 'arrowdown'], left: ['a', 'arrowleft'], right: ['d', 'arrowright'], punch: ['j'], special: ['k'], defend: ['l'] },
-    p1: { up: ['w'], down: ['s'], left: ['a'], right: ['d'], punch: ['f'], special: ['g'], defend: ['h'] },
-    p2: { up: ['arrowup'], down: ['arrowdown'], left: ['arrowleft'], right: ['arrowright'], punch: ['k'], special: ['l'], defend: ['ç', ';'] },
+    left: { up: ['w'], down: ['s'], left: ['a'], right: ['d'], punch: ['f'], special: ['g'], defend: ['h'] },
+    right: { up: ['arrowup'], down: ['arrowdown'], left: ['arrowleft'], right: ['arrowright'], punch: ['k'], special: ['l'], defend: ['ç', ';'] },
 };
 
 // Botões do controle (mapeamento padrão do navegador; num PS5: 0 = ✕, 1 = ◯, 2 = □, 3 = △, 4 = L1, 5 = R1)

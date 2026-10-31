@@ -3,7 +3,7 @@
 // As ultimates ficam em specials.js (adicionadas à classe por lá).
 
 class Fighter {
-    // controller: 'p1' / 'p2' (humanos) ou 'ai'
+    // controller: 'p1' a 'p6' (humanos) ou 'ai'
     constructor(x, y, name, characterType, team, controller) {
         this.characterType = characterType;
         this.name = name;

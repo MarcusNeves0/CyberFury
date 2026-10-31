@@ -22,7 +22,7 @@
 
 Neo-Cidade está tomada por neon, chuva e gente disposta a brigar por qualquer motivo. **Cybernetic Fury** é uma arena de luta com câmera de cima, no estilo Brawl Stars: você anda em 8 direções, a mira é automática e cada lutador tem um golpe, um golpe forte, uma defesa e uma **ultimate** própria.
 
-- 🥊 **1v1, 2v2 ou 3v3:** contra a IA ou **P1 vs P2** no mesmo computador
+- 🥊 **1v1, 2v2 ou 3v3:** de 1 a **6 jogadores** no mesmo computador, cada um escolhe o time (uns contra os outros ou todos juntos contra a IA); a IA completa as vagas que sobrarem
 - 🎮 **Teclado ou controle:** suporte a controle de PS5/Xbox, inclusive para navegar nos menus
 - 💚 **Healer obrigatório:** no 2v2 e no 3v3, todo time tem pelo menos um curandeiro
 - 🗺️ **4 arenas** com perigos próprios, escolhidas no menu ou sorteadas a cada luta
@@ -99,14 +99,14 @@ Neo-Cidade está tomada por neon, chuva e gente disposta a brigar por qualquer m
 
 ## 🕹️ Controles
 
-| Ação | Contra a IA | P1 | P2 | Controle |
+| Ação | Sozinho no teclado | 1º no teclado | 2º no teclado | Controle |
 |---|---|---|---|---|
 | Andar | WASD ou setas | WASD | Setas | Analógico / D-pad |
 | Soco (segure para o soco forte) | J | F | K | □ / X |
 | Ultimate | K | G | L | △ / Y ou R1 |
 | Defesa | L | H | Ç | ◯ / B ou L1 |
 
-Nos menus, com o controle: **✕ confirma** e **◯ volta**.
+Nos menus, com o controle: **✕ confirma** e **◯ volta**. Cabem até 2 jogadores no teclado; do 3º em diante, cada um precisa de um controle.
 
 ---
 

@@ -201,12 +201,13 @@ function createFighters() {
     const pool = CHARACTERS.filter(c => !match.picks.includes(c.id)).sort(() => Math.random() - 0.5);
     const byId = id => CHARACTERS.find(c => c.id === id);
     const teams = [[], []];
-    teams[0].push({ char: byId(match.picks[0]), controller: 'p1' });
-    if (match.vs === 'pvp') teams[1].push({ char: byId(match.picks[1]), controller: 'p2' });
+    // Cada humano entra no time que escolheu no HUB, com o lutador que escolheu na seleção
+    activePlayers().forEach((player, i) => teams[teamOf(player)].push({ char: byId(match.picks[i]), controller: player }));
     // Em 2v2 e 3v3, cada time recebe pelo menos uma healer (sorteada entre as que sobraram)
     if (FORCE_HEALER_PER_TEAM && teamSize > 1) {
         for (const team of teams) {
-            if (team.some(m => HEALERS.includes(m.char.id))) continue;
+            // Time já lotado de humanos (ou com healer) fica como está
+            if (team.length >= teamSize || team.some(m => HEALERS.includes(m.char.id))) continue;
             const healerIndex = pool.findIndex(c => HEALERS.includes(c.id));
             if (healerIndex >= 0) team.push({ char: pool.splice(healerIndex, 1)[0], controller: 'ai' });
         }
@@ -229,8 +230,7 @@ function createFighters() {
                     f.gamepadIndex = input.index;
                 } else {
                     // Dois jogadores no teclado dividem as teclas; sozinho no teclado usa o esquema completo
-                    const keyboardPlayers = activePlayers().filter(p => match.inputs[p].type === 'keyboard').length;
-                    f.keymap = keyboardPlayers === 2 ? KEYMAPS[member.controller] : KEYMAPS.solo;
+                    f.keymap = keymapFor(member.controller);
                 }
             }
             fighters.push(f);
