@@ -18,6 +18,7 @@ function createRoomLink({ kind, onMessage, onStatus, onStream }) {
         conn: null,
         retryTimer: null,
         lastPong: 0,
+        helloAt: 0,
         seated: false, // o jogo já deu uma vaga (welcome)
         open(room) {
             this.room = room;
@@ -27,6 +28,9 @@ function createRoomLink({ kind, onMessage, onStatus, onStream }) {
             this.peer.on('open', () => this.dial());
             this.peer.on('disconnected', () => { if (!this.peer.destroyed) this.peer.reconnect(); });
             this.peer.on('error', err => {
+                // Já está jogando: um erro do servidor de apresentação não derruba a conexão direta com o jogo
+                // (se ela cair de verdade, o sinal de vida percebe e reconecta)
+                if (this.seated && this.conn && this.conn.open) return;
                 // Sala ainda não aberta (jogo fechado ou código errado): continua tentando
                 onStatus('offline', err.type === 'peer-unavailable'
                     ? `Sala ${this.room} não encontrada. Tentando de novo...`
@@ -45,7 +49,7 @@ function createRoomLink({ kind, onMessage, onStatus, onStream }) {
             const conn = this.peer.connect(PEER_PREFIX + this.room, { serialization: 'json', reliable: true });
             this.conn = conn;
             conn.on('open', () => {
-                this.lastPong = Date.now();
+                this.lastPong = this.helloAt = Date.now();
                 conn.send({ t: 'hello', room: this.room, kind });
             });
             conn.on('data', msg => {
@@ -78,7 +82,15 @@ function createRoomLink({ kind, onMessage, onStatus, onStream }) {
         },
         // Sinal de vida: ping a cada 1 s; o jogo responde. Sem resposta = caiu (o PC fechou o jogo ou perdeu a rede)
         heartbeat() {
-            if (!this.conn || !this.conn.open || !this.seated) return;
+            if (!this.conn || !this.conn.open) return;
+            if (!this.seated) {
+                // Conectou mas o jogo não respondeu com a vaga: se apresenta de novo
+                if (Date.now() - this.helloAt > 3000) {
+                    this.helloAt = Date.now();
+                    this.conn.send({ t: 'hello', room: this.room, kind });
+                }
+                return;
+            }
             this.conn.send({ t: 'ping' });
             if (Date.now() - this.lastPong > ROOM_TIMEOUT_MS) {
                 const conn = this.conn;

@@ -100,6 +100,7 @@ function join(room) {
     room = cleanRoom(room);
     if (room.length < 2) return;
     try { localStorage.setItem(ROOM_KEY, room); } catch (e) { /* só não lembra */ }
+    roomInput.blur(); // alguns navegadores (Firefox, Safari) deixam o campo escondido com o foco e as teclas não iam para o jogo
     $('join-screen').classList.add('hidden');
     $('view-screen').classList.remove('hidden');
     link.open(room);
@@ -140,7 +141,8 @@ let lastMove = { x: 0, y: 0 };
 let lastMoveAt = 0;
 let moveTimer = null;
 
-const isTyping = () => document.activeElement === roomInput;
+// Só está digitando o código enquanto a tela de entrar está aberta
+const isTyping = () => document.activeElement === roomInput && !$('join-screen').classList.contains('hidden');
 
 window.addEventListener('keydown', e => {
     if (isTyping() || $('view-screen').classList.contains('hidden')) return;

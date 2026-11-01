@@ -227,7 +227,21 @@ setInterval(() => {
 
 // Celular (ou tela remota) chegou: fica com a vaga de quem está esperando; se ninguém estiver, entra como jogador novo
 function seatPhone(conn, kind) {
-    if (phones.has(conn.peer)) { greetPhone(conn.peer); return; }
+    const known = phones.get(conn.peer);
+    if (known) {
+        // Reconectou sem o jogo perceber que caiu (oscilação na internet): passa a falar pela conexão nova.
+        // Antes o jogo continuava respondendo pela antiga, já morta, e logo largava a vaga: a pessoa via
+        // o vídeo, mas os comandos dela eram ignorados.
+        if (known.conn !== conn) {
+            const old = known.conn;
+            known.conn = conn;
+            old.close();
+        }
+        known.lastSeen = Date.now();
+        greetPhone(conn.peer);
+        if (known.kind === 'screen') callScreen(known);
+        return;
+    }
     const waiting = activePlayers().find(p => match.inputs[p].type === 'phone' && match.inputs[p].index === null);
     let player = waiting;
     if (!player && gameState === 'MENU' && match.humans < maxHumans()) {
