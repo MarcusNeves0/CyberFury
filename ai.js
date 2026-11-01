@@ -83,7 +83,7 @@ class AI {
         const d = distance(me, opponent);
         const meleeRange = (isBladeUser(me) ? BLADE_REACH : PUNCH_REACH) + me.radius + opponent.radius - 6;
         // Só tenta o especial se tiver a energia de verdade (antes tentava com 45 e perdia a vez)
-        const canUseSpecial = !['zarek', 'celestia', 'flora', 'spark', 'nyx', 'mamba', 'gear', 'roxy', 'weaver', 'aegis', 'rhino', 'anchor', 'sina', 'coleone', 'bershow', 'aspas'].includes(me.characterType) &&
+        const canUseSpecial = !['zarek', 'celestia', 'flora', 'spark', 'nyx', 'mamba', 'gear', 'roxy', 'weaver', 'aegis', 'rhino', 'anchor', 'sina', 'coleone', 'bershow', 'aspas', 'cangeras'].includes(me.characterType) &&
             me.energy >= specialCost(me.characterType) && me.specialCooldown <= 0;
         if (Math.random() < 0.1) this.strafeSign *= -1;
 
@@ -291,6 +291,15 @@ class AI {
         // (pistola, tubarão e barco alcançam ~400); enquanto gira, continua lutando com a faca
         if (me.characterType === 'sina') {
             if (me.energy >= SINA_ULT_COST && me.specialCooldown <= 0 && me.sinaSpinTimer <= 0 && d < SINA_BOAT_RANGE * 0.85) {
+                me.attack('special');
+                return;
+            }
+        }
+
+        // Cangeras: abre o tribunal quando quem mais bateu na luta já juntou energia (assim a pena confisca mais)
+        if (me.characterType === 'cangeras' && me.energy >= CANGERAS_COURT_COST && me.specialCooldown <= 0) {
+            const accused = enemiesOf(me).filter(e => !e.isInsideOpponent).sort((a, b) => b.stats.dealt - a.stats.dealt)[0];
+            if (accused && accused.sentenceTimer <= 0 && (ultReady(accused) || accused.energy >= accused.maxEnergy * 0.4)) {
                 me.attack('special');
                 return;
             }

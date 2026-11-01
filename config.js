@@ -64,6 +64,7 @@ const CHARACTERS = [
     { id: 'coleone', name: 'Coleone' },
     { id: 'bershow', name: 'Bershow' },
     { id: 'aspas', name: 'Aspas the Darkness' },
+    { id: 'cangeras', name: 'Cangeras' },
 ];
 
 // Teclas (cada ação aceita uma lista). Sozinho no teclado o jogador pode andar com WASD ou setas;
@@ -254,6 +255,18 @@ const ASPAS_ARMY_COST = 220;
 const ASPAS_ARMY_SIZE = 3;             // soldados de sombra por invocação...
 const ASPAS_ARMY_BONUS_MAX = 3;        // ...+1 para cada inimigo que cair na partida (até +3)
 const ASPAS_ARMY_DURATION = 360;       // 6 s caçando (a ultimate só volta quando eles somem)
+// Cangeras: advogado do martelo de juiz. Ultimate: o Tribunal congela a luta, bate o martelo 3 vezes
+// e condena por "Agressão" o inimigo que mais causou dano na partida: ele fica sem ultimate
+const CANGERAS_GAVEL_DAMAGE = 20;
+const CANGERAS_GAVEL_COOLDOWN = 18;
+const CANGERAS_ORDER_DAMAGE = 40;       // soco forte: "ORDEM NO TRIBUNAL!", empurra para longe
+const CANGERAS_ORDER_PUSH = 8;
+const CANGERAS_COURT_COST = 160;
+const CANGERAS_COURT_COOLDOWN = 420;
+const CANGERAS_COURT_FREEZE = 180;      // 3 s com a luta congelada
+const CANGERAS_COURT_GAVELS = [55, 85, 115]; // quando cada martelada bate (passos dentro do tribunal)
+const CANGERAS_SENTENCE = 480;          // 8 s sem ultimate (e com a energia confiscada)
+let courtSession = null;                // tribunal aberto agora (a luta fica congelada)
 const SHADOW_SPEED = 3.6;
 const SHADOW_DAMAGE = 12;
 const SHADOW_HIT_INTERVAL = 40;        // um corte a cada 0,7 s
@@ -323,7 +336,7 @@ const GAZE_STUN = 45;
 // Vida máxima de cada personagem (tanques aguentam mais, quem ataca de longe aguenta menos)
 const HEALTH_BY_CHARACTER = {
     titan: 1200, zarek: 1200, fenris: 1150, bershow: 1150, spark: 1100,
-    hades: 1000, jack: 1000, kenji: 1000, akane: 950, kaze: 950, aspas: 950, craque: 950, weaver: 950, sina: 950,
+    hades: 1000, jack: 1000, kenji: 1000, akane: 950, kaze: 950, aspas: 950, cangeras: 1050, craque: 950, weaver: 950, sina: 950,
     aegis: 1600, rhino: 1450, anchor: 1450, coleone: 1450,
     mamba: 900, gear: 750, roxy: 850, celestia: 950, nyx: 950, flora: 900,
 };

@@ -51,6 +51,12 @@ const STEP_MS = 1000 / 60;
 let lastFrameTime = null, timeAccumulator = 0;
 
 function step() {
+    // Tribunal do Cangeras: a luta inteira fica congelada enquanto o julgamento acontece
+    if (courtSession) {
+        updateCourt();
+        updatePhones();
+        return;
+    }
     aiControllers.forEach(ai => ai.tick());
     // Humanos sempre miram no inimigo mais próximo; a IA escolhe o alvo, mas troca se ele cair
     for (const f of fighters) {
@@ -177,8 +183,10 @@ function draw() {
     drawSinaBoatShips();
     fighters.forEach(f => { if (alive(f) && f.characterType === 'sina') drawSinaRoulette(f); });
     healingFlowers.forEach(flower => flower.draw());
+    fighters.forEach(f => { if (alive(f) && f.sentenceTimer > 0) drawSentenceMark(f); });
     floatingTexts.forEach(t => t.draw());
     drawMapOverlay();
+    if (courtSession) drawCourt(courtSession);
 }
 
 function drawLightningChain(attacker, defender) {
@@ -259,6 +267,7 @@ async function startGame() {
         healingFlowers = [];
         floatingTexts = [];
         groundBalls = [];
+        courtSession = null;
         setupArena();
         createFighters();
         announceFightersToPhones();

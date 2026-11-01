@@ -136,6 +136,9 @@ const sfx = (() => {
         // Aspas the Darkness: passo na sombra e o exército saindo do chão
         aspas_step: t => { whoosh(t, 5000, 600, 0.18, -10, 2); zap(t, 400, 120, 0.15, -20, 'sine'); },
         aspas_army: t => { thump(t, 'A0', -4, 0.7); zap(t, 70, 140, 0.9, -12, 'sawtooth'); whoosh(t, 200, 2400, 0.9, -8, 0.8); zap(t + 0.2, 220, 110, 0.7, -18, 'triangle'); },
+        // Cangeras: o tribunal abrindo (órgão grave) e a martelada seca na madeira
+        court_open: t => { zap(t, 65, 65, 1.2, -10, 'sawtooth'); zap(t, 98, 98, 1.2, -14, 'sawtooth'); thump(t, 'C1', -4, 0.8); whoosh(t, 200, 1200, 0.8, -14, 0.5); },
+        gavel: t => { thump(t, 'G2', -2, 0.12); clang(t, 900, -8, 0.06); clang(t, 1500, -16, 0.04); whoosh(t, 4000, 1500, 0.05, -18, 2); },
         zarek_transform: t => { thump(t, 'A0', -2, 1); zap(t, 100, 900, 0.8, -12, 'sawtooth'); whoosh(t, 300, 6000, 0.9, -8, 0.8); },
     };
 

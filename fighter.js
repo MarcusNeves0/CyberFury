@@ -142,6 +142,7 @@ class Fighter {
         }
         if (characterType === 'aspas') this.height = Math.round(FIGHTER_HEIGHT * ASPAS_HEIGHT);
         this.shadowBonus = 0;        // Aspas: soldados a mais no exército (+1 por inimigo derrotado)
+        this.sentenceTimer = 0;      // condenado pelo tribunal do Cangeras: sem ultimate e sem energia
 
         // Weaver / teia
         this.slowTimer = 0;          // grudado na teia: anda na metade da velocidade
@@ -290,6 +291,7 @@ class Fighter {
         if (special && !isMeleeStrike) this.spriteFrame = 'special';
         if (this.isDashing || this.isBladeDancing || this.isChannelingSpecial || this.dunkPhase === 'rush') this.spriteFrame = 'attack';
         if (this.frenzyTimer > 0 && this.specialPoseTimer <= 0) this.spriteFrame = 'attack'; // Frenesi: pistolas sempre apontadas
+        if (this.courtPose) this.spriteFrame = this.courtPose; // Cangeras batendo o martelo no tribunal
         if (!isWalking && this.spriteFrame === null) this.spriteFrame = 'idle';
         if (special) {
             // Brilho em volta do corpo enquanto solta o poder
@@ -598,6 +600,11 @@ class Fighter {
 
         // Regeneração de energia
         this.energy = Math.min(this.maxEnergy, this.energy + 0.5);
+        // Sentença do Cangeras: a energia fica confiscada até a pena acabar
+        if (this.sentenceTimer > 0) {
+            this.sentenceTimer--;
+            this.energy = 0;
+        }
     }
 
     // Tira vida e anota nas estatísticas (dano causado de quem bateu, dano sofrido de quem levou)
@@ -754,6 +761,7 @@ class Fighter {
 
     attack(type) {
         if (this.attackCooldown > 0 || this.isParalyzed || this.isDefending || this.isDashing || this.isBladeDancing || this.isInsideOpponent || this.isDead) return;
+        if (courtSession) return; // tribunal aberto: a luta está congelada
 
         this.isAttacking = true;
         this.attackType = type;
@@ -789,7 +797,7 @@ class Fighter {
                     sfx.play('blade_swing');
                 } else {
                     this.attackCooldown = (this.characterType === 'weaver' ? WEAVER_PUNCH_COOLDOWN : this.characterType === 'sina' ? SINA_KNIFE_COOLDOWN
-                        : this.characterType === 'aspas' ? ASPAS_DAGGER_COOLDOWN : 20) / this.attackSpeedMultiplier;
+                        : this.characterType === 'aspas' ? ASPAS_DAGGER_COOLDOWN : this.characterType === 'cangeras' ? CANGERAS_GAVEL_COOLDOWN : 20) / this.attackSpeedMultiplier;
                     this.attackTimer = 6;
                     sfx.play(['kaze', 'sina', 'aspas'].includes(this.characterType) ? 'blade_swing' : 'swing');
                 }
@@ -813,6 +821,7 @@ class Fighter {
                 this.attackWindup = 4; // o soco forte puxa mais o braço
                 if (this.characterType === 'sina') this.push(this.aim, SINA_STAB_LUNGE); // estocada: dá um passo à frente
                 if (this.characterType === 'aspas') this.shadowStep(); // some e reaparece atrás do alvo
+                if (this.characterType === 'cangeras') floatingTexts.push(new FloatingText(this.x, this.y - this.height - 18, 'ORDEM!', '#ffcc4a'));
                 sfx.play(isBladeUser(this) ? 'blade_swing' : 'swing_heavy');
                 break;
             case 'special':
@@ -879,6 +888,10 @@ class Fighter {
                 }
                 if (this.characterType === 'aspas') {
                     this.summonShadowArmy();
+                    return;
+                }
+                if (this.characterType === 'cangeras') {
+                    this.openCourt();
                     return;
                 }
                 const energyCost = specialCost(this.characterType);
@@ -978,7 +991,7 @@ function tryMelee(attacker) {
     if (isBladeUser(attacker)) effect.sound = 'blade_hit';
     switch (attacker.attackType) {
         case 'punch':
-            damage = (attacker.characterType === 'akane') ? 14 : (attacker.characterType === 'nyx') ? NYX_PUNCH_DAMAGE : (attacker.characterType === 'kaze') ? KAZE_PUNCH_DAMAGE : (attacker.characterType === 'weaver') ? WEAVER_PUNCH_DAMAGE : (attacker.characterType === 'kenji') ? KENJI_PUNCH_DAMAGE : (attacker.characterType === 'aegis') ? AEGIS_PUNCH_DAMAGE : (attacker.characterType === 'rhino') ? RHINO_PUNCH_DAMAGE : (attacker.characterType === 'anchor') ? ANCHOR_PUNCH_DAMAGE : (attacker.characterType === 'sina') ? SINA_KNIFE_DAMAGE : (attacker.characterType === 'coleone') ? COLEONE_PUNCH_DAMAGE : (attacker.characterType === 'bershow') ? BERSHOW_SWORD_DAMAGE : (attacker.characterType === 'aspas') ? ASPAS_DAGGER_DAMAGE : 10;
+            damage = (attacker.characterType === 'akane') ? 14 : (attacker.characterType === 'nyx') ? NYX_PUNCH_DAMAGE : (attacker.characterType === 'kaze') ? KAZE_PUNCH_DAMAGE : (attacker.characterType === 'weaver') ? WEAVER_PUNCH_DAMAGE : (attacker.characterType === 'kenji') ? KENJI_PUNCH_DAMAGE : (attacker.characterType === 'aegis') ? AEGIS_PUNCH_DAMAGE : (attacker.characterType === 'rhino') ? RHINO_PUNCH_DAMAGE : (attacker.characterType === 'anchor') ? ANCHOR_PUNCH_DAMAGE : (attacker.characterType === 'sina') ? SINA_KNIFE_DAMAGE : (attacker.characterType === 'coleone') ? COLEONE_PUNCH_DAMAGE : (attacker.characterType === 'bershow') ? BERSHOW_SWORD_DAMAGE : (attacker.characterType === 'aspas') ? ASPAS_DAGGER_DAMAGE : (attacker.characterType === 'cangeras') ? CANGERAS_GAVEL_DAMAGE : 10;
             if (attacker.zarekForm === 'red') damage = 12;
             if (attacker.zarekForm === 'blue') damage = ZAREK_BLUE_PUNCH;
             if (attacker.characterType === 'akane') {
@@ -1014,6 +1027,7 @@ function tryMelee(attacker) {
             if (attacker.characterType === 'coleone') damage = COLEONE_STRONG_DAMAGE; // toco que manda para longe
             if (attacker.characterType === 'bershow') damage = BERSHOW_STRONG_DAMAGE; // espadão com as duas mãos
             if (attacker.characterType === 'aspas') damage = ASPAS_STEP_DAMAGE; // corte pelas costas
+            if (attacker.characterType === 'cangeras') damage = CANGERAS_ORDER_DAMAGE; // "ORDEM NO TRIBUNAL!"
             if (attacker.characterType === 'hades') { effect.type = 'burn'; }
             if (attacker.characterType === 'jack') { defender.applyCurse(attacker); }
             break;
@@ -1036,6 +1050,7 @@ function tryMelee(attacker) {
             attacker.energy = Math.min(attacker.maxEnergy, attacker.energy + 15);
             const pushForce = rhinoCharged ? 12 : attacker.characterType === 'aegis' ? 6
                 : attacker.characterType === 'coleone' && attacker.attackType === 'strong_punch' ? 9 // toco: manda para longe
+                : attacker.characterType === 'cangeras' && attacker.attackType === 'strong_punch' ? CANGERAS_ORDER_PUSH
                 : attacker.attackType === 'strong_punch' ? 4 : 1.5;
             target.push(attacker.aim, pushForce);
             // Nyx: cada acerto rouba vida e manda um orbe para o aliado mais ferido
@@ -1056,7 +1071,7 @@ function specialCost(characterType) {
         zarek: ZAREK_ULT_COST, celestia: CELESTIA_ULT_COST, flora: FLORA_FLOWER_COST, nyx: NYX_LINK_COST,
         mamba: MAMBA_CLOUD_COST, gear: GEAR_TURRET_COST, roxy: ROXY_FRENZY_COST, weaver: WEAVER_PULL_COST,
         aegis: AEGIS_WALL_COST, rhino: RHINO_CHARGE_COST, anchor: ANCHOR_HOOK_COST, sina: SINA_ULT_COST,
-        coleone: COLEONE_DUNK_COST, bershow: BERSHOW_ARMOR_COST, aspas: ASPAS_ARMY_COST,
+        coleone: COLEONE_DUNK_COST, bershow: BERSHOW_ARMOR_COST, aspas: ASPAS_ARMY_COST, cangeras: CANGERAS_COURT_COST,
     }[characterType] || 45;
 }
 
@@ -1071,7 +1086,7 @@ function maxEnergyFor(characterType) {
 
 // Ultimate pronta para usar agora (energia e trava curta)
 function ultReady(fighter) {
-    return fighter.energy >= specialCost(fighter.characterType) && fighter.specialCooldown <= 0;
+    return fighter.sentenceTimer <= 0 && fighter.energy >= specialCost(fighter.characterType) && fighter.specialCooldown <= 0;
 }
 
 // Quem luta de longe (atiradores, Craque e Flora)

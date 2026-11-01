@@ -669,6 +669,121 @@ function drawWalls() {
 }
 
 // Corte Devastador do Bershow: uma faixa de corte vermelha e branca que some rápido
+// Tribunal do Cangeras: sala escurece, holofote no juiz e no réu, martelo batendo no meio e a sentença no papel
+function drawCourt(c) {
+    const W = WORLD_W, H = WORLD_H, cx = W / 2, cy = H / 2;
+    const fade = Math.min(1, c.t / 20);
+    const done = c.knocks >= 3;
+    ctx.save();
+    ctx.fillStyle = `rgba(22, 12, 4, ${0.7 * fade})`;
+    ctx.fillRect(0, 0, W, H);
+    // Holofotes: dourado no Cangeras, vermelho no réu (os dois são redesenhados por cima do escuro)
+    for (const [f, rgb] of [[c.judge, '255, 210, 120'], [c.accused, '255, 80, 80']]) {
+        if (!alive(f)) continue;
+        const light = ctx.createRadialGradient(f.x, f.y - 20, 6, f.x, f.y - 20, 90);
+        light.addColorStop(0, `rgba(${rgb}, ${0.35 * fade})`);
+        light.addColorStop(1, `rgba(${rgb}, 0)`);
+        ctx.fillStyle = light;
+        ctx.beginPath(); ctx.arc(f.x, f.y - 20, 90, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = `rgba(${rgb}, ${0.25 * fade})`;
+        ctx.beginPath(); ctx.ellipse(f.x, f.y, 38, 12, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+    for (const f of [c.judge, c.accused]) if (alive(f)) f.draw();
+
+    ctx.save();
+    ctx.globalAlpha = fade;
+    ctx.textAlign = 'center';
+    // Título
+    ctx.font = 'bold 40px Orbitron, sans-serif';
+    ctx.fillStyle = '#ffcc4a';
+    ctx.shadowColor = '#ff9a2a';
+    ctx.shadowBlur = 18;
+    ctx.fillText('TRIBUNAL ABERTO', cx, cy - 175);
+    ctx.shadowBlur = 0;
+    // Bloco de madeira e o martelo (erguido; desce a cada martelada)
+    const by = cy - 10;
+    ctx.fillStyle = '#4e2e14';
+    ctx.beginPath(); ctx.ellipse(cx, by + 10, 46, 14, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#8a5428';
+    ctx.beginPath(); ctx.ellipse(cx, by, 46, 14, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillRect(cx - 46, by, 92, 10);
+    ctx.fillStyle = '#b07038';
+    ctx.beginPath(); ctx.ellipse(cx, by - 1, 38, 10, 0, 0, Math.PI * 2); ctx.fill();
+    // Martelo: gira em volta da mão (à direita); a cabeça fica em cima do bloco quando bate
+    const angle = c.knock > 6 ? 0 : c.knock > 0 ? 0.3 : 0.6;
+    ctx.save();
+    ctx.translate(cx + 130, by - 24);
+    ctx.rotate(angle);
+    ctx.fillStyle = '#8a5428';
+    ctx.fillRect(-110, -5, 112, 10);              // cabo
+    ctx.fillStyle = '#6a3c1a';
+    ctx.fillRect(-160, -26, 56, 52);              // cabeça
+    ctx.fillStyle = '#4e2e14';
+    ctx.fillRect(-164, -28, 9, 56); ctx.fillRect(-109, -28, 9, 56);
+    ctx.fillStyle = '#ffcc4a';
+    ctx.fillRect(-135, -26, 6, 52);
+    ctx.restore();
+    // "TOC!" de cada martelada
+    ctx.font = 'bold 30px Orbitron, sans-serif';
+    for (let i = 0; i < (c.knocks || 0); i++) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText('TOC!', cx - 190 + i * 190, by - 110 + (i === 1 ? -12 : 0));
+    }
+    // Sentença: papel com a acusação e o carimbo de culpado
+    if (done) {
+        const k = Math.min(1, (c.t - CANGERAS_COURT_GAVELS[2]) / 12);
+        const py = cy + 110;
+        ctx.globalAlpha = fade * k;
+        ctx.fillStyle = '#f1e3c0';
+        ctx.fillRect(cx - 300, py, 600, 150);
+        ctx.strokeStyle = '#8a5a2a';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(cx - 300, py, 600, 150);
+        const name = (CHARACTERS.find(ch => ch.id === c.accused.characterType) || { name: '?' }).name.toUpperCase();
+        ctx.fillStyle = '#2a1a0a';
+        ctx.font = 'bold 26px Orbitron, sans-serif';
+        ctx.fillText(`RÉU: ${name}`, cx, py + 40);
+        ctx.font = 'bold 17px Orbitron, sans-serif';
+        ctx.fillText(`CRIME: AGRESSÃO (${c.dealt} de dano causado)`, cx, py + 78);
+        ctx.fillStyle = '#8a1010';
+        ctx.fillText(`PENA: SEM ULTIMATE POR ${Math.round(CANGERAS_SENTENCE / 60)} SEGUNDOS`, cx, py + 112);
+        // Carimbo
+        const stamp = 1 + Math.max(0, 1 - k) * 1.5;
+        ctx.save();
+        ctx.translate(cx + 240, py - 4);
+        ctx.rotate(-0.25);
+        ctx.scale(stamp, stamp);
+        ctx.strokeStyle = '#d01818';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(-90, -22, 180, 44);
+        ctx.fillStyle = '#d01818';
+        ctx.font = 'bold 28px Orbitron, sans-serif';
+        ctx.fillText('CULPADO', 0, 10);
+        ctx.restore();
+    }
+    ctx.restore();
+}
+
+// Condenado pelo tribunal: balança riscada em cima da cabeça com os segundos que faltam
+function drawSentenceMark(f) {
+    const x = f.x, y = f.y - f.height - 34;
+    ctx.save();
+    ctx.fillStyle = 'rgba(120, 10, 10, 0.85)';
+    ctx.beginPath(); ctx.arc(x, y, 11, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#ffcc4a';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('⚖', x, y + 5);
+    ctx.font = 'bold 10px Orbitron, sans-serif';
+    ctx.fillStyle = '#ff8080';
+    ctx.fillText(`${Math.ceil(f.sentenceTimer / 60)}s`, x + 22, y + 4);
+    ctx.restore();
+}
+
 function drawBershowSlashes() {
     for (const slash of bershowSlashes) {
         const fade = slash.life / 18;

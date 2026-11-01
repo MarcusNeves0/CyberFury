@@ -23,7 +23,7 @@ function handleKeyDown(f, action) {
             return;
         case 'special':
             if (f.characterType === 'spark') {
-                if (!f.isChannelingSpecial && !f.isInsideOpponent && !isPossessed(f)) {
+                if (!f.isChannelingSpecial && !f.isInsideOpponent && !isPossessed(f) && f.sentenceTimer <= 0 && !courtSession) {
                     f.isChannelingSpecial = true;
                     f.channelTarget = f.target;
                 }

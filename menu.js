@@ -223,6 +223,7 @@ const ROSTER_INFO = {
     zarek: { cls: 'melee', style: 'Muda de forma na luta: Rubra 🔴 ou Umbral 🔵', ult: 'Entra no corpo do inimigo e sai rasgando' },
     weaver: { cls: 'melee', style: 'Acrobata com teia e sentido aranha', ult: 'Puxão de teia e chute para cima' },
     bershow: { cls: 'melee', style: 'Espadão que acerta todos na frente; quanto menos vida, mais forte', ult: 'Armadura da Fúria: o visor fecha, solta o Corte Devastador e ele não sente dor por 5 s' },
+    cangeras: { cls: 'melee', style: 'Advogado do martelo de juiz; o soco forte manda o inimigo para longe ("ORDEM!")', ult: 'Tribunal: congela a luta, bate o martelo 3 vezes e deixa sem ultimate quem mais causou dano' },
     aspas: { cls: 'melee', style: 'Duas adagas rápidas; some e reaparece atrás do inimigo', ult: 'Exército das Sombras: 3 soldados de sombra caçam os inimigos (+1 a cada inimigo derrotado)' },
     sina: { cls: 'melee', style: 'Pirata apostadora de faca; o papagaio revela quem se esconde', ult: 'Roleta da Sina: 🔫 pistola, 🦈 tubarão ou 🌊 barco de água' },
     mamba: { cls: 'shooter', style: 'Rifle tóxico de longo alcance', ult: 'Nuvem de veneno' },

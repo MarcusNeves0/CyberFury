@@ -688,7 +688,7 @@ body {
 .selection-grid {
     flex: 0 0 auto;
     display: grid;
-    grid-template-columns: repeat(13, 1fr);
+    grid-template-columns: repeat(14, 1fr);
     gap: 0.8cqh 0.7cqw;
     width: 100%;
 }

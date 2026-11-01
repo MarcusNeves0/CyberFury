@@ -484,6 +484,22 @@ Object.assign(Fighter.prototype, {
         sfx.play('aspas_army');
     },
 
+    // Cangeras: Tribunal — congela a luta, bate o martelo 3 vezes e condena por "Agressão"
+    // o inimigo que mais causou dano na partida (empate ou ninguém bateu: o mais perto)
+    openCourt() {
+        this.isAttacking = false;
+        if (courtSession || this.energy < CANGERAS_COURT_COST || this.specialCooldown > 0) return;
+        const accused = enemiesOf(this).filter(e => !e.isInsideOpponent)
+            .sort((a, b) => b.stats.dealt - a.stats.dealt || distance(this, a) - distance(this, b))[0];
+        if (!accused) return;
+        this.energy -= CANGERAS_COURT_COST;
+        this.specialCooldown = CANGERAS_COURT_COOLDOWN;
+        this.courtPose = 'special';
+        courtSession = { judge: this, accused, dealt: Math.round(accused.stats.dealt), t: 0 };
+        screenShake = 0;
+        sfx.play('court_open');
+    },
+
     // Capitã Sina: Roleta da Sina — gira 1 s em cima da cabeça (todos veem) e sai uma das três armas.
     // O resultado é sorteado no começo; a roleta só desacelera até parar na fatia sorteada.
     startSinaRoulette() {
@@ -1118,6 +1134,33 @@ class Turret {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
         ctx.fillRect(this.x - 15, top + 5, 30 * (this.life / TURRET_DURATION), 1);
     }
+}
+
+// Tribunal do Cangeras: roda no lugar da luta (tudo congelado). Três marteladas e a sentença no fim.
+function updateCourt() {
+    const c = courtSession;
+    const { judge, accused } = c;
+    c.t++;
+    screenShake = screenShake > 0.3 ? screenShake * 0.8 : 0;
+    if (CANGERAS_COURT_GAVELS.includes(c.t)) {
+        c.knocks = (c.knocks || 0) + 1;
+        c.knock = 10;
+        judge.courtPose = 'attack';
+        screenShake = 7;
+        sfx.play('gavel');
+    }
+    if (c.knock > 0 && --c.knock === 0) judge.courtPose = 'special';
+    if (c.t < CANGERAS_COURT_FREEZE) return;
+    // Fim do julgamento: a pena começa e a luta volta
+    judge.courtPose = null;
+    judge.poseSpecial();
+    if (alive(accused)) {
+        accused.sentenceTimer = CANGERAS_SENTENCE;
+        accused.energy = 0;
+        if (accused.isChannelingSpecial) accused.stopChanneling();
+        floatingTexts.push(new FloatingText(accused.x, accused.y - accused.height - 18, 'SEM ULTIMATE!', '#ff3b3b'));
+    }
+    courtSession = null;
 }
 
 // Nuvem tóxica da Mamba: mancha verde no chão com borda pulsando e bolhas subindo
