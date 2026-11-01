@@ -110,6 +110,10 @@ const sfx = (() => {
         buzz: t => { for (let i = 0; i < 6; i++) zap(t + i * 0.07, 120 + Math.random() * 40, 90, 0.06, -22, 'sawtooth'); },
         laser: t => { zap(t, 1800, 2400, 0.9, -24, 'sine'); zap(t + 0.1, 900, 1200, 0.8, -26, 'square'); },
         chomp: t => { thump(t, 'E2', -8, 0.12); clang(t, 500, -20, 0.05); whoosh(t, 2500, 600, 0.08, -16, 1); },
+        // Masmorra Dupla: pedra raspando (estátua erguendo a maça), a maça batendo e o colosso abrindo os olhos
+        statue_raise: t => { for (let i = 0; i < 5; i++) zap(t + i * 0.08, 60 + Math.random() * 30, 45, 0.09, -18, 'sawtooth'); whoosh(t, 300, 900, 0.5, -20, 0.5); },
+        stone_slam: t => { thump(t, 'A0', 0, 0.7); clang(t, 180, -10, 0.3); whoosh(t, 1800, 120, 0.7, -6, 0.5); },
+        colossus_gaze: t => { zap(t, 55, 70, 1.4, -8, 'sawtooth'); thump(t, 'C1', -4, 1); zap(t + 0.4, 440, 880, 0.9, -22, 'sine'); },
         glass: t => { clang(t, 2400, -14, 0.15); clang(t + 0.03, 3200, -18, 0.2); whoosh(t, 8000, 3000, 0.2, -16, 2); },
         // Menus
         menu_move: t => clang(t, 2200, -30, 0.03),

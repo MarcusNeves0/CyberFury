@@ -1127,7 +1127,7 @@ body {
 /* Escolha da arena: 5 opções em grade */
 .hub-options-maps {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
 }
 .hub-options-maps .hub-option {
     padding: 8px 6px;

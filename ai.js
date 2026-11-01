@@ -116,6 +116,19 @@ class AI {
             return;
         }
 
+        // Masmorra Dupla: sai da faixa da estátua que ergueu a maça e para quando o colosso vai olhar
+        if (mapId === 'dungeon') {
+            const statue = obstacles.find(o => o.kind === 'statue' && o.warn > 0 && o.warn < STATUE_WARN - 12 && inLane(me, statueLane(o), me.radius));
+            if (statue) {
+                me.aiMove = { x: me.x >= statue.x ? 1 : -1, y: 0 };
+                return;
+            }
+            if (gazeDanger() < 30 && mapState.gaze.obeys.get(me)) {
+                if (d <= meleeRange + 10 || SHOOTERS.includes(me.characterType)) me.attack('punch'); // bate parado
+                return;
+            }
+        }
+
         // Ação defensiva (menos provável)
         if (opponent.isAttacking && d < 120 && Math.random() < 0.5 && me.defenseResetCooldown <= 0) {
             me.isDefending = true;

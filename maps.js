@@ -24,6 +24,9 @@ const OBSTACLE_TYPES = {
     gardentree: { r: 20 },
     fountain: { r: 32 },
     chomper: { r: 13 },
+    statue: { r: 18 },
+    colossus: { r: 48 },
+    pillar: { r: 16 },
 };
 
 const MAPS = {
@@ -59,6 +62,18 @@ const MAPS = {
             team: [[0.37, 0.38, 40], [0.63, 0.62, 40], [0.2, 0.86, 38], [0.8, 0.14, 38]],
         },
     },
+    dungeon: {
+        name: 'MASMORRA DUPLA',
+        // Colosso no trono lá no fundo, fileiras de estátuas nos dois lados e colunas quebradas no meio
+        duel: [['colossus', 0.5, 0.07],
+            ...[0.18, 0.33, 0.67, 0.82].map(fx => ['statue', fx, 0.07]),
+            ...[0.18, 0.34, 0.5, 0.66, 0.82].map(fx => ['statue', fx, 0.98]),
+            ['pillar', 0.3, 0.5], ['pillar', 0.7, 0.5]],
+        team: [['colossus', 0.5, 0.07],
+            ...[0.12, 0.24, 0.36, 0.64, 0.76, 0.88].map(fx => ['statue', fx, 0.05]),
+            ...[0.12, 0.25, 0.38, 0.5, 0.62, 0.75, 0.88].map(fx => ['statue', fx, 0.98]),
+            ['pillar', 0.3, 0.42], ['pillar', 0.7, 0.58], ['pillar', 0.43, 0.72], ['pillar', 0.57, 0.3]],
+    },
 };
 const MAP_IDS = Object.keys(MAPS);
 
@@ -77,6 +92,7 @@ function makeObstacle(kind, x, y) {
     const o = isRound(type) ? { kind, x, y, r: type.r } : { kind, x: x - type.w / 2, y: y - type.h / 2, w: type.w, h: type.h };
     if (type.hp) { o.hp = type.hp; o.maxHp = type.hp; }
     if (kind === 'chomper') { o.cooldown = 60; o.warn = 0; o.bite = 0; }
+    if (kind === 'statue') { o.side = y < (arena.top + arena.bottom) / 2 ? 'top' : 'bottom'; o.warn = 0; o.slam = 0; o.seed = Math.random() * 6.3; }
     return o;
 }
 
@@ -155,6 +171,24 @@ function createMapState(map) {
         s.butterflies.forEach(b => { const p = freeSpot(); b.tx = p.x; b.ty = p.y; });
         s.fountainDrops = [];
         s.pickupTimer = 300;
+    } else if (mapId === 'dungeon') {
+        s.statueTimer = 240;
+        s.gaze = { phase: 'idle', timer: 600, hit: new Set(), obeys: new Map() };
+        s.beams = [];
+        s.cracks = [];
+        // Tochas azuis nas paredes de cima e de baixo, entre as estátuas
+        const statues = obstacles.filter(o => o.kind === 'statue');
+        s.torches = [];
+        for (const side of ['top', 'bottom']) {
+            const row = statues.filter(o => o.side === side).sort((a, b) => a.x - b.x);
+            const xs = [arena.left - 6, ...row.map(o => o.x), arena.right + 6];
+            for (let i = 0; i < xs.length - 1; i++) {
+                const x = (xs[i] + xs[i + 1]) / 2;
+                if (side === 'top' && Math.abs(x - (arena.left + arena.right) / 2) < 90) continue; // atrás do trono não tem tocha
+                s.torches.push({ x, y: side === 'top' ? arena.top - 16 : arena.bottom + 16, phase: rand(0, 6.3) });
+            }
+        }
+        s.motes = Array.from({ length: 40 }, () => ({ x: rand(arena.left, arena.right), y: rand(arena.top, arena.bottom), vy: rand(-0.35, -0.1), phase: rand(0, 6.3) }));
     }
     return s;
 }
@@ -196,6 +230,110 @@ function updateMap() {
     if (mapId === 'rooftop') updateRooftop(s);
     else if (mapId === 'lab') updateLab(s);
     else if (mapId === 'garden') updateGarden(s);
+    else if (mapId === 'dungeon') updateDungeon(s);
+}
+
+// Faixa do chão que a maça da estátua acerta (sai da estátua em direção ao meio da sala)
+function statueLane(o) {
+    const length = STATUE_LANE_LENGTH * (arena.bottom - arena.top);
+    return { x: o.x - STATUE_LANE_WIDTH / 2, y: o.side === 'top' ? o.y : o.y - length, w: STATUE_LANE_WIDTH, h: length };
+}
+const inLane = (f, lane, margin = 0) => f.x > lane.x - margin && f.x < lane.x + lane.w + margin && f.y > lane.y - margin && f.y < lane.y + lane.h + margin;
+
+// Andando (ou avançando com alguma habilidade): é isso que o colosso enxerga
+const isMoving = f => Math.hypot(f.moveX, f.moveY) > 0.3 || f.isDashing || f.rhinoChargeLeft > 0 || !!f.dunkPhase || !!f.hookTarget;
+
+// Olhar do Colosso: quanto falta (em passos) para quem está se mexendo levar o raio
+function gazeDanger() {
+    const g = mapState.gaze;
+    if (!g) return Infinity;
+    return g.phase === 'active' ? 0 : g.phase === 'warn' ? g.timer : Infinity;
+}
+
+function updateDungeon(s) {
+    const statues = obstacles.filter(o => o.kind === 'statue');
+    // Estátuas: erguem a maça (a faixa no chão fica vermelha) e batem; no 2v2/3v3 batem duas de uma vez
+    for (const o of statues) {
+        if (o.slam > 0) o.slam--;
+        if (o.warn <= 0) continue;
+        if (--o.warn === 0) slamStatue(s, o);
+        else if (o.warn % 12 === 0) particles.push(new Particle(o.x + rand(-10, 10), o.y - 50, '#8a90a0', 0, { x: rand(-0.5, 0.5), y: 1 }));
+    }
+    if (--s.statueTimer <= 0) {
+        const idle = statues.filter(o => o.warn <= 0);
+        // Prefere a estátua com alguém na frente dela (senão, qualquer uma)
+        const busy = idle.filter(o => fighters.some(f => alive(f) && inLane(f, statueLane(o))));
+        const count = match.mode === '1v1' ? 1 : 2;
+        for (let i = 0; i < count && idle.length; i++) {
+            const pool = busy.length ? busy : idle;
+            const o = pool[Math.floor(Math.random() * pool.length)];
+            o.warn = STATUE_WARN;
+            busy.splice(busy.indexOf(o), 1);
+            idle.splice(idle.indexOf(o), 1);
+        }
+        sfx.play('statue_raise');
+        s.statueTimer = 260 + Math.random() * 160;
+    }
+
+    // Olhar do Colosso: olhos acendem (aviso) e depois ficam abertos; quem se mexer leva o raio
+    const g = s.gaze;
+    if (g.phase === 'idle' && --g.timer <= 0) {
+        g.phase = 'warn';
+        g.timer = GAZE_WARN;
+        g.hit = new Set();
+        // A IA nem sempre obedece (às vezes se distrai e leva o raio)
+        g.obeys = new Map(fighters.map(f => [f, Math.random() < 0.8]));
+        sfx.play('colossus_gaze');
+        screenShake = Math.max(screenShake, 4);
+    } else if (g.phase === 'warn' && --g.timer <= 0) {
+        g.phase = 'active';
+        g.timer = GAZE_DURATION;
+    } else if (g.phase === 'active') {
+        const eyes = colossusEyes();
+        for (const f of fighters) {
+            if (!alive(f) || f.isInsideOpponent || f.heldBy || g.hit.has(f) || !isMoving(f)) continue;
+            g.hit.add(f);
+            hazardHit(f, GAZE_DAMAGE, GAZE_STUN, 'hit_heavy');
+            if (eyes) s.beams.push({ x1: eyes.x, y1: eyes.y, x2: f.x, y2: f.chestY, life: 18 });
+            floatingTexts.push(new FloatingText(f.x, f.y - f.height - 18, 'SE MEXEU!', '#ff3b3b'));
+            for (let i = 0; i < 12; i++) particles.push(new Particle(f.x, f.chestY, i % 2 ? '#ff3b3b' : '#ffd0d0', 0, { x: rand(-3, 3), y: rand(-3, 1) }));
+            sfx.play('laser');
+        }
+        if (--g.timer <= 0) { g.phase = 'idle'; g.timer = 840 + Math.random() * 360; }
+    }
+    s.beams.forEach(b => b.life--);
+    s.beams = s.beams.filter(b => b.life > 0);
+    s.cracks.forEach(c => c.life--);
+    s.cracks = s.cracks.filter(c => c.life > 0);
+    for (const m of s.motes) {
+        m.y += m.vy;
+        m.x += Math.sin(s.t * 0.01 + m.phase) * 0.2;
+        if (m.y < arena.top - 20) { m.y = arena.bottom + 10; m.x = rand(arena.left, arena.right); }
+    }
+}
+
+// Ponto dos olhos do colosso (de onde sai o raio)
+function colossusEyes() {
+    const c = obstacles.find(o => o.kind === 'colossus');
+    return c ? { x: c.x, y: c.y - 112 } : null;
+}
+
+function slamStatue(s, o) {
+    const lane = statueLane(o);
+    o.slam = 24;
+    sfx.play('stone_slam');
+    screenShake = Math.max(screenShake, 7);
+    const dir = o.side === 'top' ? 1 : -1;
+    for (const f of fighters) {
+        if (!alive(f) || f.heldBy || !inLane(f, lane, f.radius * 0.5)) continue;
+        hazardHit(f, STATUE_DAMAGE, 0, 'hit_heavy');
+        f.push({ x: 0, y: dir }, STATUE_PUSH);
+        floatingTexts.push(new FloatingText(f.x, f.y - f.height - 18, 'ESMAGADO!', '#c8ccd8'));
+    }
+    s.cracks.push({ lane, side: o.side, life: 150, seed: Math.random() * 1000 });
+    for (let i = 0; i < 30; i++) {
+        particles.push(new Particle(lane.x + rand(0, lane.w), lane.y + rand(0, lane.h), i % 3 ? '#8a90a0' : '#c8ccd8', 0, { x: rand(-2.5, 2.5), y: rand(-3.5, 0) }));
+    }
 }
 
 function updateRooftop(s) {

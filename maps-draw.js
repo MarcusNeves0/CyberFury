@@ -42,7 +42,121 @@ function renderArenaFloor(g) {
     if (mapId === 'rooftop') renderRooftopFloor(g);
     else if (mapId === 'lab') renderLabFloor(g);
     else if (mapId === 'garden') renderGardenFloor(g);
+    else if (mapId === 'dungeon') renderDungeonFloor(g);
     else renderPlazaFloor(g);
+}
+
+// Masmorra Dupla: lajes de pedra antigas, tapete gasto até o trono, círculo de runas e portões azuis nas pontas
+function renderDungeonFloor(g) {
+    const r = seeded(53);
+    const w = arena.right - arena.left, h = arena.bottom - arena.top, pad = 22;
+    const cx = arena.left + w / 2, cy = arena.top + h / 2;
+    g.fillStyle = '#040408';
+    g.fillRect(0, 0, WORLD_W, WORLD_H);
+    // Paredes de tijolo de pedra em cima e embaixo
+    for (const [y0, y1] of [[arena.top - pad - 46, arena.top - pad], [arena.bottom + pad, arena.bottom + pad + 46]]) {
+        g.fillStyle = '#15161e';
+        g.fillRect(arena.left - pad - 30, y0, w + pad * 2 + 60, y1 - y0);
+        for (let y = y0, row = 0; y < y1; y += 12, row++) {
+            for (let x = arena.left - pad - 30 - (row % 2) * 18; x < arena.right + pad + 30; x += 36) {
+                const v = 26 + r() * 10;
+                g.fillStyle = `rgb(${v}, ${v + 1}, ${v + 8})`;
+                g.fillRect(x + 1, y + 1, 34, 10);
+            }
+        }
+    }
+    // Lajes do chão
+    g.fillStyle = '#14151c';
+    g.fillRect(arena.left - pad, arena.top - pad, w + pad * 2, h + pad * 2);
+    const slab = 52;
+    for (let x = arena.left - pad; x < arena.right + pad; x += slab) {
+        for (let y = arena.top - pad; y < arena.bottom + pad; y += slab) {
+            const v = 30 + r() * 12;
+            g.fillStyle = `rgb(${v}, ${v + 2}, ${v + 10})`;
+            g.fillRect(x + 1, y + 1, slab - 2, slab - 2);
+            g.fillStyle = 'rgba(255, 255, 255, 0.04)';
+            g.fillRect(x + 1, y + 1, slab - 2, 2);
+            // Algumas lajes rachadas ou com musgo azulado
+            if (r() < 0.12) {
+                g.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+                g.lineWidth = 1.5;
+                let px = x + r() * slab, py = y + r() * slab;
+                g.beginPath(); g.moveTo(px, py);
+                for (let k = 0; k < 4; k++) { px += (r() - 0.5) * 26; py += (r() - 0.5) * 26; g.lineTo(px, py); }
+                g.stroke();
+            }
+            if (r() < 0.06) {
+                g.fillStyle = 'rgba(60, 110, 140, 0.18)';
+                g.beginPath(); g.ellipse(x + r() * slab, y + r() * slab, 10 + r() * 14, 5 + r() * 6, r() * 3, 0, Math.PI * 2); g.fill();
+            }
+        }
+    }
+    // Tapete vermelho gasto, do portão de baixo até o trono
+    const carpetW = 84;
+    g.fillStyle = '#3a0c14';
+    g.fillRect(cx - carpetW / 2, arena.top, carpetW, arena.bottom + pad - arena.top);
+    g.fillStyle = '#5a1420';
+    g.fillRect(cx - carpetW / 2 + 6, arena.top, carpetW - 12, arena.bottom + pad - arena.top);
+    g.fillStyle = '#a07a2a';
+    g.fillRect(cx - carpetW / 2 + 3, arena.top, 2, arena.bottom + pad - arena.top);
+    g.fillRect(cx + carpetW / 2 - 5, arena.top, 2, arena.bottom + pad - arena.top);
+    for (let y = arena.top + 20; y < arena.bottom + pad; y += 40) {
+        g.fillStyle = 'rgba(160, 122, 42, 0.35)';
+        g.beginPath(); g.moveTo(cx, y - 8); g.lineTo(cx + 8, y); g.lineTo(cx, y + 8); g.lineTo(cx - 8, y); g.closePath(); g.fill();
+    }
+    // Rasgos e buracos no tapete
+    for (let i = 0; i < 7; i++) {
+        g.fillStyle = 'rgba(20, 21, 28, 0.9)';
+        g.beginPath(); g.ellipse(cx + (r() - 0.5) * carpetW * 0.8, arena.top + r() * h, 4 + r() * 8, 2 + r() * 4, r() * 3, 0, Math.PI * 2); g.fill();
+    }
+    // Círculo de runas no meio da sala
+    g.save();
+    g.strokeStyle = 'rgba(90, 150, 255, 0.28)';
+    g.lineWidth = 2;
+    for (const rad of [96, 76]) { g.beginPath(); g.ellipse(cx, cy, rad, rad * 0.62, 0, 0, Math.PI * 2); g.stroke(); }
+    g.lineWidth = 1.5;
+    for (let i = 0; i < 16; i++) {
+        const a = i / 16 * Math.PI * 2;
+        const x = cx + Math.cos(a) * 86, y = cy + Math.sin(a) * 86 * 0.62;
+        g.beginPath();
+        if (i % 2) { g.moveTo(x - 4, y - 3); g.lineTo(x + 4, y - 3); g.lineTo(x, y + 4); g.closePath(); }
+        else { g.moveTo(x, y - 4); g.lineTo(x, y + 4); g.moveTo(x - 3, y); g.lineTo(x + 3, y); }
+        g.stroke();
+    }
+    g.beginPath();
+    for (let i = 0; i < 5; i++) {
+        const a = -Math.PI / 2 + i * Math.PI * 4 / 5;
+        const x = cx + Math.cos(a) * 70, y = cy + Math.sin(a) * 70 * 0.62;
+        if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
+    }
+    g.closePath(); g.stroke();
+    g.restore();
+    // Ossos espalhados de quem entrou antes
+    g.strokeStyle = 'rgba(210, 205, 190, 0.5)';
+    g.lineWidth = 2;
+    for (let i = 0; i < 12; i++) {
+        const x = arena.left + r() * w, y = arena.top + 30 + r() * (h - 60), a = r() * 3.14, len = 6 + r() * 6;
+        g.beginPath(); g.moveTo(x - Math.cos(a) * len, y - Math.sin(a) * len); g.lineTo(x + Math.cos(a) * len, y + Math.sin(a) * len); g.stroke();
+        g.fillStyle = 'rgba(210, 205, 190, 0.5)';
+        g.fillRect(x - Math.cos(a) * len - 1.5, y - Math.sin(a) * len - 1.5, 3, 3);
+        g.fillRect(x + Math.cos(a) * len - 1.5, y + Math.sin(a) * len - 1.5, 3, 3);
+    }
+    // Portões da masmorra nas pontas, onde cada time entra (brilho azul)
+    for (const [x, dir] of [[arena.left - pad, -1], [arena.right + pad, 1]]) {
+        const glow = g.createRadialGradient(x, cy, 4, x, cy, 140);
+        glow.addColorStop(0, 'rgba(80, 140, 255, 0.4)');
+        glow.addColorStop(1, 'rgba(80, 140, 255, 0)');
+        g.fillStyle = glow;
+        g.fillRect(x - 140, cy - 140, 280, 280);
+        g.fillStyle = '#0a1230';
+        g.fillRect(x + (dir > 0 ? 0 : -14), cy - 60, 14, 120);
+        g.fillStyle = 'rgba(140, 190, 255, 0.8)';
+        g.fillRect(x + (dir > 0 ? 2 : -4), cy - 56, 2, 112);
+    }
+    // Borda das lajes
+    g.strokeStyle = '#2a2c38';
+    g.lineWidth = 4;
+    g.strokeRect(arena.left - pad, arena.top - pad, w + pad * 2, h + pad * 2);
 }
 
 // Telhado: laje de concreto molhada, heliponto, grades de ventilação, cabos e a cidade lá embaixo
@@ -432,7 +546,57 @@ function drawMapGround() {
     } else if (mapId === 'garden') {
         drawFlowers();
         for (const p of pickups) drawHealingPickup(p);
+    } else if (mapId === 'dungeon') {
+        // Círculo de runas acende vermelho enquanto o colosso olha
+        const danger = gazeDanger();
+        if (danger < Infinity) {
+            const cx = (arena.left + arena.right) / 2, cy = (arena.top + arena.bottom) / 2;
+            ctx.strokeStyle = `rgba(255, 50, 50, ${danger === 0 ? 0.6 : 0.25 + Math.sin(t * 0.3) * 0.15})`;
+            ctx.lineWidth = 3;
+            for (const rad of [96, 76]) { ctx.beginPath(); ctx.ellipse(cx, cy, rad, rad * 0.62, 0, 0, Math.PI * 2); ctx.stroke(); }
+        }
+        // Rachaduras deixadas pela maça
+        for (const c of s.cracks) {
+            const r = seeded(c.seed), L = c.lane;
+            ctx.strokeStyle = `rgba(0, 0, 0, ${Math.min(1, c.life / 60) * 0.7})`;
+            ctx.lineWidth = 2;
+            for (let k = 0; k < 4; k++) {
+                let x = L.x + L.w / 2 + (r() - 0.5) * 20, y = c.side === 'top' ? L.y + 10 : L.y + L.h - 10;
+                ctx.beginPath(); ctx.moveTo(x, y);
+                for (let j = 0; j < 6; j++) { x += (r() - 0.5) * 30; y += (c.side === 'top' ? 1 : -1) * L.h / 7; ctx.lineTo(x, y); }
+                ctx.stroke();
+            }
+        }
+        // Faixa marcada na frente da estátua que ergueu a maça (fica mais forte até a hora da pancada)
+        for (const o of obstacles) {
+            if (o.kind !== 'statue') continue;
+            drawStatueSlam(o);
+            if (o.warn <= 0) continue;
+            const L = statueLane(o), k = 1 - o.warn / STATUE_WARN;
+            ctx.fillStyle = `rgba(255, 40, 40, ${0.1 + k * 0.22 + Math.sin(t * 0.5) * 0.05})`;
+            ctx.fillRect(L.x, L.y, L.w, L.h);
+            ctx.strokeStyle = `rgba(255, 90, 90, ${0.5 + k * 0.4})`;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([8, 6]);
+            ctx.strokeRect(L.x, L.y, L.w, L.h);
+            ctx.setLineDash([]);
+            // Setas apontando para onde a maça vai cair
+            const dir = o.side === 'top' ? 1 : -1;
+            ctx.fillStyle = `rgba(255, 120, 120, ${0.3 + k * 0.5})`;
+            for (let i = 1; i <= 3; i++) {
+                const ay = o.y + dir * L.h * i / 4;
+                ctx.beginPath(); ctx.moveTo(o.x - 12, ay - dir * 6); ctx.lineTo(o.x + 12, ay - dir * 6); ctx.lineTo(o.x, ay + dir * 6); ctx.closePath(); ctx.fill();
+            }
+        }
     }
+}
+
+// Pancada da maça: onda de poeira subindo pela faixa logo depois de bater
+function drawStatueSlam(o) {
+    if (o.slam <= 0) return;
+    const L = statueLane(o), k = o.slam / 24;
+    ctx.fillStyle = `rgba(200, 205, 220, ${k * 0.35})`;
+    ctx.fillRect(L.x - 4, L.y, L.w + 8, L.h);
 }
 
 // Letreiro neon na borda do telhado (pisca quando está em curto)
@@ -616,6 +780,8 @@ function drawMapOverlay() {
             ctx.fillStyle = 'rgba(190, 240, 255, 0.8)';
             ctx.fillRect(d.x, d.y - d.z, 2, 2);
         }
+    } else if (mapId === 'dungeon') {
+        drawDungeonOverlay(s, t);
     }
     // Nome do mapa no começo da luta
     if (s.banner > 0) {
@@ -647,7 +813,246 @@ function drawObstacle(o) {
         case 'gardentree': return drawGardenTree(o);
         case 'fountain': return drawFountain(o);
         case 'chomper': return drawChomper(o);
+        case 'statue': return drawStatue(o);
+        case 'colossus': return drawColossus(o);
+        case 'pillar': return drawPillar(o);
     }
+}
+
+// Masmorra Dupla por cima de tudo: escuridão, luz das tochas azuis, poeira brilhando e o olhar do colosso
+function drawDungeonOverlay(s, t) {
+    ctx.fillStyle = 'rgba(0, 2, 12, 0.38)';
+    ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (const torch of s.torches) {
+        const flick = 0.85 + Math.sin(t * 0.21 + torch.phase) * 0.08 + Math.random() * 0.07;
+        const glow = ctx.createRadialGradient(torch.x, torch.y, 2, torch.x, torch.y, 150 * flick);
+        glow.addColorStop(0, 'rgba(70, 130, 255, 0.22)');
+        glow.addColorStop(1, 'rgba(70, 130, 255, 0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath(); ctx.arc(torch.x, torch.y, 150 * flick, 0, Math.PI * 2); ctx.fill();
+    }
+    for (const m of s.motes) {
+        ctx.fillStyle = `rgba(140, 190, 255, ${0.25 + Math.max(0, Math.sin(t * 0.05 + m.phase)) * 0.4})`;
+        ctx.fillRect(m.x, m.y, 2, 2);
+    }
+    ctx.restore();
+    // Tochas: suporte de ferro e chama azul
+    for (const torch of s.torches) {
+        ctx.fillStyle = '#2a2c36';
+        ctx.fillRect(torch.x - 5, torch.y - 2, 10, 6);
+        ctx.fillRect(torch.x - 2, torch.y + 3, 4, 8);
+        const hgt = 12 + Math.sin(t * 0.3 + torch.phase) * 3;
+        ctx.fillStyle = '#3a7aff';
+        ctx.beginPath(); ctx.moveTo(torch.x - 6, torch.y - 2); ctx.quadraticCurveTo(torch.x, torch.y - hgt * 1.6, torch.x + 6, torch.y - 2); ctx.fill();
+        ctx.fillStyle = '#c8e0ff';
+        ctx.beginPath(); ctx.moveTo(torch.x - 3, torch.y - 2); ctx.quadraticCurveTo(torch.x, torch.y - hgt, torch.x + 3, torch.y - 2); ctx.fill();
+        if (Math.random() < 0.08) particles.push(new Particle(torch.x + rand(-3, 3), torch.y - 10, '#7fb0ff', 0, { x: rand(-0.3, 0.3), y: -1 }));
+    }
+    // Olhar do Colosso: a sala fica vermelha e aparece o aviso
+    const g = s.gaze;
+    if (g.phase !== 'idle') {
+        const k = g.phase === 'active' ? 1 : 1 - g.timer / GAZE_WARN;
+        ctx.fillStyle = `rgba(120, 0, 0, ${k * 0.18})`;
+        ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+        ctx.save();
+        ctx.font = 'bold 30px Orbitron, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = g.phase === 'active' ? '#ff3b3b' : '#ffd0d0';
+        ctx.shadowColor = '#ff0000';
+        ctx.shadowBlur = 16;
+        ctx.globalAlpha = g.phase === 'active' ? 1 : 0.6 + Math.sin(t * 0.4) * 0.4;
+        const textY = (arena.top + arena.bottom) / 2 - 130;
+        ctx.fillText(g.phase === 'active' ? 'NÃO SE MEXA!' : 'O COLOSSO VAI ABRIR OS OLHOS...', (arena.left + arena.right) / 2, textY);
+        if (g.phase === 'active') {
+            ctx.font = 'bold 14px Orbitron, sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowBlur = 6;
+            ctx.fillText('ficar parado ou defendendo é seguro', (arena.left + arena.right) / 2, textY + 24);
+        }
+        ctx.restore();
+    }
+    for (const b of s.beams) {
+        ctx.save();
+        ctx.strokeStyle = `rgba(255, 60, 60, ${b.life / 18})`;
+        ctx.shadowColor = '#ff0000';
+        ctx.shadowBlur = 16;
+        ctx.lineWidth = 6 * b.life / 18 + 1;
+        ctx.beginPath(); ctx.moveTo(b.x1, b.y1); ctx.lineTo(b.x2, b.y2); ctx.stroke();
+        ctx.strokeStyle = `rgba(255, 230, 230, ${b.life / 18})`;
+        ctx.lineWidth = 2;
+        ctx.shadowBlur = 0;
+        ctx.stroke();
+        ctx.restore();
+    }
+}
+
+// Estátua de cavaleiro de pedra com maça; as de cima olham para a sala, as de baixo estão de costas.
+// Erguem a maça devagar (olhos vermelhos) e batem na faixa à frente delas.
+function drawStatue(o) {
+    const front = o.side === 'top';
+    const hand = o.x < (arena.left + arena.right) / 2 ? 1 : -1; // maça do lado de dentro da sala
+    const lift = o.warn > 0 ? 1 - o.warn / STATUE_WARN : 0;
+    const shake = o.warn > 0 && o.warn < 14 ? (Math.random() - 0.5) * 2 : 0;
+    const x = o.x + shake, y = o.y;
+    shadow(x + 3, y + 4, 24, 8);
+    // Pedestal
+    ctx.fillStyle = '#2c2f3a';
+    ctx.fillRect(x - 22, y - 8, 44, 14);
+    ctx.fillStyle = '#3c404c';
+    ctx.fillRect(x - 22, y - 12, 44, 5);
+    // Pernas, corpo, ombreiras e capa
+    const stone = '#6a7080', dark = '#4a505e', light = '#878d9c';
+    ctx.fillStyle = dark;
+    ctx.fillRect(x - 13, y - 58, 26, 34); // capa
+    ctx.fillStyle = stone;
+    ctx.fillRect(x - 9, y - 30, 7, 18); ctx.fillRect(x + 2, y - 30, 7, 18);
+    ctx.fillRect(x - 11, y - 56, 22, 28);
+    ctx.fillStyle = light;
+    ctx.fillRect(x - 15, y - 56, 8, 7); ctx.fillRect(x + 7, y - 56, 8, 7);
+    if (front) {
+        ctx.fillStyle = light;
+        ctx.fillRect(x - 6, y - 50, 12, 14); // peitoral
+        ctx.fillStyle = dark;
+        ctx.fillRect(x - 1, y - 50, 2, 14);
+    }
+    // Capacete
+    ctx.fillStyle = stone;
+    ctx.fillRect(x - 8, y - 72, 16, 16);
+    ctx.fillStyle = light;
+    ctx.fillRect(x - 2, y - 78, 4, 7); // crista
+    if (front) {
+        ctx.fillStyle = '#1a1c24';
+        ctx.fillRect(x - 6, y - 66, 12, 3);
+        if (lift > 0 || o.slam > 0) {
+            ctx.save();
+            ctx.fillStyle = '#ff3030';
+            ctx.shadowColor = '#ff0000';
+            ctx.shadowBlur = 10;
+            ctx.fillRect(x - 5, y - 66, 3, 3); ctx.fillRect(x + 2, y - 66, 3, 3);
+            ctx.restore();
+        }
+    }
+    // Braço e maça: parada apoiada no chão, erguendo até em cima da cabeça, e batendo à frente
+    const sx = x + hand * 12, sy = y - 52;
+    let hx, hy;
+    if (o.slam > 0) { hx = x + hand * 6; hy = front ? y + 14 : y - 92; }
+    else {
+        const a = Math.PI / 2 - lift * Math.PI * 0.95;
+        hx = sx + hand * Math.cos(a) * 30; hy = sy + Math.sin(a) * 30;
+    }
+    ctx.strokeStyle = stone;
+    ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo((sx + hx) / 2, (sy + hy) / 2); ctx.stroke();
+    ctx.strokeStyle = '#3a3e4a';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo((sx + hx) / 2, (sy + hy) / 2); ctx.lineTo(hx, hy); ctx.stroke();
+    ctx.fillStyle = light;
+    ctx.beginPath(); ctx.arc(hx, hy, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = dark;
+    for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + 0.4; ctx.fillRect(hx + Math.cos(a) * 9 - 2, hy + Math.sin(a) * 9 - 2, 4, 4); }
+    // Escudo no outro braço
+    ctx.fillStyle = dark;
+    ctx.fillRect(x - hand * 18 - 6, y - 50, 12, 18);
+    ctx.fillStyle = light;
+    ctx.fillRect(x - hand * 18 - 1, y - 48, 2, 14);
+    ctx.strokeStyle = '#14151c';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(x - 11, y - 72, 22, 60);
+}
+
+// Colosso sentado no trono, com uma espada enorme fincada entre os joelhos. Os olhos acendem no Olhar.
+function drawColossus(o) {
+    const t = mapState.t, x = o.x, y = o.y;
+    const danger = gazeDanger();
+    shadow(x + 4, y + 6, 72, 16);
+    // Degraus
+    ctx.fillStyle = '#23252f';
+    ctx.fillRect(x - 66, y - 8, 132, 16);
+    ctx.fillStyle = '#2e313c';
+    ctx.fillRect(x - 56, y - 18, 112, 12);
+    // Encosto do trono com pontas
+    ctx.fillStyle = '#1c1e28';
+    ctx.fillRect(x - 50, y - 148, 100, 132);
+    for (let k = 0; k < 5; k++) {
+        const px = x - 44 + k * 22;
+        ctx.beginPath(); ctx.moveTo(px - 8, y - 148); ctx.lineTo(px, y - 166 - (k === 2 ? 12 : 0)); ctx.lineTo(px + 8, y - 148); ctx.fill();
+    }
+    ctx.strokeStyle = 'rgba(90, 150, 255, 0.55)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x - 46, y - 144, 92, 124);
+    // Braços do trono
+    ctx.fillStyle = '#2a2d38';
+    ctx.fillRect(x - 58, y - 66, 18, 50); ctx.fillRect(x + 40, y - 66, 18, 50);
+    // Corpo de pedra sentado
+    const stone = '#6a7080', dark = '#4a505e', light = '#878d9c';
+    ctx.fillStyle = stone;
+    ctx.fillRect(x - 30, y - 44, 26, 26); ctx.fillRect(x + 4, y - 44, 26, 26); // coxas
+    ctx.fillRect(x - 28, y - 22, 14, 14); ctx.fillRect(x + 14, y - 22, 14, 14); // canelas
+    ctx.fillStyle = dark;
+    ctx.fillRect(x - 30, y - 100, 60, 58);
+    ctx.fillStyle = light;
+    ctx.fillRect(x - 22, y - 94, 44, 30); // peitoral
+    ctx.fillStyle = dark;
+    ctx.fillRect(x - 1, y - 94, 2, 30);
+    ctx.fillStyle = light;
+    ctx.fillRect(x - 42, y - 102, 18, 14); ctx.fillRect(x + 24, y - 102, 18, 14); // ombreiras
+    ctx.fillStyle = stone;
+    ctx.fillRect(x - 46, y - 88, 12, 26); ctx.fillRect(x + 34, y - 88, 12, 26); // braços
+    ctx.fillRect(x - 12, y - 60, 24, 10); // mãos no cabo da espada
+    // Espada fincada
+    ctx.fillStyle = '#9aa2b4';
+    ctx.fillRect(x - 5, y - 50, 10, 58);
+    ctx.fillStyle = '#c8cedc';
+    ctx.fillRect(x - 1, y - 50, 2, 56);
+    ctx.fillStyle = '#3a3e4a';
+    ctx.fillRect(x - 16, y - 54, 32, 6);
+    ctx.fillRect(x - 3, y - 74, 6, 16);
+    // Cabeça com coroa de chifres
+    ctx.fillStyle = stone;
+    ctx.fillRect(x - 15, y - 128, 30, 28);
+    ctx.fillStyle = light;
+    for (const dx of [-14, -4, 4, 14]) {
+        ctx.beginPath(); ctx.moveTo(x + dx - 4, y - 128); ctx.lineTo(x + dx * 1.3, y - 142 - (Math.abs(dx) > 10 ? 6 : 0)); ctx.lineTo(x + dx + 4, y - 128); ctx.fill();
+    }
+    ctx.fillStyle = '#14151c';
+    ctx.fillRect(x - 11, y - 115, 22, 6);
+    // Olhos: azul fraco quando dorme, vermelho crescendo no aviso, vermelho forte com o olhar aberto
+    ctx.save();
+    if (danger === Infinity) {
+        ctx.fillStyle = `rgba(90, 150, 255, ${0.35 + Math.sin(t * 0.03) * 0.15})`;
+    } else {
+        const k = danger === 0 ? 1 : 1 - danger / GAZE_WARN;
+        ctx.fillStyle = `rgba(255, ${Math.round(80 - k * 60)}, ${Math.round(80 - k * 60)}, ${0.5 + k * 0.5})`;
+        ctx.shadowColor = '#ff0000';
+        ctx.shadowBlur = 10 + k * 20;
+    }
+    ctx.fillRect(x - 9, y - 114, 6, 4); ctx.fillRect(x + 3, y - 114, 6, 4);
+    ctx.restore();
+    ctx.strokeStyle = '#0c0d12';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x - 50, y - 148, 100, 140);
+}
+
+// Coluna quebrada com pedaços caídos
+function drawPillar(o) {
+    shadow(o.x + 3, o.y + 3, 22, 8);
+    ctx.fillStyle = '#2c2f3a';
+    ctx.beginPath(); ctx.ellipse(o.x, o.y, 18, 8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#5a6070';
+    ctx.fillRect(o.x - 12, o.y - 46, 24, 46);
+    ctx.fillStyle = '#6e7484';
+    for (const dx of [-8, 0, 8]) ctx.fillRect(o.x + dx - 1, o.y - 44, 2, 42);
+    ctx.fillStyle = '#7a8090';
+    ctx.beginPath();
+    ctx.moveTo(o.x - 12, o.y - 46); ctx.lineTo(o.x - 6, o.y - 54); ctx.lineTo(o.x, o.y - 48); ctx.lineTo(o.x + 5, o.y - 58); ctx.lineTo(o.x + 12, o.y - 46);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#4a505e';
+    ctx.fillRect(o.x + 14, o.y - 4, 8, 6); ctx.fillRect(o.x - 22, o.y + 2, 6, 5);
+    ctx.strokeStyle = '#14151c';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(o.x - 12, o.y - 46, 24, 46);
 }
 
 function shadow(x, y, rx, ry) {

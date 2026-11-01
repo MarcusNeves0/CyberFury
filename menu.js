@@ -181,6 +181,7 @@ const MAP_CHIPS = {
     rooftop: { icon: '🌧️', name: 'TELHADO NEON', color: '#3ff6ff' },
     lab: { icon: '🧪', name: 'LABORATÓRIO', color: '#6dff8a' },
     garden: { icon: '🌸', name: 'JARDIM SUSPENSO', color: '#ff9ad5' },
+    dungeon: { icon: '🗿', name: 'MASMORRA DUPLA', color: '#6f9bff' },
 };
 function renderSelectionChips() {
     const map = MAP_CHIPS[match.map] || MAP_CHIPS.random;

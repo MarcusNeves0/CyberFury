@@ -310,6 +310,16 @@ const MAX_HEALTH = 1000;
 const LAB_LASER_GAP = 120;        // brecha do laser do laboratório (dá para passar por ela)
 const CHOMPER_REACH = 56;         // alcance da mordida da planta carnívora
 const GARDEN_PICKUP_HEAL = 120;   // cura da flor que nasce no jardim
+// Masmorra Dupla: estátuas que batem com a maça numa faixa marcada e o olhar do colosso
+const STATUE_WARN = 60;           // tempo da maça erguida (com a faixa vermelha no chão) antes de bater
+const STATUE_LANE_WIDTH = 74;     // largura da faixa que a maça acerta
+const STATUE_LANE_LENGTH = 0.45;  // até onde a faixa vai (fração da altura da arena)
+const STATUE_DAMAGE = 40;
+const STATUE_PUSH = 14;
+const GAZE_WARN = 90;             // olhos acendendo: dá tempo de parar
+const GAZE_DURATION = 120;        // olhar aberto: quem se mexer leva o raio
+const GAZE_DAMAGE = 45;
+const GAZE_STUN = 45;
 // Vida máxima de cada personagem (tanques aguentam mais, quem ataca de longe aguenta menos)
 const HEALTH_BY_CHARACTER = {
     titan: 1200, zarek: 1200, fenris: 1150, bershow: 1150, spark: 1100,

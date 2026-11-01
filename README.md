@@ -2,7 +2,7 @@
 
 # ⚡ CYBERNETIC FURY ⚡
 
-**Briga de rua cyberpunk vista de cima, com 24 lutadores, 4 arenas cheias de perigo e partidas de 1v1 até 3v3.**
+**Briga de rua cyberpunk vista de cima, com 24 lutadores, 5 arenas cheias de perigo e partidas de 1v1 até 3v3.**
 
 <img width="900" alt="Cybernetic Fury: quatro estilos, um só objetivo" src="assets/capa.png" />
 
@@ -27,7 +27,7 @@ Neo-Cidade está tomada por neon, chuva e gente disposta a brigar por qualquer m
 - 📱 **Celular como controle:** abra `controle.html` no celular e digite o código que aparece no menu do jogo. O celular vira analógico + botões, vibra ao levar dano e também navega nos menus (sem instalar nada)
 - 📡 **Jogar de longe:** quem está com o jogo aberto clica em **📡 Transmitir** no menu; o amigo abre `tela.html` na casa dele, digita o mesmo código, vê a luta com som e joga com o teclado ou com um controle ligado no PC dele
 - 💚 **Healer obrigatório:** no 2v2 e no 3v3, todo time tem pelo menos um curandeiro
-- 🗺️ **4 arenas** com perigos próprios, escolhidas no menu ou sorteadas a cada luta
+- 🗺️ **5 arenas** com perigos próprios, escolhidas no menu ou sorteadas a cada luta
 - 📊 **Estatísticas no fim da luta:** dano causado, dano sofrido, cura, abates e o ⭐ destaque da partida
 - 🎨 **Pixel art em 64×64**, com animações de andar, atacar, soltar a ultimate, cair e comemorar
 
@@ -96,6 +96,7 @@ Neo-Cidade está tomada por neon, chuva e gente disposta a brigar por qualquer m
 | 🌧️ **Telhado Neon** | Chuva, relâmpagos e a cidade lá embaixo | **Letreiros em curto** dão choque em quem está na poça embaixo deles |
 | 🧪 **Laboratório Abandonado** | Luzes piscando, gosma verde, portas quebradas | **Laser de segurança** varrendo a sala, **fios soltos** soltando faíscas e **tanques de vidro** que liberam gás |
 | 🌸 **Jardim Suspenso** | Flores que se mexem quando alguém passa, pétalas e vaga-lumes | **Arbustos** que escondem, **plantas carnívoras** que mordem e **flores de cura** |
+| 🗿 **Masmorra Dupla** | Templo de pedra escuro com tochas azuis, fileiras de estátuas e um colosso no trono | **Estátuas** erguem a maça e esmagam a faixa marcada na frente delas; o **Olhar do Colosso** acerta quem estiver se mexendo (fique parado ou defenda) |
 
 ---
 
