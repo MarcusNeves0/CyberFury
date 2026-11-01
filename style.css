@@ -331,6 +331,32 @@ body {
     text-shadow: 0 0 8px #ffd23f;
 }
 
+.phone-room-remote {
+    flex-basis: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+}
+
+.broadcast-button {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    background: rgba(255, 210, 63, 0.12);
+    border: 1px solid #ffd23f;
+    border-radius: 6px;
+    color: #ffd23f;
+    padding: 4px 10px;
+    cursor: pointer;
+}
+
+/* Transmitindo: botão vermelho para parar */
+.broadcast-button.on {
+    background: rgba(255, 60, 60, 0.15);
+    border-color: #ff5a5a;
+    color: #ff7a7a;
+}
+
 .phone-room-new {
     margin-left: auto;
     font-size: 0.75rem;

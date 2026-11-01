@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tela remota — Cybernetic Fury</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📡</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap">
+    <link rel="stylesheet" href="tela.css">
+</head>
+<body>
+    <!-- Entrada: código da sala que aparece no menu do jogo, no PC de quem transmite -->
+    <div id="join-screen" class="screen">
+        <h1>CYBERNETIC FURY</h1>
+        <p class="join-subtitle">Jogar de longe</p>
+        <label for="room-input">Código da sala</label>
+        <input id="room-input" maxlength="8" autocomplete="off" spellcheck="false" placeholder="7K2F">
+        <button id="join-button">ENTRAR ▶</button>
+        <p class="join-hint">Peça o código para quem está com o jogo aberto.<br>Você vê a luta por aqui e joga com o teclado ou com um controle ligado neste computador.</p>
+    </div>
+
+    <!-- A partida, transmitida pelo PC de quem abriu o jogo -->
+    <div id="view-screen" class="screen hidden">
+        <video id="remote-video" autoplay playsinline></video>
+        <div id="waiting" class="waiting">
+            <p id="waiting-text">Conectando...</p>
+            <p class="waiting-hint">Quem está com o jogo aberto precisa clicar em <strong>📡 Transmitir</strong> no menu.</p>
+        </div>
+        <button id="sound-button" class="sound-button hidden">🔊 Clique para ligar o som</button>
+        <!-- Barra de cima: quem você é, como está jogando e a conexão (some sozinha depois de uns segundos) -->
+        <div id="view-bar" class="view-bar">
+            <span id="view-player" class="view-player">--</span>
+            <span id="view-device" class="view-device">⌨ Teclado</span>
+            <span id="view-status" class="view-status">Conectando...</span>
+            <span class="view-keys">Andar: WASD ou setas · Soco: J (segure = forte) · Ultimate: K · Defesa: L · Menus: Enter confirma, Esc volta</span>
+            <button id="fullscreen-button" class="bar-button" title="Tela cheia">⛶</button>
+            <button id="leave-button" class="bar-button" title="Sair">✕</button>
+        </div>
+        <div id="hit-flash" class="hit-flash"></div>
+    </div>
+
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script src="sala.js"></script>
+    <script src="tela.js"></script>
+</body>
+</html>

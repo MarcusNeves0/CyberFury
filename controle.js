@@ -1,8 +1,8 @@
 // Controle no celular: analógico virtual, botões de soco/ultimate/defesa, vibração e tela cheia.
-// Conversa com o jogo por mensagens curtas; quem leva as mensagens é o "link" (a conexão de verdade, PeerJS, entra na fase 3).
+// Conversa com o jogo por mensagens curtas; a conexão (PeerJS, reconexão, sinal de vida) fica no sala.js.
 //
-// Do celular para o jogo:
-//   { t: 'hello', room }                 pede uma vaga na sala
+// Do celular (ou da tela remota) para o jogo:
+//   { t: 'hello', room, kind }           pede uma vaga na sala; kind = 'pad' (celular) ou 'screen' (tela remota)
 //   { t: 'move', x, y }                  analógico (-1 a 1; 0, 0 = parado)
 //   { t: 'down', a } / { t: 'up', a }    botão apertado / solto; a = 'punch' | 'special' | 'defend'
 // Do jogo para o celular:
@@ -27,84 +27,30 @@ const joinScreen = $('join-screen');
 const padScreen = $('pad-screen');
 const roomInput = $('room-input');
 
-// --- Conexão com o jogo (PeerJS: o servidor gratuito só apresenta o celular ao jogo; depois é direto) ---
-const PEER_PREFIX = 'cyberfury-sala-'; // o mesmo do phone.js
-const RETRY_MS = 2500;
+// --- Conexão com o jogo (sala.js); no modo de teste, um jogo de mentira responde ---
+const roomLink = createRoomLink({
+    kind: 'pad',
+    onMessage: msg => receive(msg),
+    onStatus: (status, text) => {
+        setStatus(status);
+        if (status === 'offline') playerId = null;
+        if (text) $('pad-fighter').innerText = text;
+    },
+});
 const link = {
-    room: null,
-    peer: null,
-    conn: null,
-    retryTimer: null,
     send(msg) {
-        if (testMode) { testGame.receive(msg); return; }
-        if (this.conn && this.conn.open) this.conn.send(msg);
+        if (testMode) testGame.receive(msg);
+        else roomLink.send(msg);
     },
     open(room) {
-        this.room = room;
-        setStatus('connecting');
-        $('pad-fighter').innerText = `Conectando na sala ${room}...`;
-        if (testMode) { testGame.start(); return; }
-        if (typeof Peer === 'undefined') { $('pad-fighter').innerText = 'Sem internet para conectar'; setStatus('offline'); return; }
-        this.peer = new Peer();
-        this.peer.on('open', () => this.dial());
-        this.peer.on('disconnected', () => { if (!this.peer.destroyed) this.peer.reconnect(); });
-        this.peer.on('error', err => {
-            // Sala ainda não aberta (jogo fechado ou código errado): continua tentando
-            if (err.type === 'peer-unavailable') $('pad-fighter').innerText = `Sala ${this.room} não encontrada. Tentando de novo...`;
-            else $('pad-fighter').innerText = 'Problema na conexão. Tentando de novo...';
-            setStatus('offline');
-            this.retry();
-        });
-    },
-    dial() {
-        if (!this.peer || this.peer.destroyed) return;
-        if (this.conn) this.conn.close();
-        const conn = this.peer.connect(PEER_PREFIX + this.room, { serialization: 'json', reliable: true });
-        this.conn = conn;
-        conn.on('open', () => {
-            this.lastPong = Date.now();
-            conn.send({ t: 'hello', room: this.room });
-        });
-        conn.on('data', msg => {
-            this.lastPong = Date.now(); // qualquer mensagem do jogo prova que ele continua lá
-            if (msg.t !== 'pong') receive(msg);
-        });
-        conn.on('close', () => {
-            if (this.conn !== conn) return;
-            playerId = null;
-            setStatus('offline');
-            if ($('pad-fighter').innerText.indexOf('Sala cheia') < 0) $('pad-fighter').innerText = 'Conexão caiu. Reconectando...';
-            this.retry();
-        });
-    },
-    retry() {
-        clearTimeout(this.retryTimer);
-        this.retryTimer = setTimeout(() => this.dial(), RETRY_MS);
-    },
-    // Sinal de vida: ping a cada 1 s; o jogo responde. 5 s sem resposta = caiu (o PC fechou o jogo ou perdeu a rede)
-    heartbeat() {
-        if (!this.conn || !this.conn.open || !playerId) return;
-        this.conn.send({ t: 'ping' });
-        if (Date.now() - this.lastPong > 5000) {
-            const conn = this.conn;
-            this.conn = null;
-            conn.close();
-            playerId = null;
-            setStatus('offline');
-            $('pad-fighter').innerText = 'O jogo não responde. Reconectando...';
-            this.retry();
-        }
+        if (testMode) { setStatus('connecting'); testGame.start(); return; }
+        roomLink.open(room); // ao conectar, o celular se apresenta ({ t: 'hello' })
     },
     close() {
-        if (testMode) { testGame.stop(); return; }
-        clearTimeout(this.retryTimer);
-        if (this.conn) this.conn.close();
-        if (this.peer) this.peer.destroy();
-        this.conn = this.peer = null;
+        if (testMode) testGame.stop();
+        else roomLink.close();
     },
 };
-
-setInterval(() => link.heartbeat(), 1000);
 
 // Mensagens que chegam do jogo
 let playerId = null;
@@ -140,11 +86,8 @@ function receive(msg) {
             break;
         }
         case 'bye':
-            // O jogo mandou sair (sala cheia, trocado por outro controle): não fica tentando de novo
-            setStatus('offline');
+            // O jogo mandou sair (sala cheia, trocado por outro controle); o sala.js para de tentar de novo
             playerId = null;
-            $('pad-fighter').innerText = msg.reason || 'Desconectado';
-            link.close();
             break;
     }
 }
@@ -210,7 +153,7 @@ function join(room, fromClick) {
     padScreen.classList.remove('hidden');
     document.body.classList.add('playing');
     if (fromClick) goFullscreen(); // tela cheia só pode ser pedida num toque
-    link.open(room); // ao conectar, o celular se apresenta ({ t: 'hello' })
+    link.open(room);
 }
 
 function leave() {

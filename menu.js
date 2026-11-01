@@ -30,7 +30,7 @@ function setupHub() {
             <button class="team-toggle"></button>
             <button class="input-option" data-input="keyboard">⌨ Teclado</button>
             <button class="input-option" data-input="gamepad">🎮 Controle</button>
-            <button class="input-option" data-input="phone">📱 Celular</button>
+            <button class="input-option" data-input="phone" title="Celular como controle ou jogador de longe (tela remota)">📱 Celular / online</button>
             <span class="gamepad-status"></span>`;
         row.querySelector('.team-toggle').addEventListener('click', (e) => {
             match.inputs[player].team = 1 - match.inputs[player].team;
@@ -138,7 +138,7 @@ function renderInputStatus() {
             status.innerText = '';
         } else if (input.index === null) {
             status.innerText = input.type === 'phone'
-                ? (roomCode ? `Abra o controle no celular e digite ${roomCode}` : 'Sala para celulares indisponível')
+                ? (roomCode ? `Esperando um celular ou jogador de longe entrar com ${roomCode}` : 'Sala para celulares indisponível')
                 : 'Aperte qualquer botão no controle...';
             status.classList.add('waiting');
         } else {
