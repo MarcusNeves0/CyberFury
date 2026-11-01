@@ -348,7 +348,11 @@ class Fighter {
             drawArt(ctx, -this.height / 4 - 7, -this.height, this.height / 2, this.height, this);
             ctx.restore();
         }
+        // Coleone andando: bola quicando de uma mão para a outra por baixo das pernas
+        const dribble = this.characterType === 'coleone' && isWalking && this.spriteFrame === null ? coleoneDribble(this) : null;
+        if (dribble && dribble.behind) drawDribbleBall(this, dribble);
         if (drawArt) drawArt(ctx, -this.height / 4, -this.height, this.height / 2, this.height, this);
+        if (dribble && !dribble.behind) drawDribbleBall(this, dribble);
         ctx.restore();
 
         const headY = this.y - this.z - this.height - 8;

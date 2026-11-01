@@ -2399,6 +2399,22 @@ pixelCharacters.coleone = {
         45: '................KNNooooOOOOOOOooooOOOOOOOOOOONNK',
         46: '................KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK',
     },
+    // Andando: mão aberta, a bola quica entre as pernas (desenhada pelo jogo)
+    walk: {
+        34: '..........KOOOKooooooooOOOOOOOOOOOOOOOOOOOOKKSSSSK',
+        35: '..........KsSSSKoooooooOOOOOOOOOOOOOOOOOOOOKssssssK',
+        36: '..........KsSSSKoooooooOOOOOOOOOOOOOOOOOOOOKSSSSSSK',
+        37: '..........KKKKKKKKoooooOOOOOOOOOOOOOOOOOOOOOKSSSSK',
+        38: '................KNKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK',
+        39: '................KNNooooOOOOOOOOOOOOOOOOOOOOOONNK',
+        40: '................KNNooooOOOOOOOOOOOOOOOOOOOOOONNK',
+        41: '................KNNooooOOOOOOOooooOOOOOOOOOOONNK',
+        42: '................KNNooooOOOOOOOooooOOOOOOOOOOONNK',
+        43: '................KNNooooOOOOOOOooooOOOOOOOOOOONNK',
+        44: '................KNNooooOOOOOOOooooOOOOOOOOOOONNK',
+        45: '................KNNooooOOOOOOOooooOOOOOOOOOOONNK',
+        46: '................KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK',
+    },
 };
 
 // --- Bershow: cavaleiro negro de espadão; na fúria o visor fecha e as rachaduras da armadura acendem ---
@@ -2992,7 +3008,8 @@ function makePixelArt(type) {
             spritesByForm[form] = {
                 idle,
                 attack: buildSprite(frame(spriteVariant(def.idle, def.attack)), palette, `${type} attack`, size),
-                walk: buildWalkFrames(idle, legStart, size),
+                // Quem tem quadro próprio de andar (Coleone sem a bola na mão) anda com ele
+                walk: buildWalkFrames(def.walk ? buildSprite(frame(spriteVariant(def.idle, def.walk)), palette, `${type} walk`, size) : idle, legStart, size),
                 special: buildSprite(frame(def.special || def.idle), palette, `${type} special`, size),
             };
         }

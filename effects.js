@@ -460,6 +460,53 @@ function updateColeoneBalls() {
     coleoneBalls = coleoneBalls.filter(b => !b.done);
 }
 
+// Drible do Coleone andando: a bola desce da mão, quica no chão entre as pernas e sobe na outra mão
+// (uma troca de mão a cada 3 passos, ~0,4 s andando). Posições na grade 64x64 do sprite.
+const DRIBBLE_FRONT = { x: 47, y: 44 }, DRIBBLE_BACK = { x: 13, y: 43 }, DRIBBLE_FLOOR = { x: 31, y: 57 };
+const DRIBBLE_CYCLE = 12; // fases de caminhada para ida e volta
+function coleoneDribble(f) {
+    const u = (f.walkPhase % DRIBBLE_CYCLE) / DRIBBLE_CYCLE;
+    const [from, to] = u < 0.5 ? [DRIBBLE_FRONT, DRIBBLE_BACK] : [DRIBBLE_BACK, DRIBBLE_FRONT];
+    const s = (u % 0.5) * 2;
+    let x, y;
+    if (s < 0.5) {
+        const t = s * 2; // descendo, cada vez mais rápido
+        x = from.x + (DRIBBLE_FLOOR.x - from.x) * t;
+        y = from.y + (DRIBBLE_FLOOR.y - from.y) * t * t;
+    } else {
+        const t = (s - 0.5) * 2; // subindo, freando até a mão
+        x = DRIBBLE_FLOOR.x + (to.x - DRIBBLE_FLOOR.x) * t;
+        y = DRIBBLE_FLOOR.y - (DRIBBLE_FLOOR.y - to.y) * (1 - (1 - t) * (1 - t));
+    }
+    // Cruza na frente, entre os pés; do lado da mão de trás fica escondida atrás do corpo
+    return { x, y, behind: x < 22 };
+}
+
+// Desenhada no espaço do sprite (já virado para o lado certo): grade 64 -> altura do lutador
+function drawDribbleBall(f, d) {
+    const g = f.height / 64;
+    const px = -f.height / 2 + d.x * g, py = -f.height + d.y * g, r = 6 * g;
+    const floorY = -f.height + 63 * g, lift = (floorY - py) / f.height;
+    ctx.save();
+    ctx.fillStyle = `rgba(5, 0, 15, ${0.4 - lift})`;
+    ctx.beginPath();
+    ctx.ellipse(px, floorY, r * (1 - lift), r * 0.35, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.translate(px, py);
+    ctx.rotate(f.walkPhase * 0.6);
+    ctx.fillStyle = '#e0661c';
+    ctx.strokeStyle = '#3a1a0a';
+    ctx.lineWidth = Math.max(1, g * 0.9);
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#f08a3a';
+    ctx.beginPath(); ctx.arc(-r * 0.3, -r * 0.3, r * 0.45, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-r, 0); ctx.lineTo(r, 0);
+    ctx.moveTo(0, -r); ctx.lineTo(0, r);
+    ctx.stroke();
+    ctx.restore();
+}
+
 function drawColeoneBall(ball) {
     ctx.save();
     ctx.fillStyle = 'rgba(5, 0, 15, 0.45)';
