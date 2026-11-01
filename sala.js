@@ -10,7 +10,7 @@ const ROOM_RETRY_MS = 2500;            // sala não encontrada ou conexão caiu:
 const ROOM_TIMEOUT_MS = 5000;          // sem resposta do jogo por 5 s: considera que caiu
 
 // onMessage(msg): mensagem do jogo; onStatus(estado, texto): 'connecting' | 'online' | 'offline';
-// onStream(stream): vídeo da partida (só a tela remota recebe)
+// onStream(stream, call): vídeo da partida (só a tela remota recebe)
 function createRoomLink({ kind, onMessage, onStatus, onStream }) {
     const link = {
         room: null,
@@ -40,7 +40,7 @@ function createRoomLink({ kind, onMessage, onStatus, onStream }) {
             // A tela remota recebe uma "chamada" de vídeo do jogo
             this.peer.on('call', call => {
                 call.answer();
-                call.on('stream', stream => { if (onStream) onStream(stream); });
+                call.on('stream', stream => { if (onStream) onStream(stream, call); });
             });
         },
         dial() {

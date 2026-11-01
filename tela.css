@@ -177,6 +177,13 @@ html, body {
     color: #ccc;
 }
 
+.view-quality {
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: #6dff8a;
+}
+.view-quality.weak { color: #ffb347; }
+
 .view-status.online { color: #6dff8a; }
 .view-status.offline { color: #ff6b6b; }
 

@@ -32,8 +32,9 @@ const link = createRoomLink({
         if (status !== 'online' && !video.srcObject) $('waiting-text').innerText = text || 'Conectando...';
         showBar();
     },
-    onStream: stream => {
+    onStream: (stream, call) => {
         video.srcObject = stream;
+        watchQuality(call);
         $('waiting').classList.add('hidden');
         // Som: o navegador às vezes só deixa tocar depois de um clique na página
         video.muted = false;
@@ -45,6 +46,28 @@ const link = createRoomLink({
         stream.getVideoTracks().forEach(track => track.addEventListener('ended', streamStopped));
     },
 });
+
+// Qualidade que está chegando (resolução, quadros por segundo e taxa), para saber se o problema é a internet
+let qualityTimer = null;
+function watchQuality(call) {
+    clearInterval(qualityTimer);
+    let lastBytes = 0, lastTime = 0;
+    qualityTimer = setInterval(async () => {
+        const pc = call.peerConnection;
+        if (!pc || pc.connectionState === 'closed') { clearInterval(qualityTimer); $('view-quality').innerText = ''; return; }
+        const stats = await pc.getStats();
+        let video = null, codec = '';
+        stats.forEach(s => { if (s.type === 'inbound-rtp' && s.kind === 'video') video = s; });
+        if (!video) return;
+        const c = video.codecId && stats.get(video.codecId);
+        if (c) codec = c.mimeType.replace('video/', '');
+        const mbps = lastTime ? ((video.bytesReceived - lastBytes) * 8 / ((video.timestamp - lastTime) / 1000)) / 1e6 : 0;
+        lastBytes = video.bytesReceived; lastTime = video.timestamp;
+        const el = $('view-quality');
+        el.innerText = `${video.frameHeight || '?'}p · ${Math.round(video.framesPerSecond || 0)} fps · ${mbps.toFixed(1)} Mbps · ${codec}`;
+        el.classList.toggle('weak', (video.frameHeight || 0) < 600 || (video.framesPerSecond || 0) < 20);
+    }, 1000);
+}
 
 function streamStopped() {
     video.srcObject = null;

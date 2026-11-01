@@ -94,10 +94,16 @@ function renderPhoneRoom() {
 const remoteUrl = () => new URL('tela.html', location.href).href.replace(/^https?:\/\//, '');
 let broadcastStream = null;
 
+// Qualidade da transmissão. 1280x720 é o tamanho do mundo do jogo: a pixel art fica nítida sem gastar
+// internet à toa com a resolução do monitor. Quem transmite precisa de upload acima da taxa máxima.
+const BROADCAST_WIDTH = 1280, BROADCAST_HEIGHT = 720, BROADCAST_FPS = 30;
+const BROADCAST_MAX_BITRATE = 6000000;  // 6 Mbps por tela remota (o navegador baixa sozinho se a internet não aguentar)
+const BROADCAST_CODECS = ['VP9', 'VP8', 'H264']; // VP9 é o melhor para imagem de tela/jogo com pouca internet
+
 async function startBroadcast() {
     try {
         broadcastStream = await navigator.mediaDevices.getDisplayMedia({
-            video: { frameRate: 30 },
+            video: { width: { ideal: BROADCAST_WIDTH }, height: { ideal: BROADCAST_HEIGHT }, frameRate: { ideal: BROADCAST_FPS, max: BROADCAST_FPS } },
             audio: true,
             preferCurrentTab: true,     // Chrome/Edge: a aba do jogo já vem selecionada
             selfBrowserSurface: 'include',
@@ -113,7 +119,9 @@ async function startBroadcast() {
 function shareStream(stream) {
     broadcastStream = stream;
     stream.getVideoTracks().forEach(track => {
-        track.contentHint = 'motion'; // prioriza movimento suave em vez de nitidez de texto
+        // 'detail': não deixa o navegador derreter a resolução da pixel art quando a internet aperta
+        // (com 'motion' ele preferia baixar a resolução e a imagem ficava borrada)
+        track.contentHint = 'detail';
         track.addEventListener('ended', stopBroadcast); // parou pela barra do navegador
     });
     for (const seat of phones.values()) if (seat.kind === 'screen') callScreen(seat);
@@ -132,8 +140,46 @@ function stopBroadcast() {
 
 function callScreen(seat) {
     if (!broadcastStream || !hostPeer || seat.call) return;
-    seat.call = hostPeer.call(seat.conn.peer, broadcastStream);
+    seat.call = hostPeer.call(seat.conn.peer, broadcastStream, { sdpTransform: preferVideoCodecs });
     seat.call.on('close', () => { seat.call = null; });
+    tuneBroadcastSender(seat.call);
+}
+
+// Põe os codecs preferidos na frente da lista de vídeo da oferta (quem recebe escolhe o primeiro que conhece)
+function preferVideoCodecs(sdp) {
+    const lines = sdp.split('\r\n');
+    const m = lines.findIndex(l => l.startsWith('m=video'));
+    if (m < 0) return sdp;
+    const codecOf = {};
+    for (const l of lines) {
+        const found = l.match(/^a=rtpmap:(\d+) ([\w-]+)\//);
+        if (found) codecOf[found[1]] = found[2].toUpperCase();
+    }
+    const parts = lines[m].split(' ');
+    const rank = pt => { const i = BROADCAST_CODECS.indexOf(codecOf[pt]); return i < 0 ? BROADCAST_CODECS.length : i; };
+    const payloads = parts.slice(3).map((pt, i) => ({ pt, i })).sort((a, b) => rank(a.pt) - rank(b.pt) || a.i - b.i).map(p => p.pt);
+    lines[m] = [...parts.slice(0, 3), ...payloads].join(' ');
+    return lines.join('\r\n');
+}
+
+// Libera uma taxa maior que o padrão do navegador e pede equilíbrio entre nitidez e fluidez.
+// Os parâmetros do envio só existem depois que a conexão negocia, então tenta por alguns segundos.
+function tuneBroadcastSender(call, tries = 0) {
+    const pc = call.peerConnection;
+    const sender = pc && pc.getSenders().find(s => s.track && s.track.kind === 'video');
+    const params = sender && sender.getParameters();
+    if (!params || !params.encodings || !params.encodings.length) {
+        if (tries < 40 && call.open !== false) setTimeout(() => tuneBroadcastSender(call, tries + 1), 250);
+        return;
+    }
+    params.encodings[0].maxBitrate = BROADCAST_MAX_BITRATE;
+    params.encodings[0].maxFramerate = BROADCAST_FPS;
+    params.degradationPreference = 'balanced';
+    sender.setParameters(params).catch(() => {
+        // Navegador sem degradationPreference: tenta só com a taxa
+        delete params.degradationPreference;
+        sender.setParameters(params).catch(() => {});
+    });
 }
 
 // --- Mensagens dos celulares ---
