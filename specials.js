@@ -121,6 +121,8 @@ Object.assign(Fighter.prototype, {
         this.attackCooldown = Math.max(this.attackCooldown, 12);
         target.vz = 8;
         target.takeDamage(WEAVER_KICK_DAMAGE, { unblockable: true, sound: 'hit_heavy' }, this);
+        // Chute para cima com estrela de quadrinho (pixelfx)
+        if (window.pixelFx) pixelFx.spawn('uppercut', { x: this.x, y: this.y, flip: target.x < this.x, palette: 'cyber', advance: 0.07, seed: Math.floor(Math.random() * 1000) });
         for (let i = 0; i < 10; i++) {
             particles.push(new Particle(target.x, target.chestY, i % 2 ? '#3ff6ff' : '#e8fbff', 0, { x: (Math.random() - 0.5) * 4, y: -Math.random() * 4 }));
         }
@@ -401,6 +403,11 @@ Object.assign(Fighter.prototype, {
         this.isChargingPunch = false;
         this.poseSpecial();
         sfx.play('bershow_armor');
+        // Espadão erguido brilhando e descendo em arco até o chão (pixelfx), batendo junto com o Corte Devastador
+        if (window.pixelFx) {
+            const facing = alive(this.target) ? Math.sign(this.target.x - this.x) || this.facing : this.facing;
+            pixelFx.spawn('heavy-cleave', { x: this.x, y: this.y, flip: facing < 0, delay: BERSHOW_ARMOR_CLOSE - BERSHOW_CLEAVE_HIT, palette: BERSHOW_CLEAVE_PALETTE });
+        }
     },
 
     updateBershowClose() {
@@ -438,7 +445,8 @@ Object.assign(Fighter.prototype, {
             const c = obstacleCenter(box);
             if (inLine(c.x, c.y, 14)) damageBox(box, 999);
         }
-        bershowSlashes.push({ x: this.x, y: this.y - 24, dir, life: 18 });
+        // Em teste: só o efeito da pixelfx (heavy-cleave). A faixa vermelha comprida (drawBershowSlashes) está desligada.
+        // bershowSlashes.push({ x: this.x, y: this.y - 24, dir, life: 18 });
         // Mostra o quadro do golpe com o espadão esticado
         this.isAttacking = true;
         this.attackType = 'strong_punch';
@@ -478,6 +486,8 @@ Object.assign(Fighter.prototype, {
         for (let i = 0; i < count; i++) {
             const angle = (i / count) * Math.PI * 2 + Math.random() * 0.4;
             shadowSoldiers.push(new ShadowSoldier(this, this.x + Math.cos(angle) * 55, this.y + Math.sin(angle) * 38));
+            // Tentáculos de sombra saindo do chão onde cada soldado se levanta (pixelfx)
+            if (window.pixelFx) pixelFx.spawn('shadow-tendrils', { x: this.x + Math.cos(angle) * 55, y: this.y + Math.sin(angle) * 38, scale: 1, seed: Math.floor(Math.random() * 1000) });
         }
         floatingTexts.push(new FloatingText(this.x, this.y - this.height - 18, `SOMBRAS x${count}`, '#b28cff'));
         this.poseSpecial();
@@ -679,6 +689,8 @@ Object.assign(Fighter.prototype, {
             hit.isParalyzed = true;
             hit.paralysisTimer = Math.max(hit.paralysisTimer, 20);
             createParticleEffect(hit, 'ground_explosion', { x: hit.x, y: hit.y, count: 20 });
+            // Golpe crítico no fim da investida (pixelfx)
+            if (window.pixelFx) pixelFx.spawn('crit-hit', { x: hit.x, y: hit.y, flip: this.dashDir.x < 0, height: Math.round((hit.y - hit.chestY) / 2), palette: 'gold' });
             this.isDashing = false;
         }
         const hitWall = this.x <= arena.left || this.x >= arena.right || this.y <= arena.top || this.y >= arena.bottom;
@@ -702,6 +714,9 @@ Object.assign(Fighter.prototype, {
 
         if (this.energy > 0) {
             this.channelingTick++;
+            this.updateSparkFx(opponent);
+            // A corrente trava os músculos: o alvo anda devagar enquanto está preso no choque
+            opponent.slowTimer = Math.max(opponent.slowTimer, 2);
 
             if (this.channelingTick % 15 === 0) {
                 this.energy -= 1;
@@ -709,7 +724,9 @@ Object.assign(Fighter.prototype, {
 
             if (this.channelingTick > 0 && this.channelingTick % 60 === 0) {
                 opponent.takeDamage(this.channelingDamage, {}, this);
-                this.channelingDamage *= 2;
+                this.channelingDamage = Math.min(SPARK_CHAIN_MAX_DAMAGE, this.channelingDamage * 2);
+                // O choque dobrou: estouro elétrico no alvo, vindo do lado do Spark
+                if (window.pixelFx) pixelFx.spawn('zap-hit', { x: opponent.x, y: opponent.chestY, flip: this.x > opponent.x, scale: 1.5 });
             }
             if (this.channelingTick % 6 === 0) sfx.play('spark_zap');
 
@@ -718,8 +735,45 @@ Object.assign(Fighter.prototype, {
         }
     },
 
+    // Efeitos do choque (pixelfx): o raio da mão até o alvo, que engrossa a cada vez que o dano dobra,
+    // e o alvo eletrocutado. Trocou de alvo (o anterior caiu): o corpo eletrocutado passa para o novo.
+    updateSparkFx(opponent) {
+        if (!window.pixelFx) return;
+        const spark = this;
+        if (!this.sparkFx) {
+            const beam = pixelFx.spawn('spark-beam', {
+                x: this.x, y: this.chestY, seed: Math.floor(Math.random() * 1000),
+                follow: e => {
+                    const target = spark.channelTarget;
+                    e.x = spark.x + spark.facing * 14;
+                    e.y = spark.chestY;
+                    if (!target) return;
+                    e.fx.options.to = [(target.x - e.x) / 2, (target.chestY - e.y) / 2];
+                    e.fx.options.level = Math.round(Math.log2(spark.channelingDamage / SPARK_CHAIN_START_DAMAGE));
+                },
+            });
+            this.sparkFx = { beam, body: null, victim: null };
+        }
+        if (this.sparkFx.victim !== opponent) {
+            if (this.sparkFx.body) this.sparkFx.body.stop();
+            this.sparkFx.victim = opponent;
+            this.sparkFx.body = pixelFx.spawn('electrified', {
+                x: opponent.x, y: opponent.y, scale: 1, actor: pixelFx.actorOf(opponent), seed: Math.floor(Math.random() * 1000),
+                follow: e => { e.x = opponent.x; e.y = opponent.y - opponent.z; e.flip = opponent.facing < 0; },
+            });
+        }
+    },
+
     // Interrompe o choque do Spark e zera o dano acumulado
     stopChanneling() {
+        if (this.sparkFx) {
+            // O raio estoura em faíscas e some; o alvo para de tremer
+            this.sparkFx.beam.fx.options.broken = true;
+            this.sparkFx.beam.follow = null;
+            this.sparkFx.beam.stop();
+            if (this.sparkFx.body) this.sparkFx.body.stop();
+            this.sparkFx = null;
+        }
         this.isChannelingSpecial = false;
         this.channelTarget = null;
         this.channelingDamage = SPARK_CHAIN_START_DAMAGE;

@@ -30,12 +30,17 @@ let gameState = 'MENU'; // MENU, SELECT, FIGHT, GAMEOVER
 // picks: lutador escolhido por cada humano, na ordem P1, P2...
 const PLAYER_IDS = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'];
 const MAX_KEYBOARD_PLAYERS = 2; // um de cada lado do teclado
+// training: modo Treino (por dentro é um 1v1 contra um boneco parado; veja updateTraining no game.js)
 const match = {
-    mode: '1v1', humans: 1, map: 'random', picks: [],
+    mode: '1v1', humans: 1, map: 'random', picks: [], training: false,
     // Padrão: P1 e P2 no teclado, os outros no controle; times alternados (P1 ciano, P2 rosa, P3 ciano...)
     inputs: Object.fromEntries(PLAYER_IDS.map((p, i) => [p, { type: i < MAX_KEYBOARD_PLAYERS ? 'keyboard' : 'gamepad', index: null, name: '', team: i % 2 }])),
 };
 const teamSizeOf = mode => Number(mode[0]);
+// Treino: o boneco que apanha (troca para o reserva se o jogador escolher o mesmo) e quanto tempo sem
+// apanhar até a vida de todo mundo voltar e o contador de dano zerar
+const TRAINING_DUMMY = 'titan', TRAINING_DUMMY_SPARE = 'aegis';
+const TRAINING_RESET = 120; // 2 s
 const TEAM_COLORS = ['#00ffff', '#ff4dff'];
 const TEAM_NAMES = ['TIME CIANO', 'TIME ROSA'];
 
@@ -102,7 +107,10 @@ const PUNCH_REACH = 46;        // alcance do soco (a partir da borda do lutador)
 const BLADE_REACH = 60;        // alcance de lâminas
 const STRONG_PUNCH_HOLD = 22;  // passos segurando o soco para sair o soco forte
 const SPARK_CHAIN_RANGE = 340; // alcance máximo da corrente elétrica do Spark
-const SPARK_CHAIN_START_DAMAGE = 4; // dano do primeiro segundo do choque (depois dobra: 4, 8, 16...)
+const SPARK_CHAIN_START_DAMAGE = 6; // dano do primeiro segundo do choque (depois dobra: 6, 12, 24...)
+const SPARK_CHAIN_MAX_DAMAGE = 96;   // o choque para de dobrar aqui (6, 12, 24, 48, 96, 96...)
+const SPARK_CHAIN_BREAK_DAMAGE = 25; // só um golpe forte assim (ou mais) arrebenta o choque; os fracos não
+const SPARK_PUNCH_DAMAGE = 18;       // soco elétrico do Spark
 const KAZE_PUNCH_DAMAGE = 20;   // corte da lâmina do Kaze
 const KENJI_PUNCH_DAMAGE = 14;     // soco do Kenji (o combo acelera os socos)
 const KENJI_MAX_COMBO_SPEED = 7;   // o combo deixa os socos até 7x mais rápidos
@@ -244,6 +252,44 @@ const BERSHOW_ARMOR_LIFESTEAL = 0.3;   // com a armadura, cura 30% do dano dos g
 const BERSHOW_SLASH_RANGE = 340;       // Corte Devastador: comprimento do corte
 const BERSHOW_SLASH_WIDTH = 70;
 const BERSHOW_SLASH_DAMAGE = 90;
+// Efeito do Corte Devastador (pixelfx heavy-cleave): o arco bate no chão 20 passos depois de começar
+const BERSHOW_CLEAVE_HIT = 20;
+const BERSHOW_CLEAVE_PALETTE = ['#1a0408', '#3a0810', '#6e0f18', '#a8161e', '#e02a2a', '#ff6a4a', '#ffc0a0', '#ffffff']; // brasa vermelha da Fúria
+
+// Efeito de cada golpe de quem luta corpo a corpo (pixelfx): golpe ('punch') e soco forte ('strong_punch').
+// id do efeito e opções: palette (nome de uma rampa da pixelfx ou lista de cores) e as opções próprias dele.
+// on: 'hit' aparece no ponto do impacto quando o golpe acerta (socos); sem ele, sai do pé de quem golpeia.
+// combo: troca o efeito quando o combo chega em 'at' socos seguidos (Kenji).
+// advance: segundos do começo do efeito a pular, para o corte dele bater junto com o dano (o golpe do jogo acerta
+// ~0,05 s depois de começar; o soco forte ~0,08 s). forms: troca por forma (Zarek Rubra/Umbral).
+// Quem não está aqui golpeia como antes.
+const MELEE_FX = {
+    kaze: { punch: { id: 'sword-slash', palette: 'ice' }, strong_punch: { id: 'double-slash', palette: 'ice' } },
+    akane: { punch: { id: 'sword-slash', palette: 'blood' }, strong_punch: { id: 'double-slash', palette: 'blood' } },
+    zarek: {
+        punch: { id: 'sword-slash', palette: 'shadow' },
+        strong_punch: { id: 'scythe-reap', advance: 0.06 },
+        forms: {
+            red: { punch: { id: 'sword-slash', palette: 'blood' }, strong_punch: { id: 'scythe-reap', advance: 0.06, palette: ['#0c0306', '#220810', '#3a0c18', '#5e1222', '#8c1a2a', '#ff5a50', '#ffc8c0', '#ffffff'] } },
+            blue: { punch: { id: 'sword-slash', palette: 'ice' }, strong_punch: { id: 'scythe-reap', advance: 0.06, palette: ['#03060c', '#081428', '#0e2244', '#163466', '#244c8c', '#7fd6f0', '#d8f4ff', '#ffffff'] } },
+        },
+    },
+    bershow: { punch: { id: 'sword-slash', palette: BERSHOW_CLEAVE_PALETTE, radius: 48 }, strong_punch: { id: 'double-slash', palette: BERSHOW_CLEAVE_PALETTE } },
+    // Socos: o efeito aparece no ponto do impacto, quando acerta (on: 'hit')
+    titan: { punch: { id: 'hit-spark', on: 'hit' }, strong_punch: { id: 'blunt-hit', on: 'hit' } },
+    hades: { punch: { id: 'hit-spark', on: 'hit', palette: 'fire' }, strong_punch: { id: 'blunt-hit', on: 'hit', palette: 'fire', warm: '#ff8a2a' } },
+    // Kenji: no combo cheio (socos mais rápidos), cada soco vira golpe crítico
+    kenji: { punch: { id: 'hit-spark', on: 'hit', palette: 'gold', combo: { at: 4, id: 'crit-hit', on: 'hit', palette: 'gold' } }, strong_punch: { id: 'uppercut' } },
+    cangeras: { punch: { id: 'blunt-hit', on: 'hit', palette: 'gold', warm: '#ffe066' }, strong_punch: { id: 'hammer-smash', palette: 'gold', advance: 0.07 } },
+    jack: { punch: { id: 'sword-slash', palette: 'ember' }, strong_punch: { id: 'double-slash', palette: 'ember' } },
+    fenris: { punch: { id: 'claw-swipe', palette: 'arcane' }, strong_punch: { id: 'claw-swipe', palette: 'shadow', scale: 2.6 } },
+    weaver: { punch: { id: 'hit-spark', on: 'hit', palette: 'cyber' } },
+    spark: { punch: { id: 'hit-spark', on: 'hit', palette: 'electric' }, strong_punch: { id: 'blunt-hit', on: 'hit', palette: 'electric', warm: '#7cc8ff' } },
+    sina: { punch: { id: 'sword-slash', palette: 'metal', radius: 32 }, strong_punch: { id: 'thrust', palette: 'metal' } },
+    aspas: { punch: { id: 'sword-slash', palette: 'arcane', radius: 34 }, strong_punch: { id: 'double-slash', palette: 'shadow' } },
+};
+const HIT_STOP = 4; // passos em que a luta congela quando um soco forte acerta (dá peso à pancada)
+let hitStop = 0;
 let bershowSlashes = [];               // rastros do Corte Devastador (só visual)
 // Aspas the Darkness: duas adagas, Passo Sombrio e o Exército das Sombras
 const ASPAS_HEIGHT = 1.1;              // alto e magro: desenhado 10% mais alto

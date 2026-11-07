@@ -29,7 +29,7 @@ function buildHUD() {
             name.innerText = f.name;
             title.appendChild(document.createTextNode(' '));
             const tag = makeEl('span', 'controller-tag', title);
-            tag.innerText = f.isPlayer ? f.controller.toUpperCase() : 'IA';
+            tag.innerText = f.isPlayer ? f.controller.toUpperCase() : f.isDummy ? 'ALVO' : 'IA';
             f.hud = {
                 card,
                 health: makeBar('health-bar-outer', 'health-bar-inner', card),
@@ -110,6 +110,7 @@ function knockOut(fighter) {
     if (fighter.isInsideOpponent && fighter.zarekHost) fighter.exitHost(fighter.zarekHost);
     turrets.filter(t => t.owner === fighter).forEach(t => t.destroy(true)); // as torretas caem junto com o Gear
     fighter.mambaCloudTimer = 0;
+    syncStatusFx(fighter); // apaga o fogo e a maldição da pixelfx de quem caiu
     // Aspas: cada inimigo derrotado reforça o próximo Exército das Sombras (a sombra dele voa até o Aspas)
     for (const aspas of fighters.filter(f => alive(f) && f.characterType === 'aspas' && f.team !== fighter.team)) {
         if (aspas.shadowBonus >= ASPAS_ARMY_BONUS_MAX) continue;

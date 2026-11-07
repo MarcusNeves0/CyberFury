@@ -344,6 +344,7 @@ function updateProjectiles() {
         }
         // Soco-foguete do Titan: empurra e atordoa por 0,3 s (se não for bloqueado)
         if (projectile.type === 'rocket_punch') titanShockwave(target.x, target.y, projectile.shooter, target);
+        if (projectile.type === 'rocket_punch' && window.pixelFx) pixelFx.spawn('crit-hit', { x: target.x, y: target.y, flip: projectile.vx < 0, height: Math.round((target.y - target.chestY) / 2), palette: 'fire' });
         if (projectile.type === 'rocket_punch' && !defended) {
             target.push(dir, 12);
             target.isParalyzed = true;
@@ -716,6 +717,54 @@ function drawWalls() {
 }
 
 // Corte Devastador do Bershow: uma faixa de corte vermelha e branca que some rápido
+// Golpe corpo a corpo com efeito da pixelfx (MELEE_FX no config.js): sai do pé de quem bate, virado para
+// onde ele olha e um pouco inclinado para a mira (para cima ou para baixo)
+function meleeFxFor(fighter, type) {
+    const table = window.pixelFx && MELEE_FX[fighter.characterType];
+    if (!table) return null;
+    const byForm = table.forms && fighter.zarekForm ? table.forms[fighter.zarekForm] : null;
+    let fx = (byForm && byForm[type]) || table[type];
+    if (fx && fx.combo && fighter.consecutivePunchCounter >= fx.combo.at) fx = fx.combo;
+    return fx || null;
+}
+
+function spawnMeleeFx(fighter, type) {
+    const fx = meleeFxFor(fighter, type);
+    if (!fx || fx.on === 'hit') return; // socos: o efeito sai no impacto (spawnHitFx)
+    const { id, on, combo, ...options } = fx;
+    const tilt = Math.max(-0.45, Math.min(0.45, Math.atan2(fighter.aim.y, Math.abs(fighter.aim.x) || 0.001) * 0.4));
+    pixelFx.spawn(id, { ...options, x: fighter.x, y: fighter.y - fighter.z, flip: fighter.facing < 0, angle: tilt, seed: Math.floor(Math.random() * 1000) });
+}
+
+// Soco que acertou: o efeito nasce no pé do alvo, com o estalo na altura do peito, virado no sentido da pancada
+function spawnHitFx(attacker, target) {
+    const fx = meleeFxFor(attacker, attacker.attackType);
+    if (!fx || fx.on !== 'hit') return;
+    const { id, on, combo, ...options } = fx;
+    pixelFx.spawn(id, { height: Math.round((target.y - target.chestY) / 2), ...options, x: target.x, y: target.y - target.z, flip: attacker.x > target.x, seed: Math.floor(Math.random() * 1000) });
+}
+
+// Efeitos que acompanham o corpo enquanto um estado dura (pixelfx): fogo de quem queima, maldição do Jack
+const STATUS_FX = [
+    { id: 'burning', key: 'burnFx', on: f => f.burnDuration > 0 },
+    { id: 'cursed', key: 'curseFx', on: f => f.curseDuration > 0 },
+];
+function syncStatusFx(fighter) {
+    if (!window.pixelFx) return;
+    for (const status of STATUS_FX) {
+        const active = alive(fighter) && status.on(fighter);
+        if (active && !fighter[status.key]) {
+            fighter[status.key] = pixelFx.spawn(status.id, {
+                x: fighter.x, y: fighter.y, scale: 1, actor: pixelFx.actorOf(fighter), seed: Math.floor(Math.random() * 1000),
+                follow: e => { e.x = fighter.x; e.y = fighter.y - fighter.z; e.flip = fighter.facing < 0; },
+            });
+        } else if (!active && fighter[status.key]) {
+            fighter[status.key].stop();
+            fighter[status.key] = null;
+        }
+    }
+}
+
 // Tribunal do Cangeras: sala escurece, holofote no juiz e no réu, martelo batendo no meio e a sentença no papel
 function drawCourt(c) {
     const W = WORLD_W, H = WORLD_H, cx = W / 2, cy = H / 2;
@@ -959,6 +1008,8 @@ function updateHazards() {
         }
         sfx.play('explosion');
         createParticleEffect(null, 'ground_explosion', { x: hazard.x, y: hazard.y, count: 24 });
+        // Anel de fogo correndo pelo chão até a borda da explosão (pixelfx)
+        if (window.pixelFx) pixelFx.spawn('fire-ring', { x: hazard.x, y: hazard.y, reach: Math.round(hazard.radius / 2), seed: Math.floor(Math.random() * 1000) });
     }
     hazards = hazards.filter(h => h.timer > 0);
 }

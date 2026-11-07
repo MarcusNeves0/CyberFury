@@ -80,6 +80,9 @@ class Fighter {
         // Character-Specific Mechanics
         this.isChannelingSpecial = false;
         this.channelTarget = null;
+        this.sparkFx = null;     // Spark: efeitos do choque (raio e alvo eletrocutado) enquanto ele dura
+        this.burnFx = null;      // fogo da pixelfx enquanto o lutador está queimando
+        this.curseFx = null;     // maldição do Jack (pixelfx) enquanto dura
         this.channelingTick = 0;
         this.channelingDamage = SPARK_CHAIN_START_DAMAGE;
         this.isDashing = false;
@@ -358,7 +361,9 @@ class Fighter {
         const headY = this.y - this.z - this.height - 8;
 
         // Golpe: arco na direção da mira (só depois da preparação)
-        if (this.attackTimer > 0 && this.attackWindup === 0 && this.attackType !== 'special') {
+        // (golpe com efeito da pixelfx saindo do corpo mostra o efeito no lugar do arco; socos com estalo no impacto mantêm o arco)
+        const swingFx = this.attackType !== 'special' && meleeFxFor(this, this.attackType);
+        if (this.attackTimer > 0 && this.attackWindup === 0 && this.attackType !== 'special' && !(swingFx && swingFx.on !== 'hit')) {
             const reach = (isBladeUser(this) ? BLADE_REACH : PUNCH_REACH) + this.radius;
             const angle = Math.atan2(this.aim.y, this.aim.x);
             ctx.save();
@@ -624,6 +629,7 @@ class Fighter {
     }
 
     handleStatusEffects() {
+        syncStatusFx(this); // fogo e maldição da pixelfx enquanto duram
         if (this.burnDuration > 0) {
             this.burnDuration--;
             this.burnTick++;
@@ -737,7 +743,7 @@ class Fighter {
         sfx.play(effect.sound || (damage >= 25 ? 'hit_heavy' : 'hit'));
         this.hitFlash = 12;
         if (damage >= 25) screenShake = Math.max(screenShake, Math.min(8, damage / 9));
-        if (this.isChannelingSpecial) this.stopChanneling(); // levar dano quebra o choque
+        if (this.isChannelingSpecial && damage >= SPARK_CHAIN_BREAK_DAMAGE) this.stopChanneling(); // golpe forte quebra o choque
         // Akane grudada: se o time da vítima bater forte nela, a dança é interrompida
         if (this.isBladeDancing && this.bladeDanceLock) {
             this.bladeDanceDamageTaken += damage;
@@ -806,6 +812,7 @@ class Fighter {
                     sfx.play(['kaze', 'sina', 'aspas'].includes(this.characterType) ? 'blade_swing' : 'swing');
                 }
                 this.attackWindup = 2; // puxa o braço por um instante antes de acertar
+                spawnMeleeFx(this, 'punch');
                 break;
             case 'strong_punch':
                 if (this.characterType === 'weaver') {
@@ -827,6 +834,7 @@ class Fighter {
                 if (this.characterType === 'aspas') this.shadowStep(); // some e reaparece atrás do alvo
                 if (this.characterType === 'cangeras') floatingTexts.push(new FloatingText(this.x, this.y - this.height - 18, 'ORDEM!', '#ffcc4a'));
                 sfx.play(isBladeUser(this) ? 'blade_swing' : 'swing_heavy');
+                spawnMeleeFx(this, 'strong_punch');
                 break;
             case 'special':
                 // Possuído pelo Zarek: não consegue usar o especial
@@ -995,7 +1003,7 @@ function tryMelee(attacker) {
     if (isBladeUser(attacker)) effect.sound = 'blade_hit';
     switch (attacker.attackType) {
         case 'punch':
-            damage = (attacker.characterType === 'akane') ? 14 : (attacker.characterType === 'nyx') ? NYX_PUNCH_DAMAGE : (attacker.characterType === 'kaze') ? KAZE_PUNCH_DAMAGE : (attacker.characterType === 'weaver') ? WEAVER_PUNCH_DAMAGE : (attacker.characterType === 'kenji') ? KENJI_PUNCH_DAMAGE : (attacker.characterType === 'aegis') ? AEGIS_PUNCH_DAMAGE : (attacker.characterType === 'rhino') ? RHINO_PUNCH_DAMAGE : (attacker.characterType === 'anchor') ? ANCHOR_PUNCH_DAMAGE : (attacker.characterType === 'sina') ? SINA_KNIFE_DAMAGE : (attacker.characterType === 'coleone') ? COLEONE_PUNCH_DAMAGE : (attacker.characterType === 'bershow') ? BERSHOW_SWORD_DAMAGE : (attacker.characterType === 'aspas') ? ASPAS_DAGGER_DAMAGE : (attacker.characterType === 'cangeras') ? CANGERAS_GAVEL_DAMAGE : 10;
+            damage = (attacker.characterType === 'akane') ? 14 : (attacker.characterType === 'nyx') ? NYX_PUNCH_DAMAGE : (attacker.characterType === 'kaze') ? KAZE_PUNCH_DAMAGE : (attacker.characterType === 'weaver') ? WEAVER_PUNCH_DAMAGE : (attacker.characterType === 'kenji') ? KENJI_PUNCH_DAMAGE : (attacker.characterType === 'aegis') ? AEGIS_PUNCH_DAMAGE : (attacker.characterType === 'rhino') ? RHINO_PUNCH_DAMAGE : (attacker.characterType === 'anchor') ? ANCHOR_PUNCH_DAMAGE : (attacker.characterType === 'sina') ? SINA_KNIFE_DAMAGE : (attacker.characterType === 'coleone') ? COLEONE_PUNCH_DAMAGE : (attacker.characterType === 'bershow') ? BERSHOW_SWORD_DAMAGE : (attacker.characterType === 'aspas') ? ASPAS_DAGGER_DAMAGE : (attacker.characterType === 'cangeras') ? CANGERAS_GAVEL_DAMAGE : (attacker.characterType === 'spark') ? SPARK_PUNCH_DAMAGE : 10;
             if (attacker.zarekForm === 'red') damage = 12;
             if (attacker.zarekForm === 'blue') damage = ZAREK_BLUE_PUNCH;
             if (attacker.characterType === 'akane') {
@@ -1052,6 +1060,8 @@ function tryMelee(attacker) {
             attacker.energy = Math.min(attacker.maxEnergy, attacker.energy + 7.5);
         } else if (damage > 0) {
             attacker.energy = Math.min(attacker.maxEnergy, attacker.energy + 15);
+            spawnHitFx(attacker, target); // soco com efeito da pixelfx: estalo no ponto do impacto
+            if (attacker.attackType === 'strong_punch') hitStop = HIT_STOP; // soco forte acertou: a luta congela por um instante
             const pushForce = rhinoCharged ? 12 : attacker.characterType === 'aegis' ? 6
                 : attacker.characterType === 'coleone' && attacker.attackType === 'strong_punch' ? 9 // toco: manda para longe
                 : attacker.characterType === 'cangeras' && attacker.attackType === 'strong_punch' ? CANGERAS_ORDER_PUSH

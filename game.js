@@ -57,6 +57,12 @@ function step() {
         updatePhones();
         return;
     }
+    // Congela no impacto do soco forte (só alguns passos)
+    if (hitStop > 0) {
+        hitStop--;
+        updatePhones();
+        return;
+    }
     aiControllers.forEach(ai => ai.tick());
     // Humanos sempre miram no inimigo mais próximo; a IA escolhe o alvo, mas troca se ele cair
     for (const f of fighters) {
@@ -100,6 +106,7 @@ function step() {
     updateHazards();
     updateSinaBoats();
     updateColeoneBalls();
+    if (window.pixelFx) pixelFx.update();
     bershowSlashes.forEach(s => s.life--);
     bershowSlashes = bershowSlashes.filter(s => s.life > 0);
     updateMap();
@@ -107,6 +114,7 @@ function step() {
     shockwaves = shockwaves.filter(w => w.life > 0);
     screenShake = screenShake > 0.3 ? screenShake * 0.85 : 0;
 
+    if (training) updateTraining();
     for (const f of fighters) {
         if (!f.isDead && f.health <= 0) knockOut(f);
         else if (f.isDead && f.deathTimer > 0) f.deathTimer--;
@@ -169,7 +177,8 @@ function draw() {
 
     for (const f of fighters) {
         if (f.isInsideOpponent && alive(f.zarekHost)) drawZarekMark(f, f.zarekHost);
-        if (alive(f) && f.isChannelingSpecial && alive(f.channelTarget)) drawLightningChain(f, f.channelTarget);
+        // Choque do Spark: com a pixelfx o raio é um efeito; sem ela, a corrente de ⚡ de antes
+        if (alive(f) && f.isChannelingSpecial && alive(f.channelTarget) && !window.pixelFx) drawLightningChain(f, f.channelTarget);
         if (alive(f) && f.nyxLinkTimer > 0 && alive(f.nyxLinkEnemy)) drawNyxLink(f);
         if (alive(f) && f.pullTarget && alive(f.pullTarget)) drawWebLine(f, f.pullTarget);
         if (alive(f) && f.hookTarget && alive(f.hookTarget)) drawAnchorChain(f, f.hookTarget);
@@ -177,6 +186,7 @@ function draw() {
     lifeOrbs.forEach(orb => orb.draw());
 
     projectiles.forEach(p => p.draw());
+    if (window.pixelFx) pixelFx.draw(ctx); // efeitos de pixel art (pixelfx)
     coleoneBalls.forEach(drawColeoneBall);
     drawBershowSlashes();
     particles.forEach(p => p.draw());
@@ -206,6 +216,7 @@ function drawLightningChain(attacker, defender) {
 // --- Início do Jogo ---
 // Monta os dois times: cada humano com o personagem escolhido, o resto sorteado sem repetir
 function createFighters() {
+    if (match.training) { createTrainingFighters(); return; }
     const teamSize = teamSizeOf(match.mode);
     const pool = CHARACTERS.filter(c => !match.picks.includes(c.id)).sort(() => Math.random() - 0.5);
     const byId = id => CHARACTERS.find(c => c.id === id);
@@ -249,6 +260,62 @@ function createFighters() {
     });
 }
 
+// --- Treino ---
+// Você contra um boneco parado no meio da arena. Ninguém morre (a vida volta depois de 2 s sem apanhar),
+// sua energia fica sempre cheia e a luta não acaba: sai pelos botões da barra de treino.
+let training = null;
+
+function createTrainingFighters() {
+    const player = activePlayers()[0];
+    const char = CHARACTERS.find(c => c.id === match.picks[0]);
+    const dummyId = char.id === TRAINING_DUMMY ? TRAINING_DUMMY_SPARE : TRAINING_DUMMY;
+    const dummyChar = CHARACTERS.find(c => c.id === dummyId);
+    const w = arena.right - arena.left, y = (arena.top + arena.bottom) / 2;
+    const me = new Fighter(arena.left + w * 0.3, y, char.name, char.id, 0, player);
+    const input = match.inputs[player];
+    if (input.type === 'gamepad' && input.index !== null) me.gamepadIndex = input.index;
+    else if (input.type === 'phone') me.onPhone = true;
+    else me.keymap = keymapFor(player);
+    const dummy = new Fighter(arena.left + w * 0.62, y, 'Boneco de treino', dummyChar.id, 1, 'ai');
+    dummy.isDummy = true; // sem IA: fica parado apanhando
+    fighters = [me, dummy];
+    training = { dummy, comboStart: 0, best: 0 };
+}
+
+function updateTraining() {
+    for (const f of fighters) {
+        // Energia infinita (as recargas das habilidades continuam valendo); o boneco não usa a dele
+        f.energy = f.isDummy ? 0 : f.maxEnergy;
+        // Ninguém morre; depois de 2 s sem apanhar, a vida volta inteira
+        if (f.trainingTaken === undefined) f.trainingTaken = f.stats.taken;
+        if (f.stats.taken > f.trainingTaken) { f.trainingTaken = f.stats.taken; f.trainingQuiet = 0; }
+        else f.trainingQuiet = (f.trainingQuiet || 0) + 1;
+        if (f.health < 1) f.health = 1;
+        if (f.trainingQuiet === TRAINING_RESET) f.health = f.maxHealth;
+    }
+    // Contador de dano no boneco: soma a sequência de golpes; zera depois de 2 s parado
+    const d = training.dummy;
+    if (d.trainingQuiet === TRAINING_RESET) training.comboStart = d.stats.taken;
+    const combo = Math.round(d.stats.taken - training.comboStart);
+    training.best = Math.max(training.best, combo);
+    setIfChanged(training.comboEl, 'innerText', `Dano no boneco: ${combo}`);
+    setIfChanged(training.bestEl, 'innerText', `Maior sequência: ${training.best}`);
+}
+
+// Barra em cima da arena: dano no boneco e os botões para trocar de lutador ou sair
+function buildTrainingBar() {
+    const bar = makeEl('div', 'training-bar', document.getElementById('game-container'));
+    makeEl('span', 'training-tag', bar).innerText = '🎯 TREINO · energia infinita';
+    training.comboEl = makeEl('span', 'training-combo', bar);
+    training.bestEl = makeEl('span', 'training-best', bar);
+    const swap = makeEl('button', 'training-button', bar);
+    swap.innerText = '↺ Trocar lutador';
+    swap.addEventListener('click', () => { stopMatch(); match.picks = []; openSelection(); });
+    const leave = makeEl('button', 'training-button', bar);
+    leave.innerText = '✕ Sair do treino';
+    leave.addEventListener('click', goToMenu);
+}
+
 async function startGame() {
     try {
         await Tone.start();
@@ -268,12 +335,15 @@ async function startGame() {
         floatingTexts = [];
         groundBalls = [];
         courtSession = null;
+        hitStop = 0;
+        if (window.pixelFx) pixelFx.clear();
         setupArena();
         createFighters();
         announceFightersToPhones();
         buildHUD();
+        if (match.training) buildTrainingBar();
 
-        aiControllers = fighters.filter(f => !f.isPlayer).map(f => new AI(f));
+        aiControllers = fighters.filter(f => !f.isPlayer && !f.isDummy).map(f => new AI(f));
         aiControllers.forEach(ai => ai.start());
 
         gameState = 'FIGHT';
@@ -303,6 +373,8 @@ function stopMatch() {
     lifeOrbs = [];
     turrets = [];
     hud.innerHTML = '';
+    document.querySelectorAll('.training-bar').forEach(el => el.remove());
+    training = null;
     winText.innerText = '';
     matchStatsEl.innerHTML = '';
     winText.style.color = '';

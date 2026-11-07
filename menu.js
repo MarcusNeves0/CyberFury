@@ -16,7 +16,12 @@ function setupHub() {
             apply(button.dataset[attr]);
         }));
     };
-    bindGroup('mode-options', 'mode', value => { match.mode = value; renderInputStatus(); });
+    bindGroup('mode-options', 'mode', value => {
+        // Treino: por dentro é um 1v1 (arena de duelo) contra um boneco
+        match.training = value === 'treino';
+        match.mode = match.training ? '1v1' : value;
+        renderInputStatus();
+    });
     bindGroup('humans-options', 'humans', value => { match.humans = Number(value); renderInputStatus(); });
     bindGroup('map-options', 'map', value => { match.map = value; });
 
@@ -68,7 +73,7 @@ function setupHub() {
 
 // Jogadores humanos desta partida (P1, P2... até o número escolhido no HUB)
 const activePlayers = () => PLAYER_IDS.slice(0, match.humans);
-const maxHumans = () => teamSizeOf(match.mode) * 2;
+const maxHumans = () => (match.training ? 1 : teamSizeOf(match.mode) * 2); // no treino só você joga
 // Sozinho, o jogador fica sempre no time ciano; com mais gente, cada um escolhe o time
 const teamOf = player => match.humans === 1 ? 0 : match.inputs[player].team;
 const waitingForGamepad = () => activePlayers().some(p => match.inputs[p].type === 'gamepad' && match.inputs[p].index === null);
@@ -151,7 +156,7 @@ function renderInputStatus() {
     const startButton = document.getElementById('hub-start');
     const problem = hubProblem();
     startButton.disabled = !!problem;
-    startButton.innerText = problem || 'ESCOLHER LUTADORES ▶';
+    startButton.innerText = problem || (match.training ? 'ESCOLHER LUTADOR PARA TREINAR ▶' : 'ESCOLHER LUTADORES ▶');
 }
 
 // --- Lógica da Tela de Seleção ---
@@ -159,8 +164,8 @@ function openSelection() {
     gameState = 'SELECT';
     const humans = match.humans;
     const step = match.picks.length + 1;
-    selectionTitle.innerText = humans === 1
-        ? `${match.mode.toUpperCase()} contra a IA`
+    selectionTitle.innerText = match.training ? 'TREINO — escolha quem testar'
+        : humans === 1 ? `${match.mode.toUpperCase()} contra a IA`
         : `${match.mode.toUpperCase()} — vez do JOGADOR ${step}`;
     selectionTitle.style.color = humans === 1 ? '' : TEAM_COLORS[teamOf(activePlayers()[step - 1])];
     const cards = [...document.querySelectorAll('.character-card')];
@@ -213,7 +218,7 @@ function renderSelectionChips() {
 const CLASS_NAMES = { melee: 'Corpo a corpo', shooter: 'Atirador', healer: 'Healer', tank: 'Tanque', random: 'Sorte' };
 const ROSTER_INFO = {
     titan: { cls: 'melee', style: 'Ex-soldado com braço robótico', ult: 'Soco-foguete com onda de choque' },
-    spark: { cls: 'melee', style: 'Robô de segurança abandonado', ult: 'Corrente elétrica que dobra de dano' },
+    spark: { cls: 'melee', style: 'Robô de segurança abandonado, de soco elétrico', ult: 'Corrente elétrica: o dano dobra a cada segundo e o alvo fica lento; só golpe forte arrebenta' },
     hades: { cls: 'melee', style: 'Punhos de fogo, queima quem acerta', ult: 'Círculo de fogo que explode no chão' },
     jack: { cls: 'melee', style: 'Amaldiçoado no Halloween, rouba vida', ult: 'Abóbora amaldiçoada' },
     kaze: { cls: 'melee', style: 'Espadachim, cortes que fazem sangrar', ult: 'Tornado que prende o inimigo no ar' },

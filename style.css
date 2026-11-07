@@ -800,6 +800,40 @@ body {
 }
 
 /* --- HUD do Jogo --- */
+/* Modo Treino: barra embaixo da arena com o dano no boneco e os botões de trocar lutador e sair */
+.training-bar {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 6px 12px;
+    background: rgba(10, 8, 24, 0.82);
+    border: 1px solid var(--neon-blue);
+    border-radius: 8px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    color: #ddd;
+    white-space: nowrap;
+    z-index: 6;
+}
+.training-tag { color: var(--neon-blue); font-weight: bold; }
+.training-combo { color: #ffd23f; min-width: 150px; }
+.training-best { color: #aaa; }
+.training-button {
+    font-family: inherit;
+    font-size: 11px;
+    padding: 4px 10px;
+    background: transparent;
+    color: #fff;
+    border: 1px solid #555;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.training-button:hover { border-color: var(--neon-pink); color: var(--neon-pink); }
+
 #hud {
     position: absolute;
     top: 20px;

@@ -23,6 +23,7 @@
 Neo-Cidade está tomada por neon, chuva e gente disposta a brigar por qualquer motivo. **Cybernetic Fury** é uma arena de luta com câmera de cima, no estilo Brawl Stars: você anda em 8 direções, a mira é automática e cada lutador tem um golpe, um golpe forte, uma defesa e uma **ultimate** própria.
 
 - 🥊 **1v1, 2v2 ou 3v3:** de 1 a **6 jogadores** no mesmo computador, cada um escolhe o time (uns contra os outros ou todos juntos contra a IA); a IA completa as vagas que sobrarem
+- 🎯 **Treino:** escolha um lutador e teste os golpes e a ultimate num boneco parado, com energia infinita; a barra embaixo mostra o dano causado e ninguém morre
 - 🎮 **Teclado ou controle:** suporte a controle de PS5/Xbox, inclusive para navegar nos menus
 - 📱 **Celular como controle:** abra `controle.html` no celular e digite o código que aparece no menu do jogo. O celular vira analógico + botões, vibra ao levar dano e também navega nos menus (sem instalar nada)
 - 📡 **Jogar de longe:** quem está com o jogo aberto clica em **📡 Transmitir** no menu; o amigo abre `tela.html` na casa dele, digita o mesmo código, vê a luta com som e joga com o teclado ou com um controle ligado no PC dele
@@ -55,7 +56,7 @@ Neo-Cidade está tomada por neon, chuva e gente disposta a brigar por qualquer m
 | ⚔️ | **Bershow** | Cavaleiro negro de espadão que acerta todos na frente; quanto menos vida, mais forte | *Armadura da Fúria*: o visor fecha, solta o Corte Devastador e fica 5 s sem sentir dor |
 | 🌑 | **Aspas the Darkness** | Caçador das sombras de duas adagas; some e reaparece atrás do inimigo | *Exército das Sombras*: 3 soldados de sombra caçam os inimigos, +1 a cada inimigo derrotado |
 | ⚖️ | **Cangeras** | Advogado de terno que briga com o martelo de juiz; o soco forte ("ORDEM!") manda o inimigo para longe | *Tribunal*: a luta congela por 3 s, o martelo bate 3 vezes e quem mais causou dano é condenado por **Agressão**: fica 8 s sem ultimate e perde a energia |
-| ⚡ | **Spark** | Robô de segurança abandonado | Corrente elétrica que dobra de dano |
+| ⚡ | **Spark** | Robô de segurança abandonado, de soco elétrico | Corrente elétrica: o dano dobra a cada segundo (até 96), o alvo fica lento e só um golpe forte arrebenta |
 
 ### Atiradores
 | | Lutador | Estilo | Ultimate |
@@ -132,6 +133,7 @@ Depois abra **http://localhost:8123** no navegador.
 
 - Começou como um jogo para **aprender HTML, CSS e JavaScript** e testar a criação de um jogo do zero.
 - Feito em **colaboração com IA** (Gemini e Claude) em todas as partes: mecânicas, personagens, arte e código. O balanceamento é testado com milhares de lutas simuladas entre IAs.
+- Os efeitos dos golpes corpo a corpo (cortes, garras, socos, fogo, maldição, sombras) vêm da [pixelfx](https://github.com/patch-gg/pixelfx), de Patch e Hugo Duprez, licença MIT (cópia em `vendor/pixelfx`); o raio do Spark foi feito com as ferramentas dela.
 - Todos os lutadores são **originais**: os que começaram inspirados em personagens de outros jogos ganharam nome, história e identidade próprios.
 - Recebe **atualizações regularmente**. Antes era "sempre que o código não quebrava" 😅, mas agora cada mudança passa por testes e lutas simuladas antes de subir.
 
