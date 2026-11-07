@@ -89,6 +89,12 @@
     const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f);
     return lerp(rand(i, seed), rand(i + 1, seed), u) * 2 - 1;
   }
+  function noise2(x, y, seed = 0) {
+    const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy;
+    const ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
+    const a = rand(ix, iy, seed), b = rand(ix + 1, iy, seed), c = rand(ix, iy + 1, seed), d = rand(ix + 1, iy + 1, seed);
+    return lerp(lerp(a, b, ux), lerp(c, d, ux), uy) * 2 - 1;
+  }
   function tileNoise(x, y, px = 0, py = 0, seed = 0) {
     const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy;
     const ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
@@ -1198,23 +1204,23 @@
   }
   var FADE = 0.3;
   var isRamp = (v) => Array.isArray(v) && v.length > 0 && v.every((c) => typeof c === "number" || /^#[0-9a-f]{3,8}$/i.test(c));
-  function resolveOptions(meta19, o = {}) {
+  function resolveOptions(meta30, o = {}) {
     var _a, _b;
-    const opts = { ...(_a = meta19.options) != null ? _a : {}, ...o };
-    for (const [k, def] of Object.entries((_b = meta19.options) != null ? _b : {}))
+    const opts = { ...(_a = meta30.options) != null ? _a : {}, ...o };
+    for (const [k, def] of Object.entries((_b = meta30.options) != null ? _b : {}))
       if (isRamp(def) && isRamp(o[k]) && o[k].length !== def.length) opts[k] = fit(o[k], def.length).map(toHex);
-    if (meta19.actor && !opts.actor) opts.actor = stockActor(meta19.actor === 2 ? 2 : 1);
+    if (meta30.actor && !opts.actor) opts.actor = stockActor(meta30.actor === 2 ? 2 : 1);
     return opts;
   }
   function createFx(mod, o = {}) {
     var _a, _b;
-    const meta19 = (_a = mod.meta) != null ? _a : {};
-    const opts = resolveOptions(meta19, o);
+    const meta30 = (_a = mod.meta) != null ? _a : {};
+    const opts = resolveOptions(meta30, o);
     const impl = mod.create ? mod.create(opts) : mod;
-    const D3 = (_b = meta19.duration) != null ? _b : 1;
+    const D5 = (_b = meta30.duration) != null ? _b : 1;
     let t = 0, stopAt = Infinity;
     return {
-      meta: meta19,
+      meta: meta30,
       options: opts,
       get t() {
         return t;
@@ -1231,7 +1237,7 @@
         p.place((_a2 = opts.x) != null ? _a2 : 0, (_b2 = opts.y) != null ? _b2 : 0, !!opts.flip, (_c = opts.angle) != null ? _c : 0);
         p.fade = stopAt === Infinity ? 1 : clamp(1 - (t - stopAt) / FADE);
         p.lightK = (_d = opts.light) != null ? _d : 1;
-        const tt = meta19.loop ? t % D3 : Math.min(t, D3);
+        const tt = meta30.loop ? t % D5 : Math.min(t, D5);
         if (layer !== "front" && impl.drawBack) {
           p.layer = "back";
           impl.drawBack(p, tt, opts);
@@ -1246,7 +1252,7 @@
         if (stopAt === Infinity) stopAt = t;
       },
       done() {
-        return t - stopAt >= FADE || !meta19.loop && t >= D3;
+        return t - stopAt >= FADE || !meta30.loop && t >= D5;
       }
     };
   }
@@ -1750,9 +1756,9 @@
     const u = t - s.t0;
     if (u < 0) return;
     const R = s.ramp, n = R.length, life = s.sweep + s.hold + s.trail, hot = (_a = s.hot) != null ? _a : 0;
-    const head4 = ease.outExpo(clamp(u / s.sweep)), tail = smooth(s.sweep + s.hold, life, u), age = clamp(u / life);
-    const U = s.span * head4, T = s.span * tail, W = s.W * (1 - tail * 0.55);
-    if (tail < 1 && U - T > 0.01) {
+    const head4 = ease.outExpo(clamp(u / s.sweep)), tail2 = smooth(s.sweep + s.hold, life, u), age = clamp(u / life);
+    const U = s.span * head4, T = s.span * tail2, W = s.W * (1 - tail2 * 0.55);
+    if (tail2 < 1 && U - T > 0.01) {
       smear(p, s, T, U, W, (uu, r, out) => {
         const v = (uu - T) / (U - T), w = W * Math.pow(Math.sin(Math.PI * Math.pow(v, s.lens ? 1 : 2.2)), s.lens ? 0.75 : 0.6);
         if (w < 0.35) return;
@@ -1765,7 +1771,7 @@
       glowAlong(p, s, s.R - W * 0.4, T, U, 5 + W, R[n - 3], (uu) => (0.22 + hot * 0.3) * (1 - age) * ((uu - T) / (U - T)), half, 0.3);
     }
     const th = 0.7 * (1 - clamp((u - s.sweep - s.hold) / (s.trail + 0.2)));
-    if (tail > 0.02 && th > 0) trace(p, s, s.R - 0.5, 0, T, R[2], (uu) => th * (0.4 + 0.6 * uu / s.span), half);
+    if (tail2 > 0.02 && th > 0) trace(p, s, s.R - 0.5, 0, T, R[2], (uu) => th * (0.4 + 0.6 * uu / s.span), half);
   }
   var slashEnd = (s) => travel({ ...s, R: s.R - s.W * 0.3 }, s.span);
   function shavings(ps, R, s, n, colors, from = 0.3) {
@@ -1809,14 +1815,14 @@
     }
     return out;
   }
-  function star(p, x, y, spikes2, sc, th, core, body, inner, rim) {
+  function star(p, x, y, spikes2, sc, th, core, body2, inner, rim) {
     for (const pass of [0, 1, 2])
       for (const s of spikes2) {
         const c = Math.cos(s.a), sn = Math.sin(s.a), L = s.len * sc;
         for (let d = 0; d <= L; d += 0.5) {
           const hw0 = s.w * th * (1 - d / L) * Math.min(1, 0.5 + d / 3), hw = pass === 0 ? hw0 + 0.8 : pass === 1 ? hw0 : hw0 * 0.45;
           if (pass === 2 && d > L * 0.55) break;
-          for (let o = -hw; o <= hw; o += 0.5) p.px(x + c * d - sn * o, y + sn * d + c * o, pass === 0 ? rim : pass === 1 ? d < L * 0.35 ? inner : body : core);
+          for (let o = -hw; o <= hw; o += 0.5) p.px(x + c * d - sn * o, y + sn * d + c * o, pass === 0 ? rim : pass === 1 ? d < L * 0.35 ? inner : body2 : core);
         }
       }
     const r = 2.4 * sc * Math.sqrt(th);
@@ -1916,8 +1922,8 @@
       update(dt) {
         t += dt;
         if (t < RAISE - 0.04 && R.chance(0.35)) {
-          const a = R.range(0, TAU), D3 = R.range(14, 26), T = R.range(0.14, 0.2), v = D3 * 3 / (Math.exp(3 * T) - 1);
-          ps.spawn(P.STREAK, GLINT[0] + Math.cos(a) * D3, GLINT[1] + Math.sin(a) * D3, -Math.cos(a) * v, -Math.sin(a) * v, T, R.chance(0.5) ? C[5] : C[4]);
+          const a = R.range(0, TAU), D5 = R.range(14, 26), T = R.range(0.14, 0.2), v = D5 * 3 / (Math.exp(3 * T) - 1);
+          ps.spawn(P.STREAK, GLINT[0] + Math.cos(a) * D5, GLINT[1] + Math.sin(a) * D5, -Math.cos(a) * v, -Math.sin(a) * v, T, R.chance(0.5) ? C[5] : C[4]);
         }
         if (t > RAISE && t < HIT && R.chance(0.7)) {
           const u = U1 * head(t) * R.range(0.6, 1), [x, y] = onSwing(A, A.R - R.range(0, 6), u);
@@ -2000,8 +2006,8 @@
         }
         arc(p, E, WE, 0.02, false);
         arc(p, A, W, 0, true);
-        const tail = U1 * smooth(HIT + HOLD, HIT + HOLD + TRAIL, t), th = 0.8 * (1 - clamp((t - HIT - HOLD) / (TRAIL + 0.25)));
-        if (tail > 0.02 && th > 0) trace(p, A, A.R - 0.5, 0, tail, C[3], (u) => th * (0.4 + 0.6 * u / U1));
+        const tail2 = U1 * smooth(HIT + HOLD, HIT + HOLD + TRAIL, t), th = 0.8 * (1 - clamp((t - HIT - HOLD) / (TRAIL + 0.25)));
+        if (tail2 > 0.02 && th > 0) trace(p, A, A.R - 0.5, 0, tail2, C[3], (u) => th * (0.4 + 0.6 * u / U1));
         if (t > RAISE && t < HIT + 0.05) {
           const [x, y] = onSwing(A, A.R - 5, U1 * head(t));
           p.glow(x, y, 40, C[4], 0.5);
@@ -2567,12 +2573,12 @@
   function drawSlash(p, s, t) {
     const u = t - s.t0;
     if (u < 0) return;
-    const span = s.a1 - s.a0, head4 = ease.outExpo(clamp(u / s.sweep)), tail = smooth(s.sweep + s.hold, s.sweep + s.hold + s.trail, u);
+    const span = s.a1 - s.a0, head4 = ease.outExpo(clamp(u / s.sweep)), tail2 = smooth(s.sweep + s.hold, s.sweep + s.hold + s.trail, u);
     const age = clamp(u / (s.sweep + s.hold + s.trail));
-    if (tail < 1) crescent(p, s, s.a0 + span * tail, span * (head4 - tail), s.W * (1 - tail * 0.55), age);
+    if (tail2 < 1) crescent(p, s, s.a0 + span * tail2, span * (head4 - tail2), s.W * (1 - tail2 * 0.55), age);
     const th = 0.7 * (1 - clamp((u - s.sweep - s.hold) / (s.trail + 0.2)));
-    if (tail > 0.02 && th > 0)
-      for (let k = 0; k <= tail; k += 0.6 / (Math.abs(span) * s.R)) {
+    if (tail2 > 0.02 && th > 0)
+      for (let k = 0; k <= tail2; k += 0.6 / (Math.abs(span) * s.R)) {
         const [x, y] = onArc(s, s.R - 0.5, s.a0 + span * k);
         p.dot(x, y, s.ramp[1], th * (0.4 + 0.6 * k));
       }
@@ -2707,8 +2713,8 @@
         lights.update(dt);
       },
       draw(p) {
-        const flash = t >= CLOSE2 && t < CLOSE2 + 0.07 ? 1 : 0;
-        down.hot = up.hot = flash;
+        const flash2 = t >= CLOSE2 && t < CLOSE2 + 0.07 ? 1 : 0;
+        down.hot = up.hot = flash2;
         slash(p, down, t);
         slash(p, up, t);
         for (const [s, e] of [[down, ends[0]], [up, ends[1]]]) {
@@ -2932,7 +2938,7 @@
   function create7(o) {
     const C = fit(o.palette, 7), INK3 = hex(o.outline), Rg = new Rng(o.seed), ps = new Particles({ rng: Rg, ground: () => 0, sparks: o.sparks }), lights = new Lights();
     const A = swing({ cx: 8, cy: -25, R: 27, sy: 1, rot: 0, a0: 1.08, dir: -1, span: 2.5, W: 13, t0: 0.02, sweep: 0.07, hold: 0.05, trail: 0.22, ramp: C });
-    const top = slashEnd(A), SX = top.x + 3, SY2 = top.y - 5, HIT3 = A.t0 + A.sweep * 0.8;
+    const top = slashEnd(A), SX = top.x + 3, SY5 = top.y - 5, HIT5 = A.t0 + A.sweep * 0.8;
     const spikes2 = Array.from({ length: 10 }, (_, i) => ({ a: i / 10 * TAU + Rg.range(-0.12, 0.12) - Math.PI / 2, len: (i % 2 ? 7 : 13) + Rg.range(0, 4), w: i % 2 ? 2.2 : 3 }));
     const bursts = Array.from({ length: 8 }, (_, i) => ({ a: i / 8 * TAU + 0.2 + Rg.range(-0.15, 0.15), r0: Rg.range(15, 18), L: Rg.range(5, 9) }));
     let t = 0, hit = false, kicked = false;
@@ -2943,17 +2949,17 @@
           kicked = true;
           for (let i = 0; i < 4; i++) ps.spawn(P.DUST, 18 + Rg.range(-4, 4), -1, Rg.range(-30, 30), -Rg.range(5, 20), Rg.range(0.3, 0.55), "#6a6080", Rg.range(1.5, 2.6));
         }
-        if (!hit && t >= HIT3) {
+        if (!hit && t >= HIT5) {
           hit = true;
-          lights.add(SX, SY2, 56, C[4], 0.6, 0.4);
-          lights.add(SX, SY2, 18, WHITE, 0.7, 0.08);
+          lights.add(SX, SY5, 56, C[4], 0.6, 0.4);
+          lights.add(SX, SY5, 18, WHITE, 0.7, 0.08);
           for (let i = 0; i < 16; i++) {
             const a = -Math.PI / 2 + Rg.range(-1.6, 1.6), sp = Rg.range(120, 320);
-            ps.spawn(P.SPARK, SX, SY2, Math.cos(a) * sp, Math.sin(a) * sp, Rg.range(0.15, 0.45));
+            ps.spawn(P.SPARK, SX, SY5, Math.cos(a) * sp, Math.sin(a) * sp, Rg.range(0.15, 0.45));
           }
           for (let i = 0; i < 6; i++) {
             const a = Rg.range(0, TAU), d = Rg.range(14, 24);
-            ps.spawn(P.STAR, SX + Math.cos(a) * d, SY2 + Math.sin(a) * d, Math.cos(a) * 20, Math.sin(a) * 20 - 10, Rg.range(0.25, 0.5), Rg.chance(0.5) ? C[5] : WHITE, Rg.range(1.4, 2.6), Rg.range(0.04, 0.18));
+            ps.spawn(P.STAR, SX + Math.cos(a) * d, SY5 + Math.sin(a) * d, Math.cos(a) * 20, Math.sin(a) * 20 - 10, Rg.range(0.25, 0.5), Rg.chance(0.5) ? C[5] : WHITE, Rg.range(1.4, 2.6), Rg.range(0.04, 0.18));
           }
         }
         ps.update(dt);
@@ -2971,25 +2977,25 @@
           const [x, y] = onSwing(A, A.R - 5, A.span * ease.outExpo(clamp(u / A.sweep)));
           p.glow(x, y, 34, C[3], 0.45 * (1 - u / (A.sweep + 0.06)));
         }
-        const q = t - HIT3;
+        const q = t - HIT5;
         if (q >= 0 && q < 0.36) {
           const pop = ease.outBack(clamp(q / 0.05), 2.6), out = 1 - smooth(0.16, 0.36, q), sc = pop * (0.35 + 0.65 * out), turn = q * 1.2;
           const sp = spikes2.map((s) => ({ ...s, a: s.a + turn }));
           if (sc > 0.08) {
-            star(p, SX, SY2, sp, sc * 1.12, 1, INK3, INK3, INK3, INK3);
-            star(p, SX, SY2, sp, sc, 1, q < 0.05 ? WHITE : C[6], C[4], C[3], C[2]);
+            star(p, SX, SY5, sp, sc * 1.12, 1, INK3, INK3, INK3, INK3);
+            star(p, SX, SY5, sp, sc, 1, q < 0.05 ? WHITE : C[6], C[4], C[3], C[2]);
           }
-          p.glow(SX, SY2, 30, C[4], 0.45 * out);
+          p.glow(SX, SY5, 30, C[4], 0.45 * out);
         }
         if (q >= 0.02 && q < 0.24) {
           const k = (q - 0.02) / 0.22, r = 7 + 17 * ease.outCubic(k), th = Math.max(1, 2.2 * (1 - k)), col = k < 0.25 ? WHITE : k < 0.5 ? C[5] : k < 0.75 ? C[4] : C[3];
-          for (let a = 0; a < TAU; a += 0.6 / r) for (let o2 = 0; o2 < th; o2 += 0.5) p.dot(SX + Math.cos(a) * (r - o2), SY2 + Math.sin(a) * (r - o2), col, 1.15 - k);
+          for (let a = 0; a < TAU; a += 0.6 / r) for (let o2 = 0; o2 < th; o2 += 0.5) p.dot(SX + Math.cos(a) * (r - o2), SY5 + Math.sin(a) * (r - o2), col, 1.15 - k);
         }
         if (q >= 0.02 && q < 0.2) {
           const k = (q - 0.02) / 0.18;
           for (const b of bursts) {
             const r0 = b.r0 + 10 * ease.outCubic(k), ca = Math.cos(b.a), sa = Math.sin(b.a);
-            p.line(SX + ca * r0, SY2 + sa * r0, SX + ca * (r0 + b.L * (1 - k)), SY2 + sa * (r0 + b.L * (1 - k)), k < 0.4 ? WHITE : C[5], 1.1 - k);
+            p.line(SX + ca * r0, SY5 + sa * r0, SX + ca * (r0 + b.L * (1 - k)), SY5 + sa * (r0 + b.L * (1 - k)), k < 0.4 ? WHITE : C[5], 1.1 - k);
           }
         }
         ps.draw(p);
@@ -3319,7 +3325,7 @@
       return { a, len: L, w: R.range(w[0], w[1]) * (i % 2 ? Math.sqrt(jag) : 1) };
     });
   }
-  function star2(p, x, y, list, sc, th, [rim, body, inner, core], a = 1, heart = 2.4) {
+  function star2(p, x, y, list, sc, th, [rim, body2, inner, core], a = 1, heart2 = 2.4) {
     for (let pass = 0; pass < 3; pass++)
       for (const s of list) {
         const c = Math.cos(s.a), sn = Math.sin(s.a), L = s.len * sc;
@@ -3327,11 +3333,11 @@
           if (pass === 2 && d > L * 0.55) break;
           const hw0 = s.w * th * (1 - d / L) * Math.min(1, 0.5 + d / 3);
           const hw = pass === 0 ? hw0 + 0.8 : pass === 1 ? hw0 : hw0 * 0.45;
-          const col = pass === 0 ? rim : pass === 1 ? d < L * 0.35 ? inner : body : core;
+          const col = pass === 0 ? rim : pass === 1 ? d < L * 0.35 ? inner : body2 : core;
           for (let o = -hw; o <= hw; o += 0.5) p.dot(x + c * d - sn * o, y + sn * d + c * o, col, a);
         }
       }
-    const r = heart * sc * Math.sqrt(th);
+    const r = heart2 * sc * Math.sqrt(th);
     p.circle(x, y, r + 0.8, inner, a);
     p.circle(x, y, r, core, a);
   }
@@ -3347,6 +3353,70 @@
         for (let o = -w / 2; o <= w / 2 + 0.01; o += 0.5) if (y + sa * (rr + o) * sy < maxY) p.dot(x + ca * (rr + o), y + sa * (rr + o) * sy, o > -0.26 ? c : c2, k);
       }
     }
+  }
+  function walk2(R, x, y, a, L, { jit = 0.55, steer = 0.45, step = [2, 4], maxY = Infinity, d0 = 0 } = {}) {
+    const pts = [[x, y, d0]];
+    let d = 0, cur = a;
+    while (d < L - 0.01) {
+      const s = Math.min(L - d, R.range(step[0], step[1]));
+      cur += R.range(-jit, jit) + (a - cur) * steer;
+      x += Math.cos(cur) * s;
+      y = clamp(y + Math.sin(cur) * s, 0.5, maxY);
+      d += s;
+      pts.push([x, y, d0 + d]);
+    }
+    return pts;
+  }
+  function makeCracks(R, n, { len: len2 = [14, 40], dive = 0.85, maxY = 22, forks = 0.5, x0 = [1, 5] } = {}) {
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const side = i % 2 ? 1 : -1, dip = 0.06 + Math.pow(R.next(), 1.7) * dive, L = R.range(len2[0], len2[1]) * (1 - 0.5 * dip / (dive + 0.06));
+      const a = side > 0 ? dip : Math.PI - dip, pts = walk2(R, side * R.range(x0[0], x0[1]), R.range(0.5, 1.5), a, L, { maxY });
+      const c = { pts, len: L, t0: R.range(0, 0.035), kids: [] };
+      for (let j = 2; j < pts.length - 1; j++)
+        if (R.chance(forks * 0.4)) {
+          const [fx, fy, fd] = pts[j];
+          c.kids.push(walk2(R, fx, fy, a + R.sign() * R.range(0.45, 1), R.range(3, 9) * (1 - 0.5 * j / pts.length), { maxY, d0: fd, jit: 0.7, step: [1.5, 3] }));
+        }
+      out.push(c);
+    }
+    return out;
+  }
+  function drawCracks(p, cracks2, g, heat, hot, dark, lip2, k = 1) {
+    if (k <= 0) return;
+    const col = (d) => {
+      const h = heat(d);
+      return h > 0.75 ? hot[0] : h > 0.5 ? hot[1] : h > 0.3 ? hot[2] : h > 0.12 ? hot[3] : dark;
+    };
+    for (const c of cracks2) {
+      const G3 = g(c);
+      if (G3 <= 0) continue;
+      for (const path of [c.pts, ...c.kids]) {
+        for (let i = 1; i < path.length; i++) {
+          const [x0, y0, d0] = path[i - 1], [x1, y1, d1] = path[i];
+          if (d0 >= G3) break;
+          const f = d1 > G3 ? (G3 - d0) / (d1 - d0) : 1, ex = x0 + (x1 - x0) * f, ey = y0 + (y1 - y0) * f;
+          p.line(x0, y0 + 1, ex, ey + 1, lip2, (u) => rand(Math.round(x0 + (ex - x0) * u), Math.round(y0 + (ey - y0) * u), 5) < 0.3 ? k * 0.8 : 0);
+          p.line(x0, y0, ex, ey, (u) => col(d0 + (d1 - d0) * f * u), k);
+          const h = heat(d0);
+          if (h > 0.12) p.glow((x0 + ex) / 2, (y0 + ey) / 2, 4 + h * 4, hot[2], 0.22 * h * k);
+        }
+      }
+    }
+  }
+  function frontCrescent(p, x, dir, h, w, cols, k = 1) {
+    if (h < 1 || w < 0.3 || k <= 0) return;
+    const ry = h * 0.8, cy = -h * 0.2, rx = Math.max(2, h * 0.55);
+    const x0 = dir > 0 ? x - rx - w - 1 : x - 1, x1 = dir > 0 ? x + 1 : x + rx + w + 1;
+    p.shade(x0, -h - 1, x1, 0, (px, py, out) => {
+      if (py > 0) return;
+      const ey = (py - cy) / ry;
+      if (ey <= -1 || ey >= 1) return;
+      const e2 = 1 - ey * ey, edge = rx * Math.sqrt(e2) - rx, wt = w * Math.pow(e2, 0.45), q = (edge - (px - x) * dir) / Math.max(0.5, wt);
+      if (q < 0 || q > 1) return;
+      out.c = q < 0.28 ? cols[0] : q < 0.62 ? cols[1] : cols[2];
+      out.a = k * (ey < -0.8 ? 0.7 : 1) * (q > 0.7 ? 1.25 - q * 0.8 : 1);
+    });
   }
   var rockShape = (R, n = 6) => Array.from({ length: n }, () => R.range(0.7, 1.12));
   function rock2(p, b, st) {
@@ -3579,15 +3649,15 @@
   var hotFirst = (F) => [...F].reverse();
   var LAYERS = [[1, 1, 6], [0.76, 0.86, 4], [0.54, 0.68, 2], [0.3, 0.42, 0]];
   var BACK_LAYERS = [[1, 1, 7], [0.76, 0.86, 5], [0.54, 0.68, 3], [0.3, 0.42, 2]];
-  function flameTongue(p, x, y, h, w, sx, N3, n, H, layers = LAYERS, jit = 0.5, wob = 1.1) {
+  function flameTongue(p, x, y, h, w, sx, N5, n, H2, layers = LAYERS, jit = 0.5, wob = 1.1) {
     if (h < 1) return;
     for (const [lw, lh, ri] of layers) {
-      const L = h * lh, c = H[ri];
+      const L = h * lh, c = H2[ri];
       for (let r = 0; r <= L; r++) {
         const u = r / Math.max(1, L);
-        const half = w * lw * Math.pow(1 - u, 0.85) * Math.min(1, (r + 1.5) / 3.5) + N3(9, n, r * 0.45) * jit;
+        const half = w * lw * Math.pow(1 - u, 0.85) * Math.min(1, (r + 1.5) / 3.5) + N5(9, n, r * 0.45) * jit;
         if (half < 0.3) continue;
-        const cx = x + sx * u * u * lh + N3(4, n + 7, r * 0.2) * u * wob, Y = Math.round(y - r);
+        const cx = x + sx * u * u * lh + N5(4, n + 7, r * 0.2) * u * wob, Y = Math.round(y - r);
         for (let px = Math.round(cx - half), x1 = Math.round(cx + half); px <= x1; px++) p.px(px, Y, c);
       }
     }
@@ -3613,23 +3683,23 @@
       for (let sx = Math.ceil(cx - s - 0.5); sx <= Math.floor(cx + s - 0.5); sx++) p.blendPx(sx, sy, c, a);
     }
   }
-  function firePuff(p, x, y, k, size, frac, H, glowK = 0.18, tx = 0, ty = -1) {
-    const age = 1 - k, n = H.length, heat = Math.min(0.999, Math.pow(age, 0.62) + frac * 0.1);
+  function firePuff(p, x, y, k, size, frac, H2, glowK = 0.18, tx = 0, ty = -1) {
+    const age = 1 - k, n = H2.length, heat = Math.min(0.999, Math.pow(age, 0.62) + frac * 0.1);
     const idx = Math.min(n - 2, Math.floor(heat * (n - 1)));
-    const r = size * (0.55 + 0.45 * Math.min(1, age * 7)) * (1 - age * 0.55), c = H[idx];
+    const r = size * (0.55 + 0.45 * Math.min(1, age * 7)) * (1 - age * 0.55), c = H2[idx];
     if (idx >= n - 2) return soft(p, x, y, r, c, Math.min(1, k * 3) * 0.85);
-    solid(p, x, y, r, H[Math.min(n - 1, idx + 2)]);
-    if (r > 1.6 && ty > -0.99) solid(p, x + tx * r * 1.5, y + ty * r * 1.5, r * 0.3, H[Math.min(n - 1, idx + 1)]);
+    solid(p, x, y, r, H2[Math.min(n - 1, idx + 2)]);
+    if (r > 1.6 && ty > -0.99) solid(p, x + tx * r * 1.5, y + ty * r * 1.5, r * 0.3, H2[Math.min(n - 1, idx + 1)]);
     solid(p, x - r * 0.16, y - r * 0.22, r * 0.78, c);
     if (r > 1.6) solid(p, x + tx * r * 0.9, y + ty * r * 0.9, r * 0.42, c);
-    if (idx <= 3 && r > 1.8) solid(p, x - r * 0.28, y - r * 0.34, r * 0.36, H[Math.max(0, idx - 1)]);
+    if (idx <= 3 && r > 1.8) solid(p, x - r * 0.28, y - r * 0.34, r * 0.36, H2[Math.max(0, idx - 1)]);
     if (idx < 6) p.glow(x, y, r * 2.4 + 2, c, glowK * k);
   }
-  function simDraw(p, ps, H, layer) {
+  function simDraw(p, ps, H2, layer) {
     const all = ps.list, rest = [], fire = [];
     for (const q of all) (q.k === P.FIRE ? fire : rest).push(q);
     const puffs = (back) => {
-      for (const q of fire) if (q.delay <= 0 && !!(q.flag & PF.BACK) === back) firePuff(p, q.x, q.y, q.life / q.max, q.size, q.seed % 1, H);
+      for (const q of fire) if (q.delay <= 0 && !!(q.flag & PF.BACK) === back) firePuff(p, q.x, q.y, q.life / q.max, q.size, q.seed % 1, H2);
     };
     ps.list = rest;
     if (layer !== "front") ps.draw(p, "back"), puffs(true);
@@ -3686,9 +3756,9 @@
   var WARM = rgb(255, 176, 96);
   var EMBER_LAYERS = [[1, 1, 7], [0.7, 0.8, 6], [0.4, 0.55, 5]];
   function create12(o) {
-    const F = fit(o.palette, 9), H = hotFirst(F), REACH = o.reach, R = new Rng(o.seed), floor = () => 0, S = o.seed * 7;
-    const ps = new Particles({ rng: R, ground: floor, sparks: [H[1], H[2], H[4], H[5]] }), lights = new Lights();
-    const GLOW = mix(mix(H[3], H[4], 0.5), WHITE, 0.25);
+    const F = fit(o.palette, 9), H2 = hotFirst(F), REACH = o.reach, R = new Rng(o.seed), floor = () => 0, S = o.seed * 7;
+    const ps = new Particles({ rng: R, ground: floor, sparks: [H2[1], H2[2], H2[4], H2[5]] }), lights = new Lights();
+    const GLOW = mix(mix(H2[3], H2[4], 0.5), WHITE, 0.25);
     const front = (t2) => REACH * ease.outCubic(clamp((t2 - CHARGE) / SPREAD));
     const reachedAt = (d) => CHARGE + SPREAD * (1 - Math.cbrt(1 - Math.min(1, d / REACH)));
     const sites = [];
@@ -3711,7 +3781,7 @@
         const h = s.h * rise * fade * (0.85 + 0.15 * noise(t * 3.3, s.n)) * (1 + 0.5 * Math.max(0, noise(t * 2.6, s.n + 70) - 0.55));
         if (h < 1) continue;
         const L = u < 0.3 ? back ? BACK_LAYERS : LAYERS : u < 0.65 ? BACK_LAYERS : EMBER_LAYERS;
-        flameTongue(p, s.x, s.y, h, s.w * (0.6 + 0.4 * fade), NZ(2.2, s.n + 40) * 1.5 - s.x * 0.02, NZ, s.n, H, L);
+        flameTongue(p, s.x, s.y, h, s.w * (0.6 + 0.4 * fade), NZ(2.2, s.n + 40) * 1.5 - s.x * 0.02, NZ, s.n, H2, L);
       }
     };
     const scorch = (p) => {
@@ -3721,19 +3791,19 @@
         for (let x = Math.floor(-fr); x <= Math.ceil(fr); x++) {
           const d = Math.hypot(x + 0.5, (y + 0.5) / SY);
           if (d > fr) continue;
-          const since2 = t - reachedAt(d), h = rand(x, y, S), hot = 1 - since2 / (1.2 + h * 0.9);
+          const since3 = t - reachedAt(d), h = rand(x, y, S), hot = 1 - since3 / (1.2 + h * 0.9);
           if (hot > 0 && h < 0.03 + 0.06 * hot) {
-            p.px(x, y, hot > 0.7 ? H[3] : hot > 0.45 ? H[4] : hot > 0.2 ? H[5] : H[6]);
-            p.light(x, y, H[4], 0.3 * hot);
+            p.px(x, y, hot > 0.7 ? H2[3] : hot > 0.45 ? H2[4] : hot > 0.2 ? H2[5] : H2[6]);
+            p.light(x, y, H2[4], 0.3 * hot);
             continue;
           }
-          p.blend(x, y, h < 0.5 ? SOOT5 : SOOT22, Math.min(1, since2 * 3) * (0.55 - d / REACH * 0.25) * end);
+          p.blend(x, y, h < 0.5 ? SOOT5 : SOOT22, Math.min(1, since3 * 3) * (0.55 - d / REACH * 0.25) * end);
         }
     };
-    const ring = (p, back) => {
+    const ring2 = (p, back) => {
       const k = (t - CHARGE) / (SPREAD + 0.1);
       if (k < 0 || k >= 1) return;
-      band(p, 0, 0, front(t) + 1.5, SY, Math.max(1.5, 6 * (1 - k)), k < 0.75 ? 1 : (1 - k) / 0.25, [H[6], H[4], H[2], H[1]], (g) => Math.sin(g) < 0 === back, k < 0.12);
+      band(p, 0, 0, front(t) + 1.5, SY, Math.max(1.5, 6 * (1 - k)), k < 0.75 ? 1 : (1 - k) / 0.25, [H2[6], H2[4], H2[2], H2[1]], (g) => Math.sin(g) < 0 === back, k < 0.12);
     };
     return {
       update(dt) {
@@ -3741,7 +3811,7 @@
         if (t < CHARGE - 0.05 && R.chance(0.9 * dt * 60)) {
           const a = R.range(0, TAU), d = R.range(26, 54), T = R.range(0.18, 0.26), v = d * 3 / (Math.exp(3 * T) - 1);
           const x = Math.cos(a) * d, y = Math.min(-2, -6 + Math.sin(a) * d * 0.45), l = Math.hypot(x, y + 4) || 1;
-          ps.spawn(P.STREAK, x, y, -x / l * v, (-4 - y) / l * v, T, R.chance(0.5) ? H[2] : H[3]);
+          ps.spawn(P.STREAK, x, y, -x / l * v, (-4 - y) / l * v, T, R.chance(0.5) ? H2[2] : H2[3]);
         }
         if (t < CHARGE && R.chance(0.5 * dt * 60 * (t / CHARGE))) ps.spawn(P.FIRE, R.range(-4, 4), -1, R.range(-8, 8), -R.range(20, 40), R.range(0.12, 0.24), 0, R.range(1, 2.2));
         if (!burst && t >= CHARGE) {
@@ -3759,28 +3829,28 @@
             const s = R.pick(sites), age = t - s.t0;
             if (age < 0 || age > s.life * 0.7) continue;
             ps.spawn(P.FIRE, s.x + R.range(-1, 1), s.y - s.h * 0.6, R.range(-5, 5), -R.range(20, 40), R.range(0.2, 0.4), 0, R.range(1.2, 2.4), 0, R.chance(0.5) ? PF.SMOKES | (s.back ? PF.BACK : 0) : s.back ? PF.BACK : 0);
-            if (R.chance(0.12)) ps.spawn(P.EMBER, s.x, s.y - s.h * 0.5, R.range(-15, 15), -R.range(30, 70), R.range(0.6, 1.3), H[3], 1, 0, s.back ? PF.BACK : 0);
+            if (R.chance(0.12)) ps.spawn(P.EMBER, s.x, s.y - s.h * 0.5, R.range(-15, 15), -R.range(30, 70), R.range(0.6, 1.3), H2[3], 1, 0, s.back ? PF.BACK : 0);
           }
         ps.update(dt);
         lights.update(dt);
       },
       drawBack(p) {
         scorch(p);
-        ring(p, true);
+        ring2(p, true);
         flames(p, true);
-        simDraw(p, ps, H, "back");
+        simDraw(p, ps, H2, "back");
         const fr = front(t), k = t < CHARGE ? 0 : 1 - smooth(CHARGE + SPREAD, CHARGE + SPREAD + 1.4, t);
         if (k > 0) for (let i = 0; i < 16; i++) p.glow(Math.cos(i / 16 * TAU) * fr, Math.sin(i / 16 * TAU) * fr * SY - 3, 16, GLOW, 0.2 * k);
       },
       draw(p) {
-        ring(p, false);
+        ring2(p, false);
         flames(p, false);
-        simDraw(p, ps, H, "front");
+        simDraw(p, ps, H2, "front");
         if (t < CHARGE) p.glow(0, -3, 8 + 22 * (t / CHARGE), GLOW, 0.6 * (t / CHARGE));
         if (t >= CHARGE && t < CHARGE + 0.1) {
           const k2 = 1 - (t - CHARGE) / 0.1;
-          p.ellipse(0, -1, 14 * (0.6 + 0.4 * k2), 4, H[2]);
-          p.ellipse(0, -1, 9 * (0.6 + 0.4 * k2), 2.6, k2 > 0.5 ? WHITE : H[1]);
+          p.ellipse(0, -1, 14 * (0.6 + 0.4 * k2), 4, H2[2]);
+          p.ellipse(0, -1, 9 * (0.6 + 0.4 * k2), 2.6, k2 > 0.5 ? WHITE : H2[1]);
         }
         const k = smooth(CHARGE - 0.05, CHARGE, t) * (1 - smooth(CHARGE + SPREAD * 0.5, CHARGE + SPREAD + 1.2, t));
         if (k > 0) p.glow(0, -6, 92, GLOW, 0.3 * k);
@@ -3806,7 +3876,7 @@
     let s = SHAPES.get(m);
     if (s) return s;
     const { w, h, data } = m, on = (x, y) => x >= 0 && y >= 0 && x < w && y < h && data[y * w + x] > 0;
-    const body = [], up = [], side = [], outline = [], top = [], rows = [];
+    const body2 = [], up = [], side = [], outline = [], top = [], rows = [];
     for (let x = 0; x < w; x++) {
       let y = 0;
       while (y < h && !on(x, y)) y++;
@@ -3818,7 +3888,7 @@
         if (!on(x, y)) continue;
         if (l < 0) l = x;
         r = x;
-        body.push([x, y]);
+        body2.push([x, y]);
         if (!on(x, y - 1)) up.push([x, y]);
         if (!on(x - 1, y)) side.push([x, y, -1]);
         if (!on(x + 1, y)) side.push([x, y, 1]);
@@ -3835,7 +3905,7 @@
           outline.push([x, y, nx / l, ny / l]);
         }
       }
-    s = { w, h, on, body, up, side, outline, top, rows };
+    s = { w, h, on, body: body2, up, side, outline, top, rows };
     SHAPES.set(m, s);
     return s;
   }
@@ -3845,22 +3915,22 @@
     const a = rand(wrap(i, P3), seed), b = rand(wrap(i + 1, P3), seed);
     return (a + (b - a) * u) * 2 - 1;
   }
-  function tnoise(t, D3, f, seed = 0, off = 0) {
-    const P3 = Math.max(2, Math.round(f * D3));
-    return wnoise(t / D3 * P3 + off, P3, seed);
+  function tnoise(t, D5, f, seed = 0, off = 0) {
+    const P3 = Math.max(2, Math.round(f * D5));
+    return wnoise(t / D5 * P3 + off, P3, seed);
   }
   var travel2 = (v, g, d, a) => d > 0 ? g / d * a + (v - g / d) * (1 - Math.exp(-d * a)) / d : v * a + 0.5 * g * a * a;
   var LAYERS2 = [[1, 1, 6], [0.76, 0.86, 4], [0.54, 0.68, 2], [0.3, 0.42, 0]];
-  function tongue(p, x, y, h, w, sx, F, t, D3, n, layers = LAYERS2) {
+  function tongue(p, x, y, h, w, sx, F, t, D5, n, layers = LAYERS2) {
     if (h < 1) return;
     for (const [lw, lh, ri] of layers) {
       if (ri === 0 && h < 4) continue;
-      const H = h * lh, col = F[ri];
-      for (let r = 0; r <= H; r++) {
-        const u = r / Math.max(1, H);
-        const half = w * lw * Math.pow(1 - u, 0.85) * Math.min(1, (r + 1.5) / 3.5) + tnoise(t, D3, 9, n, r * 0.45) * 0.5;
+      const H2 = h * lh, col = F[ri];
+      for (let r = 0; r <= H2; r++) {
+        const u = r / Math.max(1, H2);
+        const half = w * lw * Math.pow(1 - u, 0.85) * Math.min(1, (r + 1.5) / 3.5) + tnoise(t, D5, 9, n, r * 0.45) * 0.5;
         if (half < 0.3) continue;
-        const cx = x + sx * u * u * lh + tnoise(t, D3, 4, n + 7, r * 0.2) * u * 1.1;
+        const cx = x + sx * u * u * lh + tnoise(t, D5, 4, n + 7, r * 0.2) * u * 1.1;
         for (let px = Math.round(cx - half); px <= Math.round(cx + half); px++) p.px(px, Math.round(y - r), col);
       }
     }
@@ -3993,13 +4063,13 @@
     let s = SPOTS.get(a.mask);
     if (!s) SPOTS.set(a.mask, s = /* @__PURE__ */ new Map());
     if (s.has(seed)) return s.get(seed);
-    const S = shape(a), H = S.h, W = S.w, R = new Rng(seed * 13 + 5);
+    const S = shape(a), H2 = S.h, W = S.w, R = new Rng(seed * 13 + 5);
     const at = (q, side) => {
-      const my = Math.round(H * q), [l, r] = S.rows[my];
+      const my = Math.round(H2 * q), [l, r] = S.rows[my];
       return [side < 0 ? l : r, my];
     };
     const hair = S.up.filter(([x]) => x < W * 0.42).sort((p, q) => p[1] - q[1] || p[0] - q[0])[0];
-    const shoulder = (_a = S.up.filter(([x, y]) => x > W / 2 && y > H * 0.4 && y < H * 0.62).sort((p, q) => p[1] - q[1])[0]) != null ? _a : at(0.5, 1);
+    const shoulder = (_a = S.up.filter(([x, y]) => x > W / 2 && y > H2 * 0.4 && y < H2 * 0.62).sort((p, q) => p[1] - q[1])[0]) != null ? _a : at(0.5, 1);
     const list = [
       { at: hair, side: -1, n: 3, h: 4.5 },
       { at: shoulder, side: 1, n: 2, h: 4 },
@@ -4008,8 +4078,8 @@
     ].map((sp, i) => ({ ...sp, x: a.x + sp.at[0] + 0.5, y: a.y + sp.at[1] + 1.5, tongues: Array.from({ length: sp.n }, (_, j) => ({ dx: (j - (sp.n - 1) / 2) * 1.6 + R.range(-0.4, 0.4), h: sp.h * R.range(0.8, 1.2), n: i * 17 + j * 5 + seed })) }));
     const scorch = [0, 1].map((tick) => [0, 1].map((k) => {
       const sp = list[(tick * 2 + k + 1) % list.length], lum = (x2, y2) => luma(colorAt(a, x2, y2));
-      let cand = S.body.filter(([x2, y2]) => Math.hypot(a.x + x2 + 0.5 - sp.x, a.y + y2 + 0.5 - sp.y) < 9 && y2 > H * 0.42 && lum(x2, y2) > 0.3 && lum(x2, y2) < 0.6);
-      if (!cand.length) cand = S.body.filter(([, y2]) => y2 > H * 0.45);
+      let cand = S.body.filter(([x2, y2]) => Math.hypot(a.x + x2 + 0.5 - sp.x, a.y + y2 + 0.5 - sp.y) < 9 && y2 > H2 * 0.42 && lum(x2, y2) > 0.3 && lum(x2, y2) < 0.6);
+      if (!cand.length) cand = S.body.filter(([, y2]) => y2 > H2 * 0.45);
       const [x, y] = cand[Math.floor(R.next() * cand.length)];
       return { x: a.x + x + 0.5, y: a.y + y + 0.5, r: R.range(3.2, 4.4) };
     }));
@@ -4392,9 +4462,9 @@
     trails(p, C, a, S, t, o.seed, false);
   }
   function draw3(p, t, o) {
-    const C = fit(o.palette, 8), a = o.actor, S = shape(a), H = S.h;
+    const C = fit(o.palette, 8), a = o.actor, S = shape(a), H2 = S.h;
     for (const [mx, my] of S.body) {
-      const c = colorAt(a, mx, my), up = 1 - (my + 0.5) / H, lv = reach(mx, t, o.seed);
+      const c = colorAt(a, mx, my), up = 1 - (my + 0.5) / H2, lv = reach(mx, t, o.seed);
       if (up > lv + 0.035) continue;
       const x = a.x + mx, y = a.y + my;
       if (up > lv - 0.02) p.px(x, y, C[6]);
@@ -4402,7 +4472,7 @@
       else p.px(x, y, mix(C[1], C[3], clamp(luma(c) * 1.6)));
     }
     for (let mx = 0; mx < S.w; mx++) {
-      const lv = reach(mx, t, o.seed), my = Math.floor((1 - lv) * H);
+      const lv = reach(mx, t, o.seed), my = Math.floor((1 - lv) * H2);
       if (S.on(mx, my)) p.glow(a.x + mx, a.y + my, 4, C[5], 0.14);
     }
     for (const e of eyes(a)) {
@@ -4434,8 +4504,8 @@
           p.line(lx - len2 / 2, ly, lx + len2 / 2, ly, k % 2 ? C[6] : C[4], glitch);
         }
     }
-    p.glow(0, a.y + H * (1 - tide(t)), 24, C[4], 0.2);
-    p.glow(0, a.y + H * 0.45, 30, C[3], 0.12);
+    p.glow(0, a.y + H2 * (1 - tide(t)), 24, C[4], 0.2);
+    p.glow(0, a.y + H2 * 0.45, 30, C[3], 0.12);
   }
 
   // vendor/pixelfx/src/fx/shadow/shadow-tendrils.js
@@ -4447,6 +4517,31 @@
 
   // vendor/pixelfx/src/fx/shadow/_lib.js
   var VOID = ["#06040b", "#150c26", "#2a1150", "#461a84", "#6f2cc0", "#9d5cec", "#cfa6ff", "#f6eaff"];
+  function annulus(x, y, r0, r1, fn) {
+    const r02 = r0 > 0 ? r0 * r0 : -1, r12 = r1 * r1;
+    for (let py = Math.floor(y - r1); py <= Math.ceil(y + r1); py++) {
+      const cy = py + 0.5, dy = cy - y, dy2 = dy * dy;
+      if (dy2 >= r12) continue;
+      const xo = Math.sqrt(r12 - dy2), xi = dy2 < r02 ? Math.sqrt(r02 - dy2) : 0;
+      for (let px = Math.floor(x - xo), x1 = Math.ceil(x + xo); px <= x1; px++) {
+        const cx = px + 0.5, dx = cx - x;
+        if (xi > 0 && dx > -xi && dx < xi) {
+          px = Math.max(px, Math.floor(x + xi) - 1);
+          continue;
+        }
+        const d2 = dx * dx + dy2;
+        if (d2 < r12 && d2 >= r02) fn(cx, cy, Math.sqrt(d2));
+      }
+    }
+  }
+  function halo(p, x, y, r0, r1, c, k) {
+    if (r1 <= r0 || k <= 4e-3) return;
+    const col = hex(c), w = r1 - r0;
+    annulus(x, y, Math.max(0, r0), r1, (cx, cy, d) => {
+      const f = 1 - (d - r0) / w;
+      p.light(cx, cy, col, f * f * k);
+    });
+  }
   var PK = { FLAME: 0, SOOT: 1 };
   var Puffs = class {
     constructor(o) {
@@ -4518,9 +4613,9 @@
           continue;
         }
         const r = q.size * (0.65 + Math.min(1, age * 2.5) * 0.45 + age * 0.45);
-        const a = Math.min(1, age * 10) * Math.min(1, k * 2.2) * 0.72, body = mix(this.soot[0], this.soot[1], age);
+        const a = Math.min(1, age * 10) * Math.min(1, k * 2.2) * 0.72, body2 = mix(this.soot[0], this.soot[1], age);
         const edge = a * 0.5, core = 1 - (1 - a * 0.5) * (1 - a * 0.62);
-        p.disc(x, y + r * 0.06, r, body, (d) => d < 0.72 ? core : edge);
+        p.disc(x, y + r * 0.06, r, body2, (d) => d < 0.72 ? core : edge);
         const lk = light ? light.k : 0;
         if (lk < 0.5) p.disc(x - r * 0.2, y - r * 0.32, r * 0.48, this.cap, a * 0.32 * (1 - age * 0.7) * (1 - lk * 2));
         if (lk <= 0.02) continue;
@@ -4560,11 +4655,11 @@
         }
       }
     }
-    draw(p, body, shine) {
+    draw(p, body2, shine) {
       for (const d of this.list) {
         const up = d.vy < 0;
-        p.px(d.x, d.y, body);
-        if (d.size > 1.4) p.px(d.x, d.y + (up ? 1 : -1), body);
+        p.px(d.x, d.y, body2);
+        if (d.size > 1.4) p.px(d.x, d.y + (up ? 1 : -1), body2);
         p.px(d.x, d.y - (d.size > 1.4 && !up ? 1 : 0), shine);
       }
     }
@@ -4782,6 +4877,1974 @@
     };
   }
 
+  // vendor/pixelfx/src/fx/projectiles/muzzle-pistol.js
+  var muzzle_pistol_exports = {};
+  __export(muzzle_pistol_exports, {
+    create: () => create16,
+    meta: () => meta19
+  });
+
+  // vendor/pixelfx/src/fx/projectiles/_lib.js
+  function cloud(p, list, R, WR, { dens = 1.5, max = 0.86, clip, lit = 1 } = {}) {
+    if (!list.length) return;
+    let X0 = Infinity, Y0 = Infinity, X1 = -Infinity, Y1 = -Infinity;
+    for (const q of list) {
+      X0 = Math.min(X0, Math.floor(q.x - q.r));
+      X1 = Math.max(X1, Math.ceil(q.x + q.r));
+      Y0 = Math.min(Y0, Math.floor(q.y - q.r));
+      Y1 = Math.max(Y1, Math.ceil(q.y + q.r));
+    }
+    const W = X1 - X0 + 3, H2 = Y1 - Y0 + 3, D5 = new Float32Array(W * H2), L = new Float32Array(W * H2), F = new Float32Array(W * H2);
+    X0--, Y0--;
+    for (const q of list) {
+      const r = q.r, r2 = r * r;
+      for (let y = Math.floor(q.y - r); y <= Math.ceil(q.y + r); y++) {
+        const dy = y + 0.5 - q.y;
+        for (let x = Math.floor(q.x - r); x <= Math.ceil(q.x + r); x++) {
+          const dx = x + 0.5 - q.x, d2 = (dx * dx + dy * dy) / r2;
+          if (d2 >= 1) continue;
+          const k = Math.sqrt(1 - d2) * q.a, i = (y - Y0) * W + (x - X0);
+          D5[i] += k;
+          L[i] += k * q.b;
+          F[i] += k * q.w * (0.5 + 0.5 * clamp(0.5 + dx / r));
+        }
+      }
+    }
+    const B2 = blur(blur(D5, W, H2, 1, 2), W, H2, W, 2), n = R.length;
+    p.each(X0 + 1, Y0 + 1, X1 + 1, Y1 + 1, (lx, ly, sx, sy) => {
+      const cx = Math.floor(lx) - X0, cy = Math.floor(ly) - Y0;
+      if (cx < 1 || cy < 1 || cx >= W - 1 || cy >= H2 - 1) return;
+      const i = cy * W + cx, d = D5[i];
+      if (d < 0.05 || clip && !clip(lx, ly)) return;
+      const a = Math.min(max, Math.ceil((1 - Math.exp(-d * dens)) * 6) / 6);
+      if (a < 0.15) return;
+      const gy = B2[i + W] - B2[i - W], gx = B2[i + 1] - B2[i - 1], up = clamp(0.5 + Math.atan((gy * 0.9 + gx * 0.35) / (B2[i] * 0.16 + 0.03)) * 0.42 * lit);
+      const w = F[i] / d, j = clamp(Math.round(L[i] / d * (0.3 + 0.7 * up) * (n - 1) + 0.25 + w * 1.5), 0, n - 1);
+      p.blendPx(sx, sy, w > 0.03 ? mix(R[j], WR[j], Math.min(0.9, Math.ceil(w * 10) / 10)) : R[j], a);
+    });
+  }
+  var Smoke = class {
+    constructor(rng2) {
+      this.R = rng2;
+      this.list = [];
+      this.t = 0;
+    }
+    add(q) {
+      this.list.push({ vx: 0, vy: 0, drag: 2.5, rise: 12, grow: 2, curl: 0, a: 0.6, b: 0.85, warm: 0, delay: 0, age: 0, seed: this.R.next() * 100, ...q });
+    }
+    get count() {
+      return this.list.length;
+    }
+    update(dt) {
+      this.t += dt;
+      for (let i = this.list.length - 1; i >= 0; i--) {
+        const q = this.list[i];
+        if (q.delay > 0) {
+          q.delay -= dt;
+          continue;
+        }
+        if ((q.age += dt) >= q.life) {
+          this.list.splice(i, 1);
+          continue;
+        }
+        if (q.curl) {
+          const c = Math.cos(q.curl * dt), s = Math.sin(q.curl * dt), vx = q.vx;
+          q.vx = vx * c - q.vy * s;
+          q.vy = vx * s + q.vy * c;
+        }
+        q.vy -= q.rise * dt;
+        q.vx += Math.sin(this.t * 1.3 + q.seed) * 8 * dt;
+        q.vx -= q.vx * q.drag * dt;
+        q.vy -= q.vy * q.drag * dt;
+        q.x += q.vx * dt;
+        q.y += q.vy * dt;
+      }
+    }
+    puffs() {
+      const out = [];
+      for (const q of this.list) {
+        if (q.delay > 0) continue;
+        const k = q.age / q.life;
+        out.push({ x: q.x, y: q.y, r: q.r0 + (q.r1 - q.r0) * (1 - Math.exp(-q.grow * q.age)), a: q.a * Math.min(1, q.age * 30) * Math.pow(1 - k, 1.3), b: q.b * (1 - k * 0.5), w: q.warm * Math.exp(-q.age * 5) });
+      }
+      return out;
+    }
+  };
+  function blur(src, w, h, step, r) {
+    const out = new Float32Array(src.length), n = step === 1 ? w : h, lines = step === 1 ? h : w, k = 1 / (2 * r + 1);
+    for (let l = 0; l < lines; l++) {
+      const base = step === 1 ? l * w : l;
+      let acc = 0;
+      for (let j = -r; j <= r; j++) acc += j >= 0 && j < n ? src[base + j * step] : 0;
+      for (let j = 0; j < n; j++) {
+        out[base + j * step] = acc * k;
+        const a = j - r, b = j + r + 1;
+        if (a >= 0) acc -= src[base + a * step];
+        if (b < n) acc += src[base + b * step];
+      }
+    }
+    return out;
+  }
+  function flashShape(r, f, { size = 1, spike = [12, 20], diag = [5, 10], cross: cross3 = [3, 6], back = [2, 4.5], core = 0.7 } = {}) {
+    const k = f === 1 ? 1 : 0.6, w = f === 1 ? 1 : 0.72, S = size;
+    const L = [
+      { off: 0.5, a: r.range(-0.08, 0.08), len: r.range(5.5, 8) * S * k, wid: r.range(2.1, 2.6) * S * w, core: 0.5 * core },
+      { off: 2, a: r.range(-0.07, 0.07), len: r.range(spike[0], spike[1]) * S * k, wid: r.range(1, 1.3) * S * w, core: 0.35 * core }
+    ];
+    const ray2 = (a, len2, wid, on) => on && L.push({ off: r.range(0.5, 2), a, len: len2 * S * k, wid: wid * S * w, core: 0.25 * core });
+    for (const s of [-1, 1]) {
+      ray2(s * r.range(0.3, 0.8), r.range(diag[0], diag[1]), r.range(1.1, 1.5), r.chance(0.85));
+      ray2(s * r.range(1.15, 1.7), r.range(cross3[0], cross3[1]), r.range(1, 1.3), r.chance(0.6));
+      ray2(s * r.range(2, 2.7), r.range(back[0], back[1]), 1, r.chance(0.7) && f === 1);
+    }
+    return L;
+  }
+  var profile = (l, u) => {
+    const k = u / l.len;
+    return l.wid * Math.pow(Math.max(0, 1 - k), 0.8) * Math.min(1, 0.45 + k * 3);
+  };
+  function flash(p, x, y, a, L, C, seed) {
+    const c = Math.cos(a), s = Math.sin(a);
+    let ext = 2;
+    for (const l of L) ext = Math.max(ext, l.off + l.len + 2);
+    p.shade(x - ext, y - ext, x + ext, y + ext, (px, py) => {
+      const dx = px - x, dy = py - y, along2 = dx * c + dy * s, across = -dx * s + dy * c;
+      let m = -9, hot = false, warm = false;
+      for (const l of L) {
+        const ca = Math.cos(l.a), sa = Math.sin(l.a), lu = (along2 - l.off) * ca + across * sa, lv = -(along2 - l.off) * sa + across * ca;
+        if (lu < -1.5 || lu > l.len + 1) continue;
+        const r = profile(l, Math.max(0, lu)), mm2 = r - Math.abs(lv);
+        if (mm2 > m) m = mm2;
+        if (lu < l.len * l.core && Math.abs(lv) <= r * 0.5) hot = true;
+        if (mm2 > r * 0.4) warm = true;
+      }
+      const dm = 1.6 - Math.hypot(along2 - 0.5, across);
+      if (dm > m) m = dm;
+      if (dm > 0.6) hot = true;
+      m += (rand(Math.floor(px) * 73 + Math.floor(py) * 151, seed) - 0.5) * 0.5 * Math.min(1, ext / 14);
+      if (m < -0.85) return;
+      return m < 0 ? C[3] : hot ? C[0] : warm ? C[1] : C[2];
+    });
+    return ext;
+  }
+  function casing(x, y, vx, vy, va, age, g, floor, bounce = 0.42, a0 = 0) {
+    let t0 = 0, a = a0, hit = -1;
+    for (let n = 0; n < 6; n++) {
+      const d = floor - y, T = (-vy + Math.sqrt(Math.max(0, vy * vy + 2 * g * d))) / g;
+      if (age - t0 < T) {
+        const u = age - t0;
+        return { x: x + vx * u, y: y + vy * u + 0.5 * g * u * u, a: a + va * u, rest: false, hit };
+      }
+      x += vx * T;
+      a += va * T;
+      t0 += T;
+      hit = age - t0;
+      const vin = vy + g * T;
+      y = floor;
+      if (vin * bounce < 45) {
+        const u = age - t0, k = 7, s = (1 - Math.exp(-k * u)) / k;
+        return { x: x + vx * 0.6 * s, y: floor, a: Math.round(a / Math.PI) * Math.PI, rest: true, hit };
+      }
+      vy = -vin * bounce;
+      vx *= 0.55;
+      va *= 0.6;
+    }
+    return { x, y: floor, a: Math.round(a / Math.PI) * Math.PI, rest: true, hit };
+  }
+  function drawCasing(p, k, B2, fade = 1) {
+    const ca = Math.cos(k.a), sa = Math.sin(k.a), x = k.x, y = k.y - 0.5;
+    p.dot(x - ca, y - sa, B2[1], fade);
+    p.dot(x, y, B2[2], fade);
+    p.dot(x + ca, y + sa, B2[3], fade);
+    if (k.hit >= 0 && k.hit < 0.07) {
+      p.px(x + ca * 0.5, y - 1, WHITE);
+      p.glow(x, y, 5, B2[3], 0.55 * (1 - k.hit / 0.07));
+    }
+  }
+
+  // vendor/pixelfx/src/fx/projectiles/muzzle-pistol.js
+  var meta19 = {
+    name: "Pistol shot",
+    desc: "One pistol shot from a muzzle `height` px above the floor (the origin): a spiky white-cored flash, sparks, a curl of smoke hooking up and back, a casing that bounces and settles.",
+    tags: ["projectile", "muzzle", "gun", "pistol", "flash", "smoke", "casing", "directional", "one-shot"],
+    size: [96, 72],
+    origin: [44, 66],
+    duration: 1.8,
+    loop: false,
+    fps: 30,
+    bg: "ground",
+    options: {
+      palette: ["#4a1712", "#8a1f17", "#c9281f", "#f2561d", "#ff8a2a", "#ffc23d", "#ffe26b", "#fff3a6", "#ffffff"],
+      brass: ["#4a2e10", "#8c5c1c", "#d9a441", "#ffe39a"],
+      smoke: ["#26222e", "#3b3644", "#544e5e", "#6f6979", "#8c8596", "#aca5b5", "#cbc4d2"],
+      height: 26,
+      seed: 3
+    }
+  };
+  var F1 = 1 / 30;
+  function create16(o) {
+    const F = fit(o.palette, 9), B2 = fit(o.brass, 4), SM = fit(o.smoke, 7), H2 = o.height, MY = -H2, R = new Rng(o.seed);
+    const ps = new Particles({ rng: R, ground: () => 0, sparks: [F[7], F[6], F[4], F[3]] }), smoke2 = new Smoke(R);
+    const shapeSeed = R.int(0, 1e6), tilt = R.range(-0.05, 0.05);
+    for (let i = 0; i < 6; i++) {
+      const a = R.range(-0.3, 0.3), sp = R.range(180, 400);
+      ps.spawn(P.SPARK, 3, MY, Math.cos(a) * sp, Math.sin(a) * sp, R.range(0.06, 0.16));
+    }
+    for (let i = 0; i < 5; i++) {
+      const a = R.range(-0.35, 0.25), sp = R.range(60, 160);
+      ps.spawn(P.EMBER, 3, MY, Math.cos(a) * sp, Math.sin(a) * sp, R.range(0.25, 0.5), F[5]);
+    }
+    for (let i = 0; i < 3; i++) smoke2.add({ x: 3, y: MY, vx: R.range(70, 120), vy: R.range(-12, 6), r0: 1.6, r1: R.range(4.5, 6), life: R.range(0.8, 1.05), a: 0.55, drag: 3.5, rise: 10, warm: 0.9, delay: i * 0.012 });
+    for (let i = 0; i < 14; i++) {
+      const k = i / 13;
+      smoke2.add({ x: 2, y: MY, vx: 115 - 75 * k + R.range(-12, 12), vy: -6 - 10 * k + R.range(-5, 5), r0: 1.4, r1: (3.6 + k * 2.6) * R.range(0.75, 1.25), life: 1.15 + k * 0.3, a: 0.62, b: R.range(0.85, 1), drag: 2.2, rise: 6, curl: -4.4 + k * 1.8 + R.range(-0.5, 0.5), grow: 1.6, warm: 0.7, delay: 0.02 + i * 0.022 });
+    }
+    smoke2.add({ x: -7, y: MY - 2, vx: -6, vy: -18, r0: 1.2, r1: 4, life: 1.05, a: 0.4, rise: 8, delay: 0.03 });
+    const shell = { vx: -R.range(25, 45), vy: -R.range(95, 130), va: R.sign() * R.range(22, 32), a0: R.range(0, 6.28) };
+    let t = 0;
+    return {
+      update(dt) {
+        t += dt;
+        ps.update(dt);
+        smoke2.update(dt);
+      },
+      draw(p) {
+        const pop = Math.exp(-(t + 8e-3) / 0.035);
+        const list = smoke2.puffs();
+        for (const q of list) q.w *= 0.4 + pop;
+        cloud(p, list, SM, [SM[0], mix(F[1], SM[1], 0.5), mix(F[2], SM[2], 0.4), F[3], F[4], F[5], F[7]], { dens: 1.5, max: 0.8, lit: 1.4 });
+        if (t < meta19.duration) drawCasing(p, casing(-7, MY - 1, shell.vx, shell.vy, shell.va, t, 850, -0.5, 0.42, shell.a0), B2, Math.min(1, (meta19.duration - 0.05 - t) / 0.3));
+        if (t < 2 * F1) {
+          const f = t < F1 ? 1 : 2, L = flashShape(rng(shapeSeed), f, { size: 1.15, spike: [15, 22], diag: [7, 12], cross: [4.5, 8], back: [3, 5.5] });
+          flash(p, 0, MY, tilt, L, f === 1 ? [WHITE, F[7], F[6], F[3]] : [F[7], F[6], F[4], F[2]], f + o.seed);
+        }
+        ps.draw(p);
+        p.glow(4, MY, 30, F[4], 0.85 * pop);
+        p.glow(2, MY, 8, WHITE, 0.5 * pop);
+        p.glow(4, 0, 16, F[4], 0.2 * pop);
+      }
+    };
+  }
+
+  // vendor/pixelfx/src/fx/status/poisoned.js
+  var poisoned_exports = {};
+  __export(poisoned_exports, {
+    act: () => act13,
+    actorAlpha: () => actorAlpha2,
+    draw: () => draw4,
+    drawBack: () => drawBack4,
+    meta: () => meta20
+  });
+  var meta20 = {
+    name: "Poisoned",
+    desc: "Sick to the bone: green rolls up the body in waves, dark veins creep from a wound, toxic sweat drips and hisses; every 0.8 s it wobbles, blisters pop and a ring pulses out.",
+    tags: ["status", "poison", "toxic", "dot", "debuff", "sick", "loop"],
+    size: [72, 64],
+    origin: [36, 54],
+    duration: 1.6,
+    loop: true,
+    fps: 30,
+    bg: "ground",
+    actor: 2,
+    options: { palette: ["#0e1d14", "#173320", "#23552e", "#318232", "#55b92f", "#8eea3f", "#cfff63", "#f6ffc2"], veins: "#2c1a3a", seed: 5 }
+  };
+  var SICK = { turn: 0.8, crouch: 4, lean: 4, hy: 1, fx: 2, fy: -20, bx: 8, by: -14, ffx: 3, fbx: -3 };
+  var act13 = {
+    onBody: true,
+    poses: [[0, { ...SICK, x: -1, crouch: 5, lean: 5 }], [0.2, { ...SICK, x: 0 }], [0.5, { ...SICK, x: 1 }], [0.8, { ...SICK, x: 1, crouch: 5, lean: 5 }], [1, { ...SICK, x: 0 }], [1.3, { ...SICK, x: -1 }], [1.6, { ...SICK, x: -1, crouch: 5, lean: 5 }]]
+  };
+  var D3 = meta20.duration;
+  var TICK2 = 0.8;
+  var G = 760;
+  var since2 = (t) => (t % TICK2 + TICK2) % TICK2;
+  var actorAlpha2 = () => 0;
+  var BODIES = /* @__PURE__ */ new WeakMap();
+  function body(a, seed) {
+    let m = BODIES.get(a.mask);
+    if (!m) BODIES.set(a.mask, m = /* @__PURE__ */ new Map());
+    if (m.has(seed)) return m.get(seed);
+    const S = shape(a), H2 = S.h, W = S.w, R = new Rng(seed * 7 + 3);
+    const [l, r] = S.rows[Math.round(H2 * 0.6)], wx = r - 1, wy = Math.round(H2 * 0.6);
+    const veins = [];
+    const walk3 = (x, y, ang, len2, depth) => {
+      const pts = [];
+      for (let s = 0; s < len2; s++) {
+        ang += R.range(-0.5, 0.5);
+        x += Math.cos(ang);
+        y += Math.sin(ang);
+        if (!S.on(Math.round(x), Math.round(y))) break;
+        pts.push([Math.round(x), Math.round(y), s / len2]);
+        if (depth < 2 && s > 2 && R.chance(0.16)) walk3(x, y, ang + R.sign() * R.range(0.6, 1.1), len2 * 0.55, depth + 1);
+      }
+      veins.push(pts);
+    };
+    for (let i = 0; i < 4; i++) walk3(wx, wy, Math.PI + (i / 4 - 0.45) * 2.2, 11, 0);
+    const lum = (x, y) => luma(colorAt(a, x, y));
+    const skin = S.body.filter(([x, y]) => lum(x, y) > 0.55 && S.on(x - 1, y) && S.on(x + 1, y));
+    const pick = (list) => list[Math.floor(R.next() * list.length)];
+    const blisters = [0, 1].map(() => [0, 1, 2].map(() => {
+      const [x, y] = pick(S.body.filter(([x2, y2]) => y2 > 4 && S.on(x2 - 1, y2) && S.on(x2 + 1, y2) && S.on(x2, y2 - 1)));
+      return { x, y, r: R.range(1.1, 1.8) };
+    }));
+    const E = eyes(a), sweat = [];
+    for (const e of E) sweat.push([e.x0 < W / 2 ? e.x0 - 1 : e.x1 + 1, e.y0 - 1]);
+    for (const side of [-1, 1]) {
+      const hand = S.body.filter(([x, y]) => y > H2 * 0.5 && y < H2 * 0.7 && (side < 0 ? x <= l + 1 : x >= r - 1) && !S.on(x, y + 1));
+      if (hand.length) sweat.push(hand[0]);
+    }
+    if (!sweat.length) sweat.push(pick(skin.length ? skin : S.body));
+    const out = { veins, wound: [wx, wy], blisters, sweat };
+    m.set(seed, out);
+    return out;
+  }
+  function offsets(t, H2) {
+    const lean = 1.3 * Math.sin(t / D3 * TAU), ph = since2(t), wob = ph < 0.12;
+    const w = wob ? Math.sin(ph / 0.12 * Math.PI) : 0;
+    return (my) => Math.round(lean * (1 - my / H2) + w * Math.sin(my * 0.42 + ph * 40));
+  }
+  function drawBack4(p, t, o) {
+    const P3 = fit(o.palette, 8), ph = since2(t);
+    const k = ph / 0.55;
+    if (k < 1) band(p, 0, 0, 5 + 22 * Math.sqrt(k), 0.18, Math.max(1, 2.5 * (1 - k)), 1 - k, [P3[3], P3[4], P3[5], P3[6]], (g) => Math.sin(g) < 0);
+    p.shade(-28, -3, 28, 6, (x, y, out) => {
+      const d = Math.hypot(x / 24, (y - 0.5) / 4);
+      if (d < 1) out.l = P3[4], out.k = (0.14 + 0.2 * Math.exp(-ph / 0.2)) * (1 - d) * (1 - d);
+    });
+  }
+  function draw4(p, t, o) {
+    const P3 = fit(o.palette, 8), a = o.actor, S = shape(a), H2 = S.h, B2 = body(a, o.seed), off = offsets(t, H2), ph = since2(t), tick = Math.floor(t / TICK2) % 2;
+    const vein = hex(o.veins);
+    for (const [mx, my] of S.body) {
+      const c = colorAt(a, mx, my), l = luma(c), wave = 0.5 + 0.5 * Math.sin(TAU * (my / H2 * 1.6 + t / D3 * 2));
+      const sick = P3[clamp(1 + Math.round(l * 6.2), 1, 7)], k2 = 0.22 + 0.4 * wave * wave;
+      p.px(a.x + mx + off(my), a.y + my, mix(c, wave > 0.85 && l > 0.4 ? mix(sick, P3[6], 0.3) : sick, k2));
+    }
+    const grow = smooth(0, D3 * 0.55, t) * (1 - smooth(D3 * 0.62, D3, t)) * 1.15;
+    for (const pts of B2.veins)
+      for (const [x, y, u] of pts) if (u < grow) p.px(a.x + x + off(y), a.y + y, u > grow - 0.12 ? P3[2] : vein);
+    const [wx, wy] = B2.wound;
+    p.px(a.x + wx + off(wy), a.y + wy, P3[6]);
+    p.px(a.x + wx + off(wy) - 1, a.y + wy, P3[3]);
+    p.glow(a.x + wx, a.y + wy, 6, P3[5], 0.3);
+    for (const bl of B2.blisters[tick]) {
+      const x = a.x + bl.x + off(bl.y), y = a.y + bl.y, grow2 = clamp(ph / 0.16), pop = ph > 0.38;
+      if (!pop) {
+        const r = bl.r * grow2;
+        p.circle(x, y, r + 0.6, P3[3]);
+        p.circle(x - 0.2, y - 0.2, r, P3[5]);
+        if (r > 0.8) p.px(x - 0.5, y - 0.8, WHITE);
+        p.glow(x, y, 4, P3[5], 0.3 * grow2);
+      } else if (ph < 0.56) {
+        const k2 = (ph - 0.38) / 0.18;
+        for (let j = 0; j < 6; j++) {
+          const an = j / 6 * TAU + bl.x, d = bl.r + 0.5 + k2 * 3.5;
+          p.dot(x + Math.cos(an) * d, y + Math.sin(an) * d - k2 * 2, j % 2 ? P3[6] : P3[5], 1.2 - k2);
+        }
+        p.glow(x, y, 6, P3[6], 0.4 * (1 - k2));
+      }
+    }
+    B2.sweat.forEach(([sx, sy], i) => {
+      const per = D3 / 2, age = ((t - i * 0.37) % per + per) % per, gather = 0.35;
+      const x = a.x + sx + 0.5 + off(sy), y0 = a.y + sy;
+      if (age < gather) {
+        const k3 = age / gather, run = Math.round(k3 * 2);
+        p.px(x, y0 + run, k3 > 0.5 ? P3[6] : P3[5]);
+        if (k3 > 0.5) p.px(x, y0 + run - 1, P3[4]);
+        return;
+      }
+      const f = age - gather, fallH = -1 - (y0 + 2), tf = Math.sqrt(2 * Math.max(1, fallH) / G);
+      if (f < tf) {
+        const y = y0 + 2 + 0.5 * G * f * f;
+        p.line(x, y - Math.min(3, G * f * 0.012), x, y, P3[4]);
+        p.px(x, y, P3[6]);
+        return;
+      }
+      const h = f - tf;
+      if (h > 0.4) return;
+      const k2 = h / 0.4;
+      p.line(x - 1 - k2 * 2, -1, x + 1 + k2 * 2, -1, P3[k2 < 0.4 ? 6 : 4], 1.2 - k2);
+      for (let j = 0; j < 3; j++) p.dot(x + (j - 1) * (2 + 3 * k2), -2 - j % 2 - 5 * k2 * (1 - k2), P3[6], 1 - k2);
+      p.disc(x + Math.sin(k2 * 6) * 1.5, -3 - k2 * 6, 1 + 1.5 * k2, P3[5], 0.35 * (1 - k2));
+      p.glow(x, -1.5, 5, P3[5], 0.35 * (1 - k2));
+    });
+    const k = ph / 0.55;
+    if (k < 1) band(p, 0, 0, 5 + 22 * Math.sqrt(k), 0.18, Math.max(1, 2.5 * (1 - k)), 1 - k, [P3[3], P3[4], P3[5], P3[6]], (g) => Math.sin(g) >= 0);
+    p.glow(0, a.y + H2 * 0.45, 26, P3[4], 0.14 + 0.2 * Math.exp(-ph / 0.18));
+  }
+
+  // vendor/pixelfx/src/fx/status/poison-skull.js
+  var poison_skull_exports = {};
+  __export(poison_skull_exports, {
+    create: () => create17,
+    meta: () => meta21
+  });
+  var meta21 = {
+    name: "Poison skull",
+    desc: "A toxic skull pops up over the head with a squash: acid-green eyes flare, venom drips off its jaw, then it sours into green vapour.",
+    tags: ["status", "poison", "skull", "toxic", "debuff", "one-shot"],
+    size: [56, 88],
+    origin: [28, 80],
+    duration: 1.8,
+    loop: false,
+    fps: 30,
+    bg: "ground",
+    // palette: venom, dark to bright; bone: the skull, dark to light; height: where the skull floats (px over the feet)
+    options: {
+      palette: ["#0d1a0c", "#173a14", "#265e18", "#3f8a1e", "#6cb82a", "#a8e04a", "#e0ff8a"],
+      bone: ["#1c2414", "#4a5a34", "#8fa070", "#cfdcb0", "#f4ffe0"],
+      height: 46,
+      seed: 4
+    }
+  };
+  var SKULL2 = [
+    "..kkkkkkk..",
+    ".k3333333k.",
+    "k333333332k",
+    "k3ddd3ddd2k",
+    "k3ded3ded1k",
+    "k22222n221k",
+    ".k2222n21k.",
+    "..k3t3t3k..",
+    "..kt1t1tk..",
+    "...kkkkk..."
+  ];
+  var POP = 0.16;
+  var HOLD4 = 0.8;
+  var FADE2 = 1.15;
+  function create17(o) {
+    const C = fit(o.palette, 7), B2 = fit(o.bone, 5), R = new Rng(o.seed), H2 = o.height;
+    const ps = new Particles({ rng: R, ground: () => 0 }), lights = new Lights();
+    let t = 0, popped = false, nextDrip = 0.25;
+    return {
+      update(dt) {
+        t += dt;
+        if (!popped && t >= POP * 0.5) {
+          popped = true;
+          lights.add(0, -H2, 22, C[5], 0.8, 0.2);
+          for (let i = 0; i < 8; i++) ps.spawn(P.MOTE, R.range(-6, 6), -H2 + R.range(-3, 3), R.range(-40, 40), R.range(-60, -10), R.range(0.25, 0.5), C[R.int(4, 6)]);
+        }
+        if (t > POP && t < HOLD4 && t >= nextDrip) {
+          nextDrip = t + R.range(0.12, 0.22);
+          ps.spawn(P.MOTE, R.range(-3, 3), -H2 + 6, 0, R.range(40, 70), R.range(0.25, 0.4), C[R.int(3, 5)]);
+        }
+        if (t > HOLD4 && t < FADE2 && R.chance(40 * dt)) ps.spawn(P.VAPOUR, R.range(-5, 5), -H2 + R.range(-4, 3), R.range(-8, 8), -R.range(14, 26), R.range(0.35, 0.6), C[3], R.range(2.5, 4));
+        ps.update(dt);
+        lights.update(dt);
+      },
+      draw(p) {
+        if (t < FADE2) {
+          const k = clamp(t / POP), rise = ease.outBack(k);
+          const bob = t > POP ? Math.round(Math.sin((t - POP) * 9) * 1) : 0;
+          const y0 = -H2 - 5 + Math.round((1 - rise) * 10) + bob;
+          const a = 1 - smooth(HOLD4, FADE2, t);
+          const eye = t < POP ? C[6] : t < HOLD4 ? Math.floor(t * 12) % 4 === 0 ? WHITE : C[5] : C[4];
+          const pal = { k: hex("#0a0d08"), 1: B2[1], 2: B2[2], 3: B2[3], d: hex("#0a0d08"), e: eye, n: B2[0], t: B2[4] };
+          SKULL2.forEach((row, y) => [...row].forEach((ch, x) => {
+            if (ch === ".") return;
+            const c = pal[ch];
+            if (a >= 1) p.px(x - 5, y0 + y, c);
+            else p.dot(x - 5, y0 + y, c, a);
+          }));
+          p.glow(-2.5, y0 + 4.5, 4, C[5], 0.45 * a);
+          p.glow(2.5, y0 + 4.5, 4, C[5], 0.45 * a);
+          p.glow(0, y0 + 5, 14, C[4], 0.14 * a);
+        }
+        ps.draw(p);
+        lights.draw(p);
+      }
+    };
+  }
+
+  // vendor/pixelfx/src/fx/shadow/necro-skulls.js
+  var necro_skulls_exports = {};
+  __export(necro_skulls_exports, {
+    draw: () => draw5,
+    drawBack: () => drawBack5,
+    meta: () => meta22
+  });
+  var meta22 = {
+    name: "Necro skulls",
+    desc: "Spectral skulls circle a cold green flame on a tilted orbit, passing behind and before it, eyes lit, trailing curls of ghost smoke.",
+    tags: ["shadow", "necromancy", "skull", "orbit", "ghost", "spectral", "magic", "loop"],
+    size: [136, 116],
+    origin: [68, 108],
+    duration: 3,
+    loop: true,
+    fps: 30,
+    bg: "ground",
+    options: {
+      palette: ["#040e10", "#0a2228", "#0f3d44", "#16615f", "#23907f", "#45c4a0", "#9af0c8", "#e8fff4"],
+      bone: ["#0c1a1c", "#2c4a4a", "#5c847c", "#a6cdb8", "#e4fff0"],
+      seed: 6
+    }
+  };
+  var CY = -52;
+  var FB = -32;
+  var FH = 34;
+  var RX2 = 42;
+  var RY = 11;
+  var TILT = -0.12;
+  var D4 = 3;
+  var N3 = 5;
+  var SKULL3 = [
+    "...kkkkk...",
+    ".kkhhhllkk.",
+    "khhhhlllmmk",
+    "khhllllllmk",
+    "kleeeleeemk",
+    "kleeeleeedk",
+    "kmleelleedk",
+    ".kmllnllmk.",
+    ".kmmlnlmdk.",
+    "..kmmmmmk..",
+    "..ktgtgtk..",
+    "...kkkkk..."
+  ];
+  function skullAt(i, t) {
+    const a = TAU * t / D4 + i * TAU / N3, ex = Math.cos(a) * RX2, ey = Math.sin(a) * RY;
+    const bob = Math.sin(TAU * 2 * t / D4 + i * 1.7) * 2;
+    return { x: ex * Math.cos(TILT) - ey * Math.sin(TILT), y: CY + ex * Math.sin(TILT) + ey * Math.cos(TILT) + bob, z: Math.sin(a), a };
+  }
+  function tail(p, C, i, t) {
+    for (let k = 8; k >= 1; k--) {
+      const tt = t - k * 0.05, s = skullAt(i, tt), age = k / 8;
+      const r = 2 + age * 3.6, a = (1 - age) * 0.5 * (0.6 + 0.4 * (s.z + 1) / 2);
+      p.disc(s.x, s.y - age * 7 + 2, r, age < 0.4 ? C[5] : age < 0.7 ? C[4] : C[3], a);
+    }
+  }
+  function drawSkull(p, C, K, s, t, i) {
+    const front = s.z >= 0, depth = 0.55 + 0.45 * (s.z + 1) / 2;
+    const PAL3 = front ? { k: K[0], d: K[1], m: K[2], l: K[3], h: K[4], e: C[0], n: C[0], t: K[3], g: K[0] } : { k: K[0], d: K[0], m: K[1], l: K[2], h: K[3], e: C[0], n: C[0], t: K[2], g: K[0] };
+    const x0 = Math.round(s.x) - 5, y0 = Math.round(s.y) - 6;
+    p.sprite(SKULL3, PAL3, x0, y0);
+    const k = (0.5 + 0.5 * Math.sin(TAU * 3 * t / D4 + i * 2.1)) * 0.5 + 0.5;
+    for (const ex of [3, 7]) {
+      p.px(x0 + ex + 0.5, y0 + 5.5, front ? k > 0.75 ? WHITE : C[7] : C[6]);
+      if (front) p.px(x0 + ex + 0.5, y0 + 4.5, C[5]);
+      p.glow(x0 + ex + 1, y0 + 6, 6, C[5], 0.45 * depth * k);
+    }
+    p.glow(s.x, s.y, 11, C[4], 0.18 * depth);
+  }
+  function flame(p, C, t) {
+    const W = 10, scroll = t / D4;
+    p.shade(-W - 4, FB - FH - 4, W + 4, FB + 2, (x, y, out) => {
+      const u = (FB - y) / FH;
+      if (u < -0.04 || u >= 1) return;
+      const n1 = tileNoise(x * 0.3, y * 0.2 + scroll * 8, 0, 8, 3), n2 = tileNoise(x * 0.6, y * 0.45 + scroll * 16, 0, 16, 5);
+      const prof = u < 0.22 ? 0.35 + 0.65 * Math.sqrt(Math.max(0, u) / 0.22) : Math.pow(1 - (u - 0.22) / 0.78, 0.85);
+      const w = W * prof * (1 + 0.3 * n1) + n2 * 2.2 * u, sway = n1 * 3 * u * u, d = Math.abs(x - sway) / Math.max(0.6, w);
+      if (d > 1) return;
+      const heat = Math.pow(1 - d, 0.7) * Math.pow(Math.max(0, 1 - u), 0.55) + n2 * 0.12;
+      if ((Math.floor(x) + Math.floor(y) & 1) === 0) out.k = 0.16 * heat;
+      return heat > 0.82 ? WHITE : heat > 0.66 ? C[7] : heat > 0.46 ? C[6] : heat > 0.27 ? C[5] : heat > 0.12 ? C[4] : C[3];
+    });
+    p.glow(0, FB - FH * 0.35, 40, C[5], 0.45);
+    p.glow(0, FB - 5, 12, C[7], 0.25);
+  }
+  function drawBack5(p, t, o) {
+    const C = fit(o.palette, 8), K = fit(o.bone, 5);
+    p.glow(0, -1, 40, C[4], 0.2);
+    const order = Array.from({ length: N3 }, (_, i) => [i, skullAt(i, t)]).filter(([, s]) => s.z < 0).sort((a, b) => a[1].z - b[1].z);
+    for (const [i] of order) tail(p, C, i, t);
+    for (const [i, s] of order) drawSkull(p, C, K, s, t, i);
+  }
+  function draw5(p, t, o) {
+    const C = fit(o.palette, 8), K = fit(o.bone, 5), S = o.seed;
+    cycle(t, D4, 18, S, (r) => r.range(0.8, 1.4), (age, L, r) => {
+      const x0 = r.range(-6, 6), u = age / L, x = x0 + Math.sin(u * 5 + r.range(0, 6)) * 3 * u, y = FB - 6 - u * r.range(36, 56);
+      p.dot(x, y, u < 0.5 ? C[7] : C[6], u < 0.7 ? 1 : (1 - u) * 3.3);
+      p.glow(x, y, 3, C[6], 0.3 * (1 - u));
+    });
+    flame(p, C, t);
+    const order = Array.from({ length: N3 }, (_, i) => [i, skullAt(i, t)]).filter(([, s]) => s.z >= 0).sort((a, b) => a[1].z - b[1].z);
+    for (const [i] of order) tail(p, C, i, t);
+    for (const [i, s] of order) drawSkull(p, C, K, s, t, i);
+    halo(p, 0, CY, 0, 46, C[4], 0.12);
+  }
+
+  // vendor/pixelfx/src/fx/holy/heal-aoe.js
+  var heal_aoe_exports = {};
+  __export(heal_aoe_exports, {
+    create: () => create18,
+    meta: () => meta23
+  });
+
+  // vendor/pixelfx/src/fx/holy/_lib.js
+  var GREEN = ["#0e2a24", "#14472f", "#1d6e3a", "#2f9a45", "#5cc654", "#a0e46c", "#dcffb4", "#ffffff"];
+  var SHAPES2 = /* @__PURE__ */ new WeakMap();
+  function shapeOf(A) {
+    let s = SHAPES2.get(A.mask);
+    if (s && s.x === A.x && s.y === A.y) return s;
+    const m = A.mask, inside = (i, j) => i >= 0 && j >= 0 && i < m.w && j < m.h && m.data[j * m.w + i] > 0;
+    const edge = [], out = [];
+    for (let j = -1; j <= m.h; j++)
+      for (let i = -1; i <= m.w; i++) {
+        const nb = inside(i - 1, j) + inside(i + 1, j) + inside(i, j - 1) + inside(i, j + 1);
+        if (inside(i, j)) {
+          if (nb < 4) edge.push([A.x + i, A.y + j]);
+        } else if (nb) out.push([A.x + i, A.y + j]);
+      }
+    s = { x: A.x, y: A.y, edge, out, top: A.y, bottom: A.y + m.h, at: (x, y) => inside(Math.floor(x) - A.x, Math.floor(y) - A.y) };
+    SHAPES2.set(A.mask, s);
+    return s;
+  }
+  function recolor(p, A, fn, a = 1) {
+    const m = A.mask, P3 = A.pixels, fa = typeof a === "function";
+    if (!P3) return;
+    for (let j = 0; j < m.h; j++)
+      for (let i = 0; i < m.w; i++) {
+        const c = P3[j * m.w + i];
+        if (!c) continue;
+        const x = A.x + i, y = A.y + j, n = fn(c, x, y);
+        if (n) p.dot(x, y, n, fa ? a(x, y) : a);
+      }
+  }
+  function oval(p, cx, cy, rx, ry, c, a = 1, keep = null) {
+    if (rx < 0.5) return;
+    const n = Math.ceil(Math.max(rx, ry) * TAU * 1.5) + 6, fc = typeof c === "function", fa = typeof a === "function";
+    for (let j = 0; j < n; j++) {
+      const g = j / n * TAU;
+      if (keep && !keep(g)) continue;
+      p.dot(cx + Math.cos(g) * rx, cy + Math.sin(g) * ry, fc ? c(g) : c, fa ? a(g) : a);
+    }
+  }
+  function plus(p, x, y, L, th, R, a = 1, glint = false) {
+    const n = R.length, X = Math.round(x), Y = Math.round(y), w = th > 1 ? 1 : 0;
+    const ins = (i, j) => Math.abs(i) <= w && Math.abs(j) <= L || Math.abs(j) <= w && Math.abs(i) <= L;
+    for (let j = -L - 1; j <= L + 1; j++)
+      for (let i = -L - 1; i <= L + 1; i++) {
+        if (!ins(i, j)) {
+          if (w && (ins(i - 1, j) || ins(i + 1, j) || ins(i, j - 1) || ins(i, j + 1))) p.dot(X + i, Y + j, R[Math.max(0, n - 6)], a * 0.9);
+          continue;
+        }
+        let c;
+        if (!w) c = i === 0 && j === 0 ? WHITE : Math.abs(i) + Math.abs(j) >= L ? R[n - 3] : R[n - 2];
+        else if (i === 0 && j === 0) c = WHITE;
+        else if (i === 0 || j === 0) c = Math.abs(i) + Math.abs(j) < L ? R[n - 2] : R[n - 3];
+        else c = i < 0 || j < 0 ? R[n - 3] : R[n - 5];
+        if (glint && (i === 0 && j === -L || i === -L && j === 0)) c = WHITE;
+        p.dot(X + i, Y + j, c, a);
+      }
+  }
+
+  // vendor/pixelfx/src/fx/holy/heal-aoe.js
+  var meta23 = {
+    name: "Healing ring",
+    desc: "A seed of green light sinks into the floor and a soft ring rolls out from it; the floor glows where it passes and plus signs sprout and float up.",
+    tags: ["holy", "heal", "aoe", "ring", "plus", "ground", "one-shot"],
+    size: [256, 136],
+    origin: [128, 104],
+    duration: 2.9,
+    loop: false,
+    fps: 30,
+    bg: "ground",
+    options: { palette: GREEN, reach: 104, seed: 6 }
+  };
+  var SY2 = 0.2;
+  var SEED = 0.3;
+  var ROLL = 1;
+  function create18(o) {
+    const C = fit(o.palette, 8), REACH = o.reach, R = new Rng(o.seed);
+    const ps = new Particles({ rng: R, ground: () => 0, sparks: [WHITE, C[6], C[5], C[4]] });
+    const lights = new Lights();
+    const front = (tt) => tt < SEED ? 0 : REACH * ease.outCubic(seg(tt, SEED, SEED + ROLL));
+    const passed = (d) => SEED + ROLL * (1 - Math.cbrt(1 - Math.min(0.999, d / REACH)));
+    const sites = Array.from({ length: 26 }, (_, i) => {
+      const a = R.range(0, TAU), d = REACH * Math.sqrt(R.range(0.04, 0.92)), big = i % 5 < 2;
+      return { x: Math.cos(a) * d, z: Math.sin(a) * d, t0: passed(d) + R.range(0, 0.06), rise: R.range(18, 34), life: R.range(0.9, 1.3), sway: R.range(0, TAU), L: big ? 3 + (i % 5 === 0 ? 1 : 0) : i % 5 === 2 ? 1 : 2, thick: big ? 3 : 1, popped: false };
+    });
+    const riders = Array.from({ length: 14 }, (_, i) => ({ a: i / 14 * TAU + R.range(-0.2, 0.2), w: R.range(0.6, 1.1) * (i % 2 ? 1 : -1) }));
+    let t = 0, released = false;
+    function wash(p) {
+      const fr = front(t);
+      if (fr < 2 || t > 2.6) return;
+      p.shade(-fr - 1, -fr * SY2 - 1, fr + 1, fr * SY2 + 1, (x, y, out) => {
+        const d = Math.hypot(x, y / SY2);
+        if (d > fr) return;
+        const age = t - passed(d), k = Math.exp(-age / 0.35) * smooth(fr, fr - 6, d) * (1 - smooth(1.4, 1.9, t));
+        if (k < 0.04) return;
+        out.l = C[4];
+        out.k = 0.32 * k;
+      });
+    }
+    function ring2(p, back) {
+      if (t < SEED) return;
+      const u = seg(t, SEED, SEED + ROLL + 0.25), fr = front(t), k = u < 0.7 ? 1 : (1 - u) / 0.3;
+      if (k <= 0) return;
+      const keep = back ? (g) => Math.sin(g) < 0 : (g) => Math.sin(g) >= 0;
+      band(p, 0, 0, fr, SY2, Math.max(2, 7 * (1 - u * 0.7)), k, C.slice(2), keep, t < SEED + 0.08);
+      oval(p, 0, 0, fr + 1, (fr + 1) * SY2, (g) => Math.sin(g) > 0.3 ? WHITE : C[6], k * (back ? 0.7 : 1), keep);
+      for (let j = 0, n = Math.ceil(fr * 0.9); j < n; j++) {
+        const g = j / n * TAU, near = Math.sin(g) >= 0;
+        if (near === back || rand(j, Math.floor(t * 20)) > 0.45) continue;
+        const x = Math.cos(g) * fr, y = Math.sin(g) * fr * SY2, h = (1 + rand(j, 7) * 4) * k * (near ? 1 : 0.6);
+        for (let i = 1; i <= h; i++) p.dot(x, y - i, i > h - 1 ? WHITE : C[6], k * (1.2 - i / (h + 1)));
+      }
+      for (const r of riders) {
+        const g = r.a + r.w * (t - SEED) * 2.2, near = Math.sin(g) >= 0;
+        if (near === back) continue;
+        const x = Math.cos(g) * fr, y = Math.sin(g) * fr * SY2;
+        if (near) sparkle(p, x, y - 1, 2 + (Math.sin(t * 9 + r.a * 5) > 0.3 ? 1 : 0), WHITE, C[6], 0.35 * k);
+        else p.dot(x, y, C[6], k);
+      }
+      if (!back) for (let i = 0; i < 8; i++) {
+        const g = i / 8 * TAU;
+        p.glow(Math.cos(g) * fr, Math.sin(g) * fr * SY2 - 2, 16, C[4], 0.22 * k);
+      }
+    }
+    function sprouts(p, back) {
+      for (const s of sites) {
+        const a = t - s.t0;
+        if (a < 0 || a > s.life || s.z < 0 !== back) continue;
+        const u = a / s.life, h = s.rise * ease.outCubic(u), x = s.x + Math.sin(a * 4 + s.sway) * 1.5 * u, y = s.z * SY2 - 2 - h;
+        const pop = ease.outBack(clamp(a / 0.12), 2.6), end = s.life - 0.15, L = Math.max(1, Math.round(s.L * pop - (back ? 1 : 0)));
+        if (a < 0.04) sparkle(p, x, y, 3, WHITE, C[6], 0.5);
+        else if (a < end) plus(p, x, y, L, back && L < 3 ? 1 : s.thick, back ? C.slice(0, 7) : C, back ? 0.8 : 1, !back && Math.sin(a * 12 + s.sway * 3) > 0.8);
+        else {
+          const v = (a - end) / 0.15;
+          for (const [dx, dy] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) p.dot(x + dx * (2 + v * 5), y + dy * (2 + v * 5) - v * 2, v < 0.4 ? WHITE : C[6], 1 - v);
+        }
+        if (u < 0.5) for (let j = 1; j < h * (1 - u * 2); j += 1.5) p.dot(s.x, s.z * SY2 - 2 - h + j + 3, C[5], (1 - j / h) * (1 - u * 2) * (back ? 0.5 : 0.8));
+        p.glow(x, y, 7 + L * 2, C[5], (back ? 0.2 : 0.34) * (a < end ? 1 : 1 - (a - end) / 0.15));
+      }
+    }
+    return {
+      update(dt) {
+        t += dt;
+        if (t < SEED - 0.04 && R.chance(0.7)) {
+          const a = R.range(0, TAU), D5 = R.range(24, 48), x = Math.cos(a) * D5, y = Math.sin(a) * D5 * SY2 - R.range(1, 8);
+          const T = R.range(0.16, 0.24), l = Math.hypot(x, y + 3) || 1, v = l * 3 / (Math.exp(3 * T) - 1);
+          ps.spawn(P.STREAK, x, y, -x / l * v, (-3 - y) / l * v, T, R.chance(0.5) ? C[6] : C[5]);
+        }
+        if (!released && t >= SEED) {
+          released = true;
+          lights.add(0, -16, 76, C[5], 0.85, 0.55);
+          lights.add(0, -6, 28, WHITE, 0.8, 0.12);
+          for (let i = 0; i < 10; i++) ps.spawn(P.MOTE, R.range(-2, 2), -R.range(2, 10), R.range(-25, 25), -R.range(80, 170), R.range(0.3, 0.6), R.chance(0.5) ? WHITE : C[6], R.range(0.6, 1));
+          for (let i = 0; i < 16; i++) {
+            const a = R.range(Math.PI * 1.05, Math.PI * 1.95), sp = R.range(40, 120);
+            ps.spawn(P.STAR, 0, -3, Math.cos(a) * sp, Math.sin(a) * sp, R.range(0.4, 0.8), R.chance(0.5) ? WHITE : C[6], R.range(0.6, 2));
+          }
+        }
+        for (const s of sites)
+          if (!s.popped && t >= s.t0) {
+            s.popped = true;
+            for (let i = 0; i < 3; i++) ps.spawn(P.STAR, s.x + R.range(-3, 3), s.z * SY2 - 1, R.range(-10, 10), -R.range(15, 40), R.range(0.3, 0.6), R.chance(0.5) ? WHITE : C[6], R.range(0.5, 1.2), 0, s.z < 0 ? 4 : 0);
+          }
+        if (t > SEED + 0.1 && t < 1.9 && R.chance(0.35)) {
+          const fr = front(t), a = R.range(0, TAU), d = fr * Math.sqrt(R.next());
+          ps.spawn(P.EMBER, Math.cos(a) * d, Math.sin(a) * d * SY2 - 1, R.range(-5, 5), -R.range(10, 30), R.range(0.5, 1), C[5], 1, 0, Math.sin(a) < 0 ? 4 : 0);
+        }
+        ps.update(dt);
+        lights.update(dt);
+      },
+      drawBack(p) {
+        wash(p);
+        ring2(p, true);
+        sprouts(p, true);
+        ps.draw(p, "back");
+      },
+      draw(p) {
+        ring2(p, false);
+        if (t < SEED) {
+          const k = t / SEED;
+          sparkle(p, 0, -3, 2 + 4 * k * k, WHITE, C[6], 0.3 + 0.4 * k);
+          p.glow(0, -3, 10 + 16 * k, C[4], 0.5 * k);
+        } else if (t < SEED + 0.2) flare(p, 0, -3, 22 * Math.pow(1 - (t - SEED) / 0.2, 1.5), 1 - (t - SEED) / 0.2, C.slice(3));
+        const g = seg(t, SEED, SEED + 0.5);
+        if (g > 0 && g < 1) {
+          const top = -4 - 46 * ease.outCubic(Math.min(1, g * 2.2)) - 10 * g, bot = -2 - 50 * ease.inQuad(seg(g, 0.35, 1)), w = 1 + 2.4 * (1 - g);
+          if (bot - top > 2) {
+            p.beam(0, bot, 0, top, w * 2, (u, v) => v < 0.45 ? WHITE : u > 0.8 ? C[5] : C[6]);
+            p.glowLine(0, bot, 0, top, 12, C[5], 0.55 * (1 - g));
+            sparkle(p, 0, top, 4 * (1 - g) + 1, WHITE, C[6], 0.5 * (1 - g));
+          }
+        }
+        sprouts(p, false);
+        ps.draw(p, "front");
+        lights.draw(p);
+      }
+    };
+  }
+
+  // vendor/pixelfx/src/fx/holy/heal.js
+  var heal_exports = {};
+  __export(heal_exports, {
+    act: () => act14,
+    create: () => create19,
+    meta: () => meta24
+  });
+  var meta24 = {
+    name: "Heal",
+    desc: "Petals of light bloom under the feet, a hoop of light rises up the body restoring its colour and leaving sparkles, and motes spiral up and pop into tiny hearts.",
+    tags: ["holy", "heal", "restore", "buff", "petals", "hearts", "character", "one-shot"],
+    size: [80, 104],
+    origin: [40, 92],
+    duration: 1.9,
+    loop: false,
+    fps: 30,
+    bg: "ground",
+    actor: 2,
+    options: { palette: ["#3d2027", "#7d3f35", "#c97a4a", "#f2b46a", "#ffd994", "#fff0cf", "#fffaf2", "#ffffff"], seed: 2 }
+  };
+  var HURT = { turn: 0.8, crouch: 5, lean: 3, hy: 1, fx: 1, fy: -21, bx: 7, by: -15, ffx: 4, fbx: -3 };
+  var UP2 = { turn: 1.15, crouch: -1, fx: -13, fy: -36, bx: 14, by: -36, hy: -1, ffx: -3, fbx: 4 };
+  var act14 = {
+    onBody: true,
+    poses: [
+      [-0.3, HURT],
+      [0.16, { ...HURT, crouch: 6 }],
+      [0.5, { ...HURT, crouch: 3, lean: 1, hy: 0 }],
+      [0.78, UP2],
+      [1.2, { ...UP2, crouch: 0, fy: -30, by: -30, hy: 0 }],
+      [1.9, READY]
+    ]
+  };
+  var SY3 = 0.3;
+  var NP = 8;
+  var PR = 16;
+  var LIFT0 = 0.16;
+  var LIFT1 = 0.74;
+  var TOPY = -43;
+  var HEART = [".#.#.", "#####", ".###.", "..#.."];
+  function heart(p, x, y, C, a) {
+    const X = Math.round(x) - 2, Y = Math.round(y) - 2, at = (i, j) => j >= 0 && j < 4 && i >= 0 && i < 5 && HEART[j][i] === "#";
+    for (let j = -1; j <= 4; j++)
+      for (let i = -1; i <= 5; i++) {
+        if (at(i, j)) p.dot(X + i, Y + j, i === 1 && j === 1 ? WHITE : j >= 2 ? C[5] : C[6], a);
+        else if (at(i - 1, j) || at(i + 1, j) || at(i, j - 1) || at(i, j + 1)) p.dot(X + i, Y + j, C[3], a * 0.9);
+      }
+    p.glow(x, y, 6, C[5], 0.4 * a);
+  }
+  function create19(o) {
+    var _a;
+    const C = fit(o.palette, 8), A = o.actor, S = shapeOf(A), R = new Rng(o.seed);
+    const ps = new Particles({ rng: R, ground: () => 0, sparks: [WHITE, C[6], C[5], C[4]] });
+    const lights = new Lights();
+    const rows = /* @__PURE__ */ new Map();
+    for (const [x, y] of S.edge) ((_a = rows.get(y)) != null ? _a : rows.set(y, []).get(y)).push(x);
+    const petals = Array.from({ length: NP }, (_, k) => ({ a: k / NP * TAU + 0.2, t0: 0.02 + k * 3 % NP * 0.035, w: R.range(4.2, 5.2) }));
+    const motes = [];
+    for (let k = 0; k < NP; k++) motes.push({ t0: 0.2 + k * 0.05, th0: petals[k].a, r0: PR * 0.9, y0: -1, w: 4.2 * (k % 2 ? 1 : -1), v: R.range(46, 58), life: R.range(0.75, 0.95), kind: k % 2 });
+    for (let k = 0; k < 8; k++) motes.push({ t0: LIFT1 + R.range(0, 0.06), th0: k / 8 * TAU, r0: R.range(12, 18), y0: TOPY + R.range(-2, 4), w: 3.6 * (k % 2 ? 1 : -1), v: R.range(14, 34), life: R.range(0.35, 0.6), kind: (k + 1) % 2 });
+    let t = 0, burst = false, lastRow = 1;
+    const hoopY = (tt) => lerp(0, TOPY, ease.inOutSine(seg(tt, LIFT0, LIFT1)));
+    const hoopR = (tt) => lerp(PR, 12, seg(tt, LIFT0, LIFT1));
+    function bloom(k, tt) {
+      const pe = petals[k];
+      return ease.outBack(seg(tt, pe.t0, pe.t0 + 0.3), 1.8) * (1 - ease.inBack(seg(tt, 1.25 + k * 0.02, 1.6 + k * 0.02), 1.4));
+    }
+    function petal(p, k, back) {
+      const pe = petals[k], g = pe.a + t * 0.4, near = Math.sin(g) >= 0, b = bloom(k, t);
+      if (near === back || b <= 0.02) return;
+      const ca = Math.cos(g), sa = Math.sin(g), rb = 6, rt = rb + 9 * Math.min(1.2, b), h = (k % 2 ? 7 : 9) * b;
+      const bx = ca * rb, by = sa * rb * SY3, tx = ca * rt, ty = sa * rt * SY3 - h, L = Math.hypot(tx - bx, ty - by);
+      if (L < 1.5) return;
+      const ux = (tx - bx) / L, uy = (ty - by) / L, W = pe.w * Math.min(1, b) * (0.35 + 0.65 * Math.abs(sa)), pad = W + 1;
+      p.each(Math.min(bx, tx) - pad, Math.min(by, ty) - pad, Math.max(bx, tx) + pad, Math.max(by, ty) + pad, (x, y, sx, sy) => {
+        const dx = x - bx, dy = y - by, u = (dx * ux + dy * uy) / L;
+        if (u < 0 || u > 1) return;
+        const hw = W * Math.pow(Math.sin(Math.PI * Math.pow(u, 0.6)), 0.7) + 0.2, v = Math.abs(-dx * uy + dy * ux) / hw;
+        if (v > 1) return;
+        if (u > 0.9) return p.put(sx, sy, WHITE, 1);
+        if (v > 0.7) return p.put(sx, sy, u < 0.3 ? C[3] : u < 0.7 ? C[5] : C[6], 1);
+        if (v < 0.2 && u > 0.15 && u < 0.85) return p.put(sx, sy, u < 0.55 ? C[5] : C[6], back ? 0.75 : 0.85);
+        p.blendPx(sx, sy, u < 0.45 ? C[3] : C[4], back ? 0.6 : 0.45);
+      });
+      p.glow(tx, ty, 5, C[5], 0.35 * Math.min(1, b));
+    }
+    function hoop(p, back) {
+      if (t < LIFT0 || t > LIFT1 + 0.12) return;
+      const y = hoopY(t), r = hoopR(t) * (t > LIFT1 ? 1 - (t - LIFT1) / 0.12 : 1), keep = back ? (g) => Math.sin(g) < 0 : (g) => Math.sin(g) >= 0;
+      oval(p, 0, y, r, r * SY3, (g) => Math.sin(g) > 0.5 ? WHITE : C[6], back ? 0.8 : 1, keep);
+      if (!back) {
+        oval(p, 0, y + 1, r - 0.5, r * SY3, C[4], 1, keep);
+        for (let i = -2; i <= 2; i++) p.glow(i * r * 0.45, y, 8, C[5], 0.32);
+      }
+    }
+    return {
+      update(dt) {
+        t += dt;
+        if (t > LIFT0 && t < LIFT1) {
+          const Y = Math.round(hoopY(t));
+          for (let y = lastRow; y > Y; y--) {
+            const xs = rows.get(y);
+            if (!xs || !R.chance(0.45)) continue;
+            ps.spawn(P.STAR, R.pick(xs) + R.range(-1, 1) * 2, y, R.range(-4, 4), -R.range(4, 12), R.range(0.3, 0.55), R.chance(0.5) ? WHITE : C[6], R.range(0.6, 1.6));
+          }
+          lastRow = Math.min(lastRow, Y);
+        }
+        if (!burst && t >= LIFT1) {
+          burst = true;
+          lights.add(0, TOPY, 26, C[5], 0.55, 0.3);
+          lights.add(0, TOPY, 10, WHITE, 0.45, 0.08);
+        }
+        ps.update(dt);
+        lights.update(dt);
+      },
+      drawBack(p) {
+        const pool = smooth(0, 0.2, t) * (1 - smooth(1.3, 1.75, t));
+        if (pool > 0) p.glow(0, -2, 30, C[4], 0.3 * pool);
+        for (let k = 0; k < NP; k++) petal(p, k, true);
+        hoop(p, true);
+        ps.draw(p, "back");
+        riders(p, true);
+      },
+      draw(p) {
+        const drain = smooth(0, 0.08, t);
+        if (t < LIFT1 + 0.35) {
+          const Y = t < LIFT0 ? 1 : hoopY(t), done = t >= LIFT1;
+          recolor(p, A, (c, x, y) => {
+            const d = y - Y;
+            if (!done && d < -0.5) {
+              const l = luma(c) * 0.88;
+              return mix(c, rgb(l * 236, l * 226, l * 222), 0.68 * drain);
+            }
+            if (!done && d < 1) return WHITE;
+            if (!done && d < 2.5) return C[6];
+            const k = done ? 0.45 * (1 - seg(t, LIFT1, LIFT1 + 0.35)) : 0.5 * Math.exp(-(d - 2.5) / 5);
+            return k > 0.05 ? mix(c, C[5], k) : 0;
+          });
+          if (t > LIFT0 && !done) p.glow(0, Y, 18, C[5], 0.35);
+        }
+        for (let k = 0; k < NP; k++) petal(p, k, false);
+        hoop(p, false);
+        if (t >= LIFT1 && t < LIFT1 + 0.25) sparkle(p, 0, TOPY, 8 * (1 - (t - LIFT1) / 0.25), WHITE, C[5], 0.6);
+        riders(p, false);
+        ps.draw(p, "front");
+        lights.draw(p);
+      }
+    };
+    function riders(p, back) {
+      for (const m of motes) {
+        const a = t - m.t0;
+        if (a < 0) continue;
+        const at = (aa) => {
+          const th = m.th0 + m.w * aa, r = m.r0 * (1 - 0.45 * (aa / m.life));
+          return [Math.cos(th) * r, m.y0 - m.v * aa, Math.sin(th)];
+        };
+        if (a < m.life) {
+          const [x2, y2, z] = at(a);
+          if (z < 0 !== back) continue;
+          for (let j = 0; j < 7; j++) {
+            const aj = a - j * 0.03;
+            if (aj < 0) break;
+            const [tx, ty, tz] = at(aj);
+            if (tz < 0 !== back) continue;
+            p.dot(tx, ty, j === 0 ? WHITE : j < 3 ? C[6] : C[5], (1 - j / 7) * (back ? 0.6 : 1));
+          }
+          p.glow(x2, y2, 4, C[5], back ? 0.2 : 0.4);
+          continue;
+        }
+        const u = (a - m.life) / 0.36;
+        if (u >= 1 || back) continue;
+        const [x, y] = at(m.life), k = 1 - smooth(0.5, 1, u);
+        if (u < 0.12) sparkle(p, x, y, 3, WHITE, C[6], 0.5);
+        else if (m.kind) heart(p, x, y - u * 6, C, k);
+        else sparkle(p, x, y - u * 5, 1 + 2 * k * (0.7 + 0.3 * Math.sin(a * 30)), WHITE, C[5], 0.45 * k);
+      }
+    }
+  }
+
+  // vendor/pixelfx/src/fx/nature/healing-bloom.js
+  var healing_bloom_exports = {};
+  __export(healing_bloom_exports, {
+    create: () => create20,
+    meta: () => meta25
+  });
+
+  // vendor/pixelfx/src/fx/nature/_lib.js
+  var MASK = new Uint8Array(64 * 64);
+  var FACE = new Int8Array(64 * 64);
+  var ROWS = 400;
+  var RL = new Float32Array(ROWS);
+  var RR = new Float32Array(ROWS);
+  var RU = new Float32Array(ROWS);
+  function drawLeaf(p, x, y, len2, wid, ang, fl, pal, alpha = 1) {
+    const ca = Math.cos(ang), sa = Math.sin(ang), sq = Math.cos(fl), w = Math.max(0.55, Math.abs(sq) * wid), under = sq < 0;
+    const R = Math.ceil(len2 / 2 + 2), X = Math.round(x), Y = Math.round(y);
+    const inside = (i, j) => {
+      const u = (i + 0.5) * ca + (j + 0.5) * sa + len2 / 2, v = -(i + 0.5) * sa + (j + 0.5) * ca;
+      if (u < 0 || u > len2) return 0;
+      const half = w * Math.pow(Math.sin(Math.PI * u / len2), 0.75);
+      return Math.abs(v) <= half ? v < 0 ? 1 : 2 : 0;
+    };
+    for (let j = -R; j <= R; j++)
+      for (let i = -R; i <= R; i++) {
+        const s = inside(i, j);
+        if (!s) {
+          if (inside(i - 1, j) || inside(i + 1, j) || inside(i, j - 1) || inside(i, j + 1)) p.dot(X + i, Y + j, pal[0], alpha);
+          continue;
+        }
+        const u = (i + 0.5) * ca + (j + 0.5) * sa + len2 / 2, v = -(i + 0.5) * sa + (j + 0.5) * ca;
+        const rib = Math.abs(v) < 0.5 && u > len2 * 0.12 && u < len2 * 0.88 && w > 1.2;
+        p.dot(X + i, Y + j, rib ? pal[1] : s === 1 !== under ? pal[3] : pal[2], alpha);
+      }
+    p.dot(X - ca * (len2 / 2 + 1), Y - sa * (len2 / 2 + 1), pal[1], alpha);
+  }
+
+  // vendor/pixelfx/src/fx/nature/healing-bloom.js
+  var meta25 = {
+    name: "Healing bloom",
+    desc: "A sprout pushes up and unfurls, a bud swells and opens round a glowing golden heart in a flare of healing light; its petals lift away one by one as motes.",
+    tags: ["nature", "heal", "flower", "plant", "buff", "ground", "one-shot"],
+    size: [124, 120],
+    origin: [62, 108],
+    duration: 3.3,
+    loop: false,
+    fps: 30,
+    bg: "ground",
+    options: {
+      palette: ["#0c1a10", "#173a1a", "#24582a", "#357a34", "#52a03e", "#86c84e", "#c4ec7a", "#f4ffd0"],
+      petal: ["#4a1a3a", "#a8406e", "#ec8ab0", "#ffd8e8"],
+      heart: ["#a8641a", "#f0b42e", "#ffe680", "#fffbe0"],
+      seed: 4
+    }
+  };
+  var STEM = 0.42;
+  var BUD = 0.75;
+  var OPEN2 = 1.05;
+  var LIFT = 1.7;
+  var WILT = 2.4;
+  var H = 36;
+  var NPET = 6;
+  function cross2(p, x, y, L, C, a, glint) {
+    const X = Math.round(x), Y = Math.round(y), ins = (dx, dy) => dx === 0 && Math.abs(dy) <= L || dy === 0 && Math.abs(dx) <= L;
+    for (let dy = -L - 1; dy <= L + 1; dy++)
+      for (let dx = -L - 1; dx <= L + 1; dx++) {
+        if (ins(dx, dy)) p.dot(X + dx, Y + dy, glint && !dx && !dy ? WHITE : dy < 0 || dx < 0 ? C[6] : C[5], a);
+        else if (L > 1 && (ins(dx - 1, dy) || ins(dx + 1, dy) || ins(dx, dy - 1) || ins(dx, dy + 1))) p.dot(X + dx, Y + dy, C[2], a * 0.8);
+      }
+    p.glow(x, y, 5 + L * 2, C[6], 0.35 * a);
+  }
+  function create20(o) {
+    const C = fit(o.palette, 8), Pt = fit(o.petal, 4), Ht = fit(o.heart, 4), R = new Rng(o.seed), floor = () => 0;
+    const ps = new Particles({ rng: R, ground: floor, sparks: [Ht[3], Ht[2], Ht[1], Ht[0]] });
+    const lights = new Lights(), flying = [], glyphs = [];
+    const petals = Array.from({ length: NPET }, (_, i) => ({ az: i / NPET * TAU + 0.3, off: i * 0.7 % 1, gone: false, at: LIFT + i * 0.37 % 1 * 0.55 }));
+    let t = 0, popped = false, sprouted = false;
+    const grow = () => ease.outCubic(clamp(t / STEM)) * (1 - ease.inCubic(clamp((t - WILT) / 0.6)));
+    const sway = () => Math.sin(t * 2.6) * 1.4 * smooth(0.2, 0.6, t);
+    const stem = () => {
+      const g = grow(), pts = [];
+      for (let i = 0; i <= 12; i++) {
+        const s = i / 12;
+        pts.push([Math.sin(s * 3.2) * 2.2 * s + sway() * s * s, (1 - g) * H * 1.1 - s * H]);
+      }
+      return pts;
+    };
+    const open = () => ease.outBack(clamp((t - BUD) / (OPEN2 - BUD)), 1.4);
+    return {
+      update(dt) {
+        t += dt;
+        const f = Math.min(1, dt * 120), top = stem()[12];
+        if (!sprouted) {
+          sprouted = true;
+          for (let i = 0; i < 8; i++) ps.spawn(P.GRIT, R.range(-3, 3), -1, R.range(-40, 40), -R.range(40, 100), R.range(0.5, 0.8), R.pick([C[2], C[3]]), 1);
+          for (let i = 0; i < 3; i++) ps.spawn(P.DUST, R.range(-3, 3), -1, R.sign() * R.range(10, 30), -R.range(4, 10), R.range(0.4, 0.6), C[3], R.range(1.5, 2.5));
+        }
+        if (t > STEM && t < BUD && R.chance(0.3 * f)) {
+          const a = R.range(0, TAU), d = R.range(14, 26), x = top[0] + Math.cos(a) * d, y = top[1] - 3 + Math.sin(a) * d * 0.8;
+          ps.spawn(P.STREAK, x, y, (top[0] - x) * 3.4, (top[1] - 3 - y) * 3.4, R.range(0.18, 0.26), R.chance(0.5) ? Ht[2] : C[6]);
+        }
+        if (!popped && t >= OPEN2 - 0.12) {
+          popped = true;
+          lights.add(top[0], top[1] - 3, 22, WHITE, 0.45, 0.08);
+          lights.add(top[0], top[1] - 3, 70, Ht[2], 0.5, 0.8);
+          for (let i = 0; i < 16; i++) {
+            const a = R.range(0, TAU), sp = R.range(40, 120);
+            ps.spawn(P.MOTE, top[0], top[1] - 3, Math.cos(a) * sp, Math.sin(a) * sp - 20, R.range(0.4, 0.8), R.chance(0.5) ? Ht[3] : C[7], 0.7);
+          }
+          for (let i = 0; i < 5; i++) ps.spawn(P.STAR, top[0] + R.range(-10, 10), top[1] - R.range(0, 14), 0, -6, R.range(0.3, 0.6), Ht[3], R.range(1, 2.4), R.range(0, 0.3));
+        }
+        if (t > OPEN2 && t < WILT && R.chance(0.13 * f)) glyphs.push({ x: R.range(-22, 22), y: -R.range(2, 36), t0: t, life: Math.min(R.range(0.7, 1.1), meta25.duration - 0.05 - t), L: R.chance(0.35) ? 3 : 2, seed: R.next() * 9 });
+        if (t > OPEN2 - 0.1 && t < WILT && R.chance(0.35 * f)) ps.spawn(P.EMBER, R.range(-20, 20), -R.range(0, 8), R.range(-6, 6), -R.range(25, 55), Math.min(R.range(0.6, 1.1), meta25.duration - 0.05 - t), R.chance(0.6) ? C[6] : Ht[2], R.chance(0.3) ? 2 : 1);
+        for (let i = glyphs.length - 1; i >= 0; i--) if (t - glyphs[i].t0 > glyphs[i].life) glyphs.splice(i, 1);
+        for (const q of petals)
+          if (!q.gone && t >= q.at) {
+            q.gone = true;
+            const e = Math.PI / 2 - 0.15, dx = Math.sin(e) * Math.cos(q.az), L = 10;
+            flying.push({ x: top[0] + dx * L * 0.6, y: top[1] - 3 - Math.cos(e) * L * 0.6, vx: dx * 30 + R.range(-10, 10), vy: -R.range(25, 45), a: Math.atan2(-Math.cos(e), dx), va: R.range(-5, 5), fl: 0, vf: R.range(5, 9), life: Math.min(R.range(0.75, 1), meta25.duration - 0.45 - t), max: 0 });
+            flying[flying.length - 1].max = flying[flying.length - 1].life;
+          }
+        for (let i = flying.length - 1; i >= 0; i--) {
+          const q = flying[i];
+          if ((q.life -= dt) <= 0) {
+            ps.spawn(P.STAR, q.x, q.y, 0, -8, Math.min(0.35, meta25.duration - 0.05 - t), Pt[3], 1.8);
+            flying.splice(i, 1);
+            continue;
+          }
+          q.vx -= q.vx * 1.5 * dt;
+          q.vy -= q.vy * 0.8 * dt + 10 * dt;
+          q.x += q.vx * dt + Math.sin(q.fl) * 12 * dt;
+          q.y += q.vy * dt;
+          q.a += q.va * dt;
+          q.fl += q.vf * dt;
+        }
+        ps.update(dt);
+        lights.update(dt);
+      },
+      drawBack(p) {
+        const bloom = smooth(OPEN2 - 0.15, OPEN2 + 0.2, t) * (1 - smooth(WILT - 0.2, WILT + 0.5, t)), top = stem()[12];
+        for (let h = 0; h < 70; h += 7) p.glow(0, -h, 22, C[5], 0.12 * bloom * (1 - h / 80));
+        const k = clamp((t - OPEN2 + 0.12) / 0.6);
+        if (k > 0 && k < 1) band(p, 0, 0.5, 6 + 30 * ease.outCubic(k), 0.18, Math.max(1, 3 * (1 - k)), 1.1 - k, [C[3], C[5], Ht[2], Ht[3]], (g) => Math.sin(g) < 0);
+        const fw = 6 + 16 * smooth(0, 0.8, t);
+        for (let x = Math.floor(-fw); x <= fw; x++) {
+          const u = Math.abs(x) / fw, a = Math.sqrt(1 - u) * smooth(0, 0.4, t) * (1 - smooth(WILT, WILT + 0.6, t));
+          p.dot(x, 0, u < 0.3 ? C[6] : u < 0.65 ? C[5] : C[4], a);
+          if (x % 5 === 0) p.glow(x, 0, 8, C[5], 0.2 * a * (1 - u));
+        }
+        if (t > BUD - 0.05) {
+          for (const q of petals) if (Math.sin(q.az) < 0 && !q.gone) petal(p, q, top);
+        }
+        ps.draw(p, "back");
+      },
+      draw(p) {
+        const pts = stem(), top = pts[12], g = grow();
+        if (g > 0.02) {
+          for (let i = 1; i < pts.length; i++) {
+            const [x0, y0] = pts[i - 1], [x1, y1] = pts[i];
+            if (y1 > 0) continue;
+            p.line(x0, y0, x1, y1, C[5]);
+            p.line(x0 + 1, y0, x1 + 1, y1, C[3]);
+          }
+          for (const [i, sd, d] of [[4, -1, 0.1], [7, 1, 0.22]]) {
+            const lk = ease.outBack(clamp((t - d - 0.12) / 0.3), 1.6) * (1 - smooth(WILT, WILT + 0.5, t) * 0.4), [x, y] = pts[i];
+            if (lk <= 0 || y > -1) continue;
+            const la = sd < 0 ? -2.6 + 0.4 * (1 - lk) : -0.55 - 0.4 * (1 - lk);
+            drawLeaf(p, x + Math.cos(la) * 6 * lk, y + Math.sin(la) * 6 * lk, 12 * lk, 3.4, la, 0.25, [C[1], C[3], C[5], C[6]]);
+          }
+          if (t > STEM - 0.1 && t < OPEN2 - 0.1) {
+            const b = clamp((t - STEM + 0.1) / (BUD - STEM)), w = 2 + 2.5 * b, h = 3.5 + 5 * b;
+            p.ellipse(top[0], top[1] - h * 0.6, w, h, (d, a) => Math.cos(a) < -0.2 ? Pt[2] : d > 0.7 ? Pt[0] : Pt[1]);
+            p.glow(top[0], top[1] - h * 0.6, 8 + 8 * b, Ht[2], 0.25 * b);
+          }
+        }
+        for (const q of petals) if (Math.sin(q.az) >= 0 && !q.gone && t > BUD - 0.05) petal(p, q, top);
+        if (t > OPEN2 - 0.12 && t < WILT + 0.3) {
+          const pulse = 0.85 + 0.15 * Math.sin(t * 9), k = 1 - smooth(WILT - 0.3, WILT + 0.3, t), cy = top[1] - 4;
+          p.circle(top[0], cy, 3.3 * k, Ht[1]);
+          p.circle(top[0] - 0.5, cy - 0.5, 2.2 * k, Ht[2]);
+          p.px(top[0] - 1, cy - 1, Ht[3]);
+          p.glow(top[0], cy, 16 * pulse, Ht[2], 0.5 * k);
+          p.glow(top[0], cy, 34, C[5], 0.2 * k);
+        }
+        const e = t - OPEN2 + 0.12;
+        if (e > 0 && e < 0.16) sparkle(p, top[0], top[1] - 3, 10 * (1 - e / 0.16), Ht[3], Ht[2], 0.6);
+        for (const q of flying) drawLeaf(p, q.x, q.y, 6, 2.2, q.a, q.fl, [Pt[0], Pt[1], Pt[2], Pt[3]], Math.min(1, q.life / 0.3));
+        for (const q of glyphs) {
+          const k = (t - q.t0) / q.life;
+          cross2(p, q.x + Math.sin(k * 5 + q.seed) * 2, q.y - k * 24, q.L, C, Math.sin(Math.PI * k), Math.sin(k * 14 + q.seed) > 0.8);
+        }
+        ps.draw(p, "front");
+        lights.draw(p);
+      }
+    };
+    function petal(p, q, top) {
+      const op = open(), e = lerp(0.15, Math.PI / 2 - 0.2, op), dx = Math.sin(e) * Math.cos(q.az), dz = Math.sin(e) * Math.sin(q.az), dy = -Math.cos(e);
+      const L = lerp(8, 12, op), len2 = L * Math.hypot(dx, dy), ang = Math.atan2(dy, dx), back = dz < 0, cy = top[1] - 3;
+      if (len2 < 1.5) return;
+      drawLeaf(p, top[0] + dx * L * 0.5, cy + dy * L * 0.5, len2 + 1, 3 + (1 - Math.abs(dz)) * 0.8, ang, back ? 0.9 : 0.2, back ? [Pt[0], Pt[0], Pt[1], Pt[2]] : [Pt[0], Pt[1], Pt[2], Pt[3]]);
+    }
+  }
+
+  // vendor/pixelfx/src/fx/explosions/cartoon-pow.js
+  var cartoon_pow_exports = {};
+  __export(cartoon_pow_exports, {
+    create: () => create21,
+    meta: () => meta26
+  });
+
+  // vendor/pixelfx/src/fx/explosions/_lib.js
+  var OUTLINE3 = hex("#1a1422");
+  var SOOT6 = hex("#0d0a12");
+  var SOOT23 = hex("#17121d");
+  var LIFTS = /* @__PURE__ */ new Set([P.SMOKE, P.DUST, P.FIRE, P.EMBER, P.VAPOUR]);
+  function cull(ps, x0, y0, x1, y1) {
+    const L = ps.list;
+    for (let i = L.length - 1; i >= 0; i--) {
+      const q = L[i];
+      if (q.x < x0 || q.x > x1 || q.y < y0 || q.y > y1) L.splice(i, 1);
+    }
+  }
+  var SOFT2 = /* @__PURE__ */ new Set([P.SMOKE, P.DUST, P.VAPOUR]);
+
+  // vendor/pixelfx/src/fx/explosions/cartoon-pow.js
+  var meta26 = {
+    name: "Cartoon POW",
+    desc: "A comic-book hit: a jagged two-tone burst star slams in with a shake and boiling edges, POW! drops in letter by letter, action lines fly, then it all snaps away.",
+    tags: ["cartoon", "comic", "pow", "hit", "impact", "text", "one-shot"],
+    size: [184, 144],
+    origin: [92, 72],
+    duration: 1.05,
+    loop: false,
+    fps: 30,
+    bg: "dark",
+    options: { palette: ["#1a0e14", "#6e1a12", "#c8361a", "#f47a24", "#ffc23c", "#fff07a", "#ffffff"], text: "POW!", seed: 5 }
+  };
+  var N4 = 14;
+  var IN2 = 0.05;
+  var GO = 0.66;
+  var END2 = 0.8;
+  function create21(o) {
+    const C = fit(o.palette, 7), R = new Rng(o.seed), INK3 = C[0];
+    const ps = new Particles({ rng: R, sparks: [C[6], C[5], C[4], C[3]] });
+    const spikes2 = Array.from({ length: N4 * 2 }, (_, i) => ({ r: i % 2 ? R.range(0.5, 0.6) : R.range(0.85, 1.05), j: R.next() * 100 }));
+    const lines = Array.from({ length: 16 }, (_, i) => ({ a: (i + R.range(0.2, 0.8)) / 16 * TAU, r: R.range(0.92, 1.08), L: R.range(10, 17), t0: R.range(0, 0.06) }));
+    let t = 0, popped = false, burst = false;
+    return {
+      update(dt) {
+        t += dt;
+        if (!burst && t >= IN2) {
+          burst = true;
+          for (let i = 0; i < 22; i++) {
+            const a = R.range(0, TAU), sp = R.range(180, 360);
+            ps.spawn(P.SPARK, Math.cos(a) * 14, Math.sin(a) * 10, Math.cos(a) * sp, Math.sin(a) * sp, R.range(0.12, 0.3));
+          }
+        }
+        if (!popped && t >= GO) {
+          popped = true;
+          for (let i = 0; i < 14; i++) {
+            const a = R.range(0, TAU), sp = R.range(60, 150);
+            ps.spawn(P.STAR, Math.cos(a) * 26, Math.sin(a) * 18, Math.cos(a) * sp, Math.sin(a) * sp, R.range(0.25, 0.42), R.pick([C[6], C[5], C[4]]), R.range(1.2, 2.4));
+          }
+        }
+        ps.update(dt);
+        cull(ps, -meta26.origin[0] + 3, -meta26.origin[1] + 3, meta26.size[0] - meta26.origin[0] - 3, meta26.size[1] - meta26.origin[1] - 3);
+      },
+      draw(p) {
+        var _a;
+        const k = clamp(t / IN2);
+        const s = t < IN2 ? 0.25 + 0.95 * ease.outCubic(k) : t < GO ? 1 + 0.18 * Math.exp(-(t - IN2) * 18) * Math.cos((t - IN2) * 40) : 1 - ease.inBack(clamp((t - GO) / (END2 - GO)), 2);
+        const shake = t < 0.3 ? (1 - t / 0.3) * 2.2 : 0, sx = Math.round(Math.sin(t * 97) * shake), sy = Math.round(Math.cos(t * 83) * shake);
+        if (s > 0.02) {
+          const boil = Math.floor(t * 12), outer = 50 * s, rot = -0.1 + (t > GO ? (t - GO) * 3 : 0), M2 = N4 * 2;
+          const rad = spikes2.map((q, i) => q.r * (1 + (rand(i, boil, 7) - 0.5) * 0.08));
+          p.shade(sx - outer - 4, sy - outer - 4, sx + outer + 4, sy + outer + 4, (x2, y) => {
+            const dx = x2 - sx, dy = (y - sy) / 0.82, d = Math.hypot(dx, dy);
+            let u = ((Math.atan2(dy, dx) - rot) / TAU % 1 + 1) % 1 * M2;
+            const i = Math.floor(u) % M2, f = u - Math.floor(u), r = rad[i] + (rad[(i + 1) % M2] - rad[i]) * f, e = d / r;
+            if (e > outer + 2.5) return;
+            if (e > outer) return INK3;
+            if (e > outer * 0.66 + 2) return dx * 0.6 + dy * 0.8 > outer * 0.25 && (Math.floor(x2) + Math.floor(y) * 2) % 4 === 0 && Math.floor(y) % 2 === 0 ? C[4] : C[5];
+            if (e > outer * 0.66) return INK3;
+            return e > outer * 0.44 ? C[3] : C[4];
+          });
+          p.glow(sx, sy, outer * 1.3, C[5], 0.3 * Math.min(1, s));
+        }
+        for (const q of lines) {
+          const u = (t - IN2 - q.t0) / 0.32;
+          if (u <= 0 || u >= 1) continue;
+          const r0 = (46 + 22 * ease.outCubic(u)) * q.r, L = q.L * 0.7 * (1 - u), ca = Math.cos(q.a), sa = Math.sin(q.a) * 0.82;
+          p.line(ca * r0, sa * r0, ca * (r0 + L), sa * (r0 + L), (v) => v < 0.5 ? WHITE : C[5]);
+        }
+        const ru = (t - IN2) / 0.24;
+        if (ru > 0 && ru < 1) p.ring(0, 0, 30 + 34 * ease.outCubic(ru), Math.max(1, 2.5 * (1 - ru)), ru < 0.4 ? WHITE : C[5], 1.1 - ru);
+        const word = String((_a = o.text) != null ? _a : "POW!"), scale2 = 3, widths = [...word].map((ch) => p.measure(ch, { font: "big", scale: scale2 })[0]);
+        let x = -widths.reduce((a, w) => a + w + scale2, -scale2) / 2;
+        [...word].forEach((ch, i) => {
+          const u = (t - IN2 - 0.04 - i * 0.05) / 0.12, away = clamp((t - GO) / (END2 - GO - 0.04));
+          if (u > 0 && away < 1) {
+            const drop = (1 - ease.outBack(clamp(u), 2.4)) * -14, y = Math.round(-11 + drop - i * 1.5 + sy + away * 6);
+            const lx = Math.round(x + sx), a = 1 - away;
+            for (let d = 4; d >= 1; d--) p.text(ch, lx + d, y + d, d >= 3 ? INK3 : C[1], { font: "big", scale: scale2, a, outline: d === 4 ? INK3 : void 0 });
+            for (const [ox, oy] of [[-2, 0], [2, 0], [0, -2], [0, 2], [-1, -1], [1, -1], [-1, 1], [1, 1]]) p.text(ch, lx + ox, y + oy, INK3, { font: "big", scale: scale2, a });
+            p.text(ch, lx, y, (gx, gy) => gy < 4 ? C[6] : gy < 6 ? C[5] : C[4], { font: "big", scale: scale2, a });
+          }
+          x += widths[i] + scale2;
+        });
+        ps.draw(p);
+        if (t > IN2 && t < IN2 + 0.12) sparkle(p, sx + 34, sy - 22, 6 * (1 - (t - IN2) / 0.12), C[6], C[5], 0.6);
+      }
+    };
+  }
+
+  // vendor/pixelfx/src/fx/impacts/ground-slam.js
+  var ground_slam_exports = {};
+  __export(ground_slam_exports, {
+    create: () => create22,
+    meta: () => meta27
+  });
+  var meta27 = {
+    name: "Ground slam",
+    desc: "Something lands hard: the floor flashes and cracks, two crescent shock waves race out along it, a dust wave and a tall dust cloud rise, rocks erupt, bounce and settle.",
+    tags: ["impact", "ground", "slam", "shockwave", "quake", "rocks", "dust", "one-shot"],
+    size: [288, 208],
+    origin: [144, 164],
+    duration: 3.2,
+    loop: false,
+    fps: 30,
+    bg: "ground",
+    options: { palette: ["#2a1712", "#5e2c1c", "#a4502a", "#e8893a", "#ffc764", "#fff0b4", "#ffffff"], stone: "#4a3f69", reach: 104, seed: 5 }
+  };
+  var WAVE = 0.6;
+  function crater(p, st, hot, C, k) {
+    for (let x = -12; x <= 11; x++) {
+      const q = Math.abs(x + 0.5) / 12, dep = Math.round(2.6 * (1 - q * q));
+      if (q < 0.84) {
+        for (let y = 0; y < dep; y++) p.dot(x, y, SOOT4, k);
+        p.dot(x, dep, hot > 0.5 ? C[5] : hot > 0.2 ? C[4] : st.lip, k);
+      } else {
+        p.dot(x, -1, q > 0.93 ? st.light : st.lip, k);
+        if (q < 0.9) p.dot(x, -2, st.light, k * 0.8);
+      }
+    }
+  }
+  function create22(o) {
+    const C = fit(o.palette, 7), st = stone2(o.stone), REACH = o.reach, R = new Rng(o.seed), floor = () => 0, D5 = meta27.duration;
+    const ps = new Particles({ rng: R, ground: floor, sparks: [C[6], C[5], C[4], C[3]] });
+    const bits = new Bits({ ground: floor }), lights = new Lights(), HOT3 = [WHITE, C[5], C[4], C[3]];
+    const dustLit = mix(st.dust, WHITE, 0.2), cracks2 = makeCracks(R, 10, { len: [22, 58], dive: 0.55, maxY: 22, forks: 0.7, x0: [2, 9] });
+    const front = (t2) => 7 + (REACH - 7) * ease.outCubic(clamp((t2 - 0.015) / WAVE));
+    const heat = (t2) => Math.pow(clamp(1 - t2 / 0.8), 1.4);
+    const crest = (u) => [6 + 28 * Math.pow(1 - u, 0.75), 1.5 + 5 * Math.pow(1 - u, 0.9)];
+    const burst = [
+      { a: -0.07, len: R.range(34, 40), w: 1.9 },
+      { a: Math.PI + 0.07, len: R.range(34, 40), w: 1.9 },
+      { a: -0.42 + R.range(-0.08, 0.08), len: R.range(15, 20), w: 1.5 },
+      { a: -Math.PI + 0.42 + R.range(-0.08, 0.08), len: R.range(15, 20), w: 1.5 },
+      { a: -Math.PI / 2 + R.range(-0.15, 0.15), len: R.range(18, 24), w: 1.7 },
+      { a: -1.05 + R.range(-0.1, 0.1), len: R.range(10, 14), w: 1.2 },
+      { a: -Math.PI + 1.05 + R.range(-0.1, 0.1), len: R.range(10, 14), w: 1.2 }
+    ];
+    const embers = [];
+    for (const c of cracks2)
+      for (const [x, y, d] of c.pts) if (d > 3 && d < 32 && R.chance(0.25)) embers.push({ x, y, d, life: R.range(0.8, 2.2), ph: R.range(0, TAU) });
+    lights.add(0, -12, 96, C[4], 0.6, 0.6);
+    lights.add(0, -4, 50, WHITE, 0.9, 0.14);
+    for (let i = 0; i < 56; i++) {
+      const low = i < 14, s = R.sign(), a = low ? s > 0 ? -R.range(0.04, 0.6) : Math.PI + R.range(0.04, 0.6) : -Math.PI / 2 + R.range(-1.15, 1.15);
+      const sp = low ? R.range(150, 380) : R.range(200, 500);
+      ps.spawn(P.SPARK, R.range(-4, 4), -1, Math.cos(a) * sp, Math.sin(a) * sp, low ? R.range(0.2, 0.5) : R.range(0.25, 0.65), WHITE, 1, low ? 0 : R.range(0, 0.05));
+    }
+    for (let i = 0; i < 20; i++) {
+      const s = i < 3 ? 4 : R.int(1, 3), a = -Math.PI / 2 + R.range(-0.5, 0.5), sp = s > 3 ? R.range(110, 190) : R.range(170, 380) * (s > 2 ? 0.8 : 1);
+      bits.add({ kind: B.CHUNK, x: R.range(-7, 7), y: -2, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, g: 1, drag: 0.4, bounce: 0.38, life: R.range(1.9, 2.7), a: R.range(0, TAU), va: R.range(-14, 14), s, pts: rockShape(R), pvy: 0 });
+    }
+    for (let i = 0; i < 110; i++) {
+      const u = R.range(-1, 1), a = -Math.PI / 2 + u * 0.65, sp = R.range(110, 380) * (1 - 0.35 * Math.abs(u));
+      ps.spawn(P.GRIT, u * 6, -1, Math.cos(a) * sp, Math.sin(a) * sp, R.range(1, 2.2), R.pick([st.light, st.body, st.body, st.shade, st.shade, st.lip]), R.chance(0.35) ? 2 : 1);
+    }
+    for (let i = 0; i < 28; i++) {
+      const core = i < 14, s = R.sign();
+      ps.spawn(P.SMOKE, core ? R.range(-5, 5) : s * R.range(4, 12), -R.range(2, 10), core ? R.range(-12, 12) : s * R.range(14, 38), -R.range(50, 130) * (core ? 1 : R.range(0.3, 0.6)), R.range(1.9, 2.7), R.chance(0.35) ? dustLit : st.dust, core ? R.range(4.5, 9) : R.range(4, 7.5), R.range(0.02, 0.22), PF.BIG);
+    }
+    for (let i = 0; i < 10; i++) {
+      const s = R.sign();
+      ps.spawn(P.SMOKE, s * R.range(2, 14), -R.range(2, 6), s * R.range(20, 70), -R.range(4, 20), R.range(1.4, 2.3), st.dust, R.range(6, 9), R.range(0, 0.08), PF.BIG);
+    }
+    for (let i = 0; i < 26; i++)
+      ps.spawn(P.FLAKE, R.range(-22, 22), -R.range(14, 80), R.range(-12, 12), R.range(-10, 4), R.range(1.2, 2), R.chance(0.5) ? st.lip : dustLit, R.range(0.5, 1.2), R.range(0.25, 1));
+    let t = 0;
+    const acc = [R.next(), R.next()];
+    const ring2 = (p, back) => {
+      const u = clamp((t - 0.015) / (WAVE + 0.1));
+      if (t < 0.015 || u >= 0.9) return;
+      band(
+        p,
+        0,
+        0.5,
+        front(t) + 1,
+        0.16,
+        Math.max(1, 4 * Math.pow(1 - u, 0.8)),
+        u < 0.55 ? 1.1 : (0.9 - u) / 0.35,
+        u < 0.35 ? [C[3], C[4], C[5], C[6]] : [st.body, st.light, C[4], C[5]],
+        (g) => Math.sin(g) < 0 === back,
+        t < 0.09
+      );
+    };
+    const fronts = (p) => {
+      const u = clamp((t - 0.03) / (WAVE + 0.16));
+      if (t < 0.03 || u >= 1) return;
+      const fr = front(t), [h, w] = crest(u), k = u < 0.7 ? 1 : (1 - u) / 0.3;
+      const cols = u < 0.14 ? [WHITE, C[6], C[5]] : u < 0.34 ? [C[6], C[5], C[4]] : u < 0.55 ? [C[5], C[4], st.lip] : [st.lip, st.light, st.dust];
+      for (const s of [-1, 1]) {
+        frontCrescent(p, s * fr, s, h, w, cols, k);
+        p.glow(s * fr, -h * 0.3, 8 + h * 0.7, C[4], 0.5 * (1 - u) * k);
+      }
+    };
+    return {
+      update(dt) {
+        t += dt;
+        const u = clamp((t - 0.015) / WAVE);
+        if (u > 0 && u < 1) {
+          const fr = front(t), [h] = crest(u);
+          for (let k = 0; k < 2; k++) {
+            const s = k ? 1 : -1;
+            for (acc[k] += dt * 120 * (1 - u * 0.7); acc[k] > 1; acc[k]--) {
+              ps.spawn(P.SMOKE, s * (fr - R.range(1, 7)), -R.range(0.5, 3), s * R.range(15, 70) * (1 - u), -R.range(2, 12), R.range(1, 2.1), R.chance(0.3) ? dustLit : st.dust, R.range(2.5, 6.5) * (1 - 0.4 * u), 0, PF.BIG);
+              if (R.chance(0.5)) ps.spawn(P.DUST, s * (fr - R.range(0, 3)), -R.range(0.3, 0.9) * h, s * R.range(-15, 25), -R.range(8, 35), R.range(0.3, 0.6), R.chance(0.5) ? dustLit : st.dust, R.range(1.2, 2.4));
+              if (R.chance(0.4)) ps.spawn(P.GRIT, s * fr, -1, s * R.range(10, 60), -R.range(40, 140) * (1 - u), R.range(0.5, 1), R.pick([st.light, st.body, st.lip]), 1);
+              if (u < 0.45 && R.chance(0.2)) ps.spawn(P.SPARK, s * fr, -1, s * R.range(60, 200), -R.range(30, 160), R.range(0.12, 0.3));
+            }
+          }
+        }
+        for (const b of bits.list) b.pvy = b.vy;
+        bits.update(dt);
+        for (const b of bits.list)
+          if (b.pvy > 70 && b.vy <= 0) {
+            const n = b.pvy > 200 ? 3 : 2;
+            for (let i = 0; i < n; i++) ps.spawn(P.DUST, b.x + R.range(-1.5, 1.5), -0.5, R.sign() * R.range(8, 35), -R.range(2, 16), R.range(0.3, 0.65), st.dust, R.range(1.3, 2.4) * (0.7 + b.s * 0.25));
+            b.pvy = 0;
+          }
+        ps.update(dt);
+        lights.update(dt);
+      },
+      drawBack(p) {
+        const fade = 1 - smooth(D5 - 0.9, D5 - 0.15, t), H2 = heat(t);
+        if (t > 0.02) crater(p, st, H2, C, fade);
+        drawCracks(p, cracks2, (c) => c.len * ease.outCubic(clamp((t - c.t0) / 0.1)), (d) => H2 * clamp(1.2 - d / 40), HOT3, SOOT4, st.light, fade);
+        for (const e of embers) {
+          const k = 1 - (t - 0.1) / e.life;
+          if (t < 0.1 || k <= 0) continue;
+          const f = 0.6 + 0.4 * Math.sin(t * 23 + e.ph);
+          p.px(e.x, e.y, k * f > 0.55 ? C[5] : k * f > 0.25 ? C[4] : C[3]);
+          p.glow(e.x, e.y, 4, C[4], 0.35 * k * f);
+        }
+        ring2(p, true);
+        ps.draw(p, "back");
+      },
+      draw(p) {
+        ring2(p, false);
+        fronts(p);
+        for (const b of bits.list) rock2(p, b, st);
+        ps.draw(p, "front");
+        if (t < 0.035) {
+          p.ellipse(0, 0, 30, 4.5, (d) => d > 0.8 ? C[4] : d > 0.5 ? C[6] : WHITE);
+          star2(p, 0, -1, burst, 1, 1, [C[4], C[6], WHITE, WHITE]);
+        } else if (t < 0.07) star2(p, 0, -1, burst, 1.25, 0.5, [C[3], C[5], C[6], WHITE]);
+        if (t < 0.14) p.glowLine(-80, 0, 80, 0, 10, C[5], 0.55 * (1 - t / 0.14));
+        const H2 = heat(t);
+        if (H2 > 0) p.glow(0, 1, 46, C[4], 0.35 * H2);
+        lights.draw(p);
+      }
+    };
+  }
+
+  // vendor/pixelfx/src/fx/impacts/shield-block.js
+  var shield_block_exports = {};
+  __export(shield_block_exports, {
+    act: () => act15,
+    create: () => create23,
+    meta: () => meta28
+  });
+  var meta28 = {
+    name: "Shield block",
+    desc: "A blow is caught on a half-dome of energy in front of the character: its diamond lattice flashes, a ripple runs over it, sparks glance off, then it blinks out cell by cell.",
+    tags: ["impact", "block", "shield", "barrier", "energy", "ripple", "actor", "one-shot"],
+    size: [148, 104],
+    origin: [40, 88],
+    duration: 1.1,
+    loop: false,
+    fps: 30,
+    bg: "ground",
+    actor: 2,
+    options: {
+      palette: ["#151a3d", "#212f6b", "#2c58aa", "#3a8bd8", "#62c8f4", "#a6ecff", "#dcfbff", "#ffffff"],
+      sparks: ["#fff3a6", "#ffe26b", "#ff8a2a", "#f2561d"],
+      seed: 12
+    }
+  };
+  var BRACE = { ...READY, crouch: 4, lean: 2, fx: 13, fy: -28, bx: 6, by: -21, ffx: 9, fbx: -9 };
+  var act15 = {
+    poses: [
+      [-0.36, READY],
+      [-0.1, BRACE],
+      [0, { ...BRACE, x: -3, crouch: 6, lean: -2, fx: 10, fy: -26 }, "snap"],
+      [0.18, { ...BRACE, x: -4, crouch: 5, lean: 0 }],
+      [0.65, { ...BRACE, x: -3 }],
+      [1.1, { ...READY, x: 0 }]
+    ],
+    hits: [{ t: 5e-3, stop: 0.09, shake: 0.2, amp: 2 }],
+    dust: [{ t: 0.01, x: -10, n: 6, dir: -1 }]
+  };
+  var CX = 3;
+  var RX3 = 28;
+  var RY2 = 44;
+  var GRID2 = 3.4;
+  var HIT3 = { lon: 1.18, lat: 0.5 };
+  var GONE2 = 0.5;
+  var onDome = (lon, lat) => [CX + RX3 * Math.cos(lat) * Math.sin(lon), -RY2 * Math.sin(lat)];
+  function create23(o) {
+    const C = fit(o.palette, 8), S = fit(o.sparks, 4), R = new Rng(o.seed), floor = () => 0;
+    const ps = new Particles({ rng: R, ground: floor, sparks: S });
+    const lights = new Lights();
+    const [hx, hy] = onDome(HIT3.lon, HIT3.lat), sp = spikes(R, 8, 0.2, { len: [5, 8], w: [1.4, 1.9], fwd: 1.2, back: 0.3 });
+    lights.add(hx, hy, 40, S[1], 0.7, 0.2);
+    lights.add(hx, hy, 12, WHITE, 0.7, 0.06);
+    const nA = Math.atan2(-Math.sin(HIT3.lat) / RY2, Math.cos(HIT3.lat) * Math.sin(HIT3.lon) / RX3);
+    for (let i = 0; i < 14; i++) {
+      const a = nA + R.range(-1.2, 0.9), v = R.range(130, 300);
+      ps.spawn(P.SPARK, hx + 1, hy, Math.cos(a) * v, Math.sin(a) * v - 30, R.range(0.15, 0.42), WHITE, 1, i > 10 ? R.range(0.01, 0.04) : 0);
+    }
+    let t = 0;
+    const dome = (p, back) => {
+      const fade = 1 - smooth(GONE2 + 0.35, GONE2 + 0.55, t);
+      if (fade <= 0) return;
+      for (let y = -RY2 - 1; y < 0; y++)
+        for (let x = CX; x <= CX + RX3 + 1; x++) {
+          const u = (x + 0.5 - CX) / RX3, v = -(y + 0.5) / RY2, q = u * u + v * v;
+          if (q > 1 || u < 0 || v < 0) continue;
+          const z = Math.sqrt(1 - q) * (back ? -1 : 1), lon = Math.atan2(u, z), lat = Math.asin(clamp(v));
+          const a = (lon + lat) * GRID2, b = (lon - lat) * GRID2, fa = a - Math.floor(a), fb = b - Math.floor(b);
+          const cell = rand(Math.floor(a), Math.floor(b), 31), line = Math.min(fa, 1 - fa, fb, 1 - fb) < 0.13;
+          const gone = GONE2 + cell * 0.35;
+          if (t > gone) continue;
+          const d = Math.acos(clamp(Math.cos(lat) * Math.cos(HIT3.lat) * Math.cos(lon - HIT3.lon) + Math.sin(lat) * Math.sin(HIT3.lat), -1, 1));
+          let hit = 0;
+          for (const [t0, k0] of [[0, 1], [0.12, 0.55]]) {
+            const k = t - t0, front = k * 3.6;
+            if (k < 0 || k > 0.55) continue;
+            if (Math.abs(d - front) < 0.2) hit = Math.max(hit, k0 * (1 - k / 0.55));
+            else if (d < front) hit = Math.max(hit, 0.3 * k0 * (1 - k / 0.55));
+          }
+          const rim = 1 - Math.abs(z), flash2 = t < 0.05, blink = t > gone - 0.06, sheen = Math.abs(((lat * 0.8 - lon * 0.3 - t * 1.6) % 1 + 1) % 1 - 0.5) < 0.05;
+          if (back) {
+            if (line) p.dot(x, y, C[3], 0.5 * fade);
+            continue;
+          }
+          if (q > 0.9) p.dot(x, y, flash2 || hit > 0.5 ? WHITE : C[6], fade);
+          else if (line) p.dot(x, y, flash2 || blink || hit > 0.5 ? WHITE : hit > 0.2 || sheen ? C[6] : rim > 0.7 ? C[5] : rim > 0.35 ? C[4] : C[3], fade);
+          else p.blend(x, y, flash2 || hit > 0.35 ? C[6] : C[3], fade * Math.min(0.85, (flash2 ? 0.35 : 0.1 + 0.25 * rim * rim) + hit * 0.65));
+          if ((x * 7 + y * 3 & 15) === 0) p.light(x, y, C[4], 0.15 + 0.5 * hit);
+        }
+    };
+    return {
+      update(dt) {
+        t += dt;
+        if (t > GONE2 && t < GONE2 + 0.38 && R.chance(0.5)) {
+          const lon = R.range(0, Math.PI / 2), lat = R.range(0.05, 1.4), [x, y] = onDome(lon, lat);
+          ps.spawn(P.STAR, x, y, R.range(-10, 10), -R.range(10, 40), R.range(0.2, 0.36), R.chance(0.5) ? C[6] : C[5], R.range(0.6, 1.4));
+        }
+        ps.update(dt);
+        lights.update(dt);
+      },
+      drawBack(p) {
+        dome(p, true);
+      },
+      draw(p) {
+        dome(p, false);
+        const fade = 1 - smooth(GONE2 + 0.3, GONE2 + 0.55, t);
+        if (fade > 0) for (let x = CX; x <= CX + RX3; x++) p.dot(x, 0, t < 0.05 ? WHITE : C[5], fade * (0.6 + 0.4 * ((x - CX) / RX3)));
+        if (t < 0.03) star2(p, hx, hy, sp, 1, 1, [S[3], S[0], S[1], WHITE], 1, 2);
+        else if (t < 0.06) star2(p, hx, hy, sp, 1.25, 0.55, [S[3], S[1], S[2], S[0]], 1, 2);
+        ps.draw(p);
+        p.glow(CX + RX3 * 0.5, -RY2 * 0.45, RY2 * 0.9, C[4], 0.2 * (1 - smooth(GONE2, GONE2 + 0.55, t)) + 0.35 * Math.exp(-t / 0.08));
+        lights.draw(p);
+      }
+    };
+  }
+
+  // vendor/pixelfx/src/fx/water/splash.js
+  var splash_exports = {};
+  __export(splash_exports, {
+    create: () => create24,
+    meta: () => meta29
+  });
+
+  // vendor/pixelfx/src/fx/water/_lib.js
+  var WATER = ["#0a1630", "#123063", "#1b5596", "#2a7fc4", "#45a9e3", "#86d3f5", "#cdf1ff", "#ffffff"];
+  var ROCK = ["#141219", "#221f2b", "#34303f", "#4a4558", "#655f74", "#8a8498"];
+  function bead(p, x, y, vx, vy, s, C, a = 1) {
+    const sp = Math.hypot(vx, vy) || 1, ux = vx / sp, uy = vy / sp, tail2 = Math.min(5, sp * 0.011);
+    if (tail2 >= 1) p.line(x - ux * (tail2 + 1), y - uy * (tail2 + 1), x - ux * 1.2, y - uy * 1.2, (u) => u < 0.45 ? C[3] : s > 1 ? C[5] : C[4], a);
+    if (s >= 3) {
+      p.circle(x, y, 1.75, C[4], a);
+      p.circle(x - 0.25, y - 0.25, 1.15, C[6], a);
+      p.dot(x - 0.7, y - 0.7, WHITE, a);
+    } else if (s >= 2) {
+      const X = Math.floor(x), Y = Math.floor(y);
+      p.dot(X, Y, WHITE, a);
+      p.dot(X + 1, Y, C[6], a);
+      p.dot(X, Y + 1, C[5], a);
+      p.dot(X + 1, Y + 1, C[4], a);
+    } else p.dot(x, y, sp > 160 ? C[6] : C[5], a);
+  }
+  var Drops2 = class {
+    constructor({ sy = 0.22, g = 820, drag = 0.35, onLand = null } = {}) {
+      this.sy = sy;
+      this.g = g;
+      this.drag = drag;
+      this.onLand = onLand;
+      this.list = [];
+    }
+    add(d) {
+      var _a;
+      const life = (_a = d.life) != null ? _a : 4;
+      this.list.push({ x: 0, z: 0, h: 0, vx: 0, vz: 0, vh: 0, s: 1, delay: 0, ...d, life, max: life });
+    }
+    get count() {
+      return this.list.length;
+    }
+    update(dt) {
+      var _a;
+      const k = this.drag * dt;
+      for (let i = this.list.length - 1; i >= 0; i--) {
+        const d = this.list[i];
+        if (d.delay > 0) {
+          d.delay -= dt;
+          continue;
+        }
+        if ((d.life -= dt) <= 0) {
+          this.list.splice(i, 1);
+          continue;
+        }
+        d.vh -= this.g * dt;
+        d.vx -= d.vx * k;
+        d.vz -= d.vz * k;
+        d.vh -= d.vh * k * 0.5;
+        d.x += d.vx * dt;
+        d.z += d.vz * dt;
+        d.h += d.vh * dt;
+        if (d.h <= 0 && d.vh < 0) {
+          d.h = 0;
+          this.list.splice(i, 1);
+          (_a = this.onLand) == null ? void 0 : _a.call(this, d);
+        }
+      }
+    }
+    /** Draw the drops behind z = 0 ("back"), in front of it ("front"), or all. */
+    draw(p, C, layer) {
+      for (const d of this.list) {
+        if (d.delay > 0 || layer === "back" && d.z >= 0 || layer === "front" && d.z < 0) continue;
+        const x = d.x, y = d.z * this.sy - d.h;
+        bead(p, x, y, d.vx, d.vz * this.sy - d.vh, d.s, C, Math.min(1, d.life / 0.2));
+        p.glow(x, y, 2.5 + d.s, C[5], 0.1 + 0.05 * d.s);
+      }
+    }
+  };
+  function ring(p, cx, cy, r, sy, k, C, { n = 2, gap = 3, half = 0, hot = false, glint = 0, seed = 0, wob = 0 } = {}) {
+    if (k <= 0.02 || r < 0.5) return;
+    for (let j = 0; j < n; j++) {
+      const rr = r - j * gap;
+      if (rr < 0.6) break;
+      const kj = k * (1 - j * 0.42), m = Math.max(6, Math.ceil(rr * TAU * 1.3)), need = 1.15 - 2.3 * Math.min(1, kj * 1.25);
+      for (let i = 0; i < m; i++) {
+        const a = i / m * TAU, s = Math.sin(a), near = s > 0;
+        if (half > 0 && !near || half < 0 && near) continue;
+        if (noise(a * 4.7 + seed * 13.1 + j * 5.3, seed) * 0.65 + noise(a * 11.3 + seed * 7.7, seed + 3) * 0.35 < need) continue;
+        const lit = kj * (near ? 1 : 0.7) * (0.88 - 0.12 * Math.cos(a));
+        const c = hot && near && j === 0 ? WHITE : C[lit > 0.7 ? 6 : lit > 0.38 ? 5 : 4], ra = wob ? rr + wob * noise(a * 2.6 + seed * 1.9 + j, seed + 11) : rr;
+        const x = cx + Math.cos(a) * ra, y = cy + s * ra * sy;
+        p.dot(x, y, c);
+        if (j === 0) p.light(x, y, C[4], 0.3 * lit);
+      }
+    }
+    if (glint > 0 && half >= 0) {
+      const x = cx + Math.cos(2.05) * r, y = cy + Math.sin(2.05) * r * sy;
+      p.px(x, y, WHITE);
+      p.glow(x, y, 3 + glint * 2, C[5], 0.35 * glint);
+    }
+  }
+  var Ripples = class {
+    constructor({ sy = 0.22 } = {}) {
+      this.sy = sy;
+      this.list = [];
+    }
+    add(x, z, r0, r1, life, o = {}) {
+      var _a, _b, _c, _d, _e, _f, _g;
+      this.list.push({ x, z, r0, r1, life, age: -((_a = o.delay) != null ? _a : 0), k: (_b = o.k) != null ? _b : 1, n: (_c = o.n) != null ? _c : 2, gap: (_d = o.gap) != null ? _d : 3, hot: (_e = o.hot) != null ? _e : 0.1, glint: (_f = o.glint) != null ? _f : 0, seed: this.seq = ((_g = this.seq) != null ? _g : 0) + 1 });
+    }
+    get count() {
+      return this.list.length;
+    }
+    update(dt) {
+      for (let i = this.list.length - 1; i >= 0; i--) if ((this.list[i].age += dt) >= this.list[i].life) this.list.splice(i, 1);
+    }
+    draw(p, C, half = 0) {
+      for (const q of this.list) {
+        if (q.age < 0) continue;
+        const u = q.age / q.life, r = q.r0 + (q.r1 - q.r0) * (1 - Math.pow(1 - u, 2.6)), k = q.k * Math.pow(1 - u, 1.7);
+        ring(p, q.x, q.z * this.sy, r, this.sy, k, C, { n: q.n, gap: q.gap * (0.55 + 0.6 * u), half, hot: q.age < q.hot, glint: q.glint * k, seed: q.seed });
+      }
+    }
+  };
+  function lace(p, cx, cy, rx, ry, k, C, t, seed = 0) {
+    if (k <= 0.01 || rx < 1) return;
+    const sy = ry / rx;
+    p.shade(cx - rx, cy - ry, cx + rx, cy + ry, (x, y, o) => {
+      const dx = (x - cx) / rx, dy = (y - cy) / ry, d = dx * dx + dy * dy;
+      if (d > 1) return;
+      const u = (x - cx) * 0.36, v = (y - cy) / sy * 0.36;
+      const n = noise2(u + seed * 7.13, v - t * 0.35, seed), m = noise2(u * 2.2 - t * 0.3, v * 2.2 + seed * 3.1, seed + 9);
+      const net = 1 - Math.abs(n) * 4.6 + m * 0.3, need = 1.02 - k * (1.15 - d * 0.9);
+      if (net < need) return;
+      o.c = net > need + 0.4 ? WHITE : C[6];
+    });
+  }
+  var Mist = class {
+    constructor() {
+      this.list = [];
+    }
+    add(x, y, vx, vy, r0, r1, life, c, a = 0.25, delay = 0) {
+      this.list.push({ x, y, vx, vy, r0, r1, life, max: life, c: hex(c), a, delay });
+    }
+    get count() {
+      return this.list.length;
+    }
+    update(dt) {
+      for (let i = this.list.length - 1; i >= 0; i--) {
+        const m = this.list[i];
+        if (m.delay > 0) {
+          m.delay -= dt;
+          continue;
+        }
+        if ((m.life -= dt) <= 0) {
+          this.list.splice(i, 1);
+          continue;
+        }
+        m.vx -= m.vx * 2.4 * dt;
+        m.vy -= m.vy * 2.4 * dt + 7 * dt;
+        m.x += m.vx * dt;
+        m.y += m.vy * dt;
+      }
+    }
+    draw(p, haze) {
+      for (const m of this.list) {
+        if (m.delay > 0) continue;
+        const age = 1 - m.life / m.max, r = m.r0 + (m.r1 - m.r0) * (1 - Math.pow(1 - age, 2.2));
+        const a = m.a * Math.min(1, age / 0.12) * Math.pow(1 - age, 1.4);
+        if (a < 0.01) continue;
+        p.disc(m.x, m.y, r, m.c, (d) => a * (1 - d * d) * (1 - d * 0.5));
+        p.disc(m.x - r * 0.2, m.y - r * 0.32, r * 0.55, WHITE, (d) => a * 0.25 * (1 - d) * (1 - d));
+        if (haze) p.glow(m.x, m.y, r * 1.5, haze, 0.16 * a / m.a * Math.min(1, m.a * 3));
+      }
+    }
+  };
+  function pebble(p, x, y, r, ST) {
+    p.shade(x - r - 1, y - r - 1, x + r + 1, y + r + 1, (px, py, o) => {
+      const dx = px - x, dy = py - y, d = Math.hypot(dx * 1.1, dy);
+      if (d > r + 0.8) return;
+      const lit = (dx + dy) / Math.max(0.5, r);
+      o.c = d > r ? ST[0] : lit < -0.7 ? ST[5] : lit < 0.2 ? ST[4] : lit < 0.8 ? ST[3] : ST[2];
+    });
+  }
+  var rock3 = () => ROCK.map(hex);
+
+  // vendor/pixelfx/src/fx/water/splash.js
+  var meta29 = {
+    name: "Splash",
+    desc: "A stone drops into still water: a white hit, a crown that tears into droplets arcing out to plink down with rings, a jet that bounces back, foam and drifting mist.",
+    tags: ["water", "splash", "impact", "drop", "liquid", "one-shot"],
+    size: [176, 100],
+    origin: [88, 78],
+    duration: 2.5,
+    loop: false,
+    fps: 30,
+    bg: "ground",
+    options: { palette: WATER, stone: true, seed: 3 }
+  };
+  var SY4 = 0.22;
+  var HIT4 = 0.16;
+  var G2 = 820;
+  var FINGERS = 12;
+  var JET = 0.3;
+  var TEAR2 = 0.11;
+  var height = (u) => 19 * ease.outCubic(clamp(u / 0.09)) * (1 - ease.inQuad(clamp((u - 0.12) / 0.3)));
+  var foot = (u) => 3 + 7.5 * ease.outCubic(clamp(u / 0.45));
+  var lip = (u) => foot(u) + height(u) * 0.42 + 3 * ease.outCubic(clamp(u / 0.25));
+  var jetH = (u) => 26 * (ease.outCubic(clamp(u / 0.12)) - ease.inQuad(clamp((u - 0.15) / 0.28)));
+  function create24(o) {
+    const C = fit(o.palette, 8), R = new Rng(o.seed), ST = rock3(), phi = R.range(0, TAU);
+    const ps = new Particles({ rng: R }), mist = new Mist(), lights = new Lights(), rings = new Ripples({ sy: SY4 });
+    const plinks = [], bubbles = [], spikes2 = Array.from({ length: FINGERS }, (_, k) => ({ a: (k * TAU / FINGERS + phi) % TAU, L: R.range(0.2, 0.36) }));
+    const drops = new Drops2({
+      sy: SY4,
+      g: G2,
+      onLand: (d) => {
+        rings.add(d.x, d.z, 0.6, 2 + d.s * 1.8, 0.34 + d.s * 0.1, { n: 1, k: 0.95, hot: 0.06 });
+        plinks.push({ x: d.x, y: d.z * SY4, s: d.s, age: 0 });
+        if (d.s > 1 && !d.small)
+          for (let i = 0; i < d.s; i++) {
+            const a = R.range(0, TAU), v = R.range(10, 34);
+            drops.add({ x: d.x, z: d.z, h: 0.5, vx: Math.cos(a) * v, vz: Math.sin(a) * v, vh: R.range(55, 110), s: 1, small: true, life: 1 });
+          }
+      }
+    });
+    let t = 0;
+    const done = /* @__PURE__ */ new Set(), once = (key, at) => !done.has(key) && t >= at && done.add(key);
+    const scallop = (a, h) => h * (0.86 + 0.14 * noise(Math.cos(a) * 2.2 + Math.sin(a) * 1.3 + phi * 3, o.seed));
+    function crown(p, back) {
+      const u = t - HIT4, h = height(u);
+      if (u < 0 || h < 0.7) return;
+      const r0 = foot(u), rt = lip(u), white = u < 0.045;
+      const cells = /* @__PURE__ */ new Map();
+      const put = (x, y, c, a, rank) => {
+        const X = Math.floor(x), Y = Math.floor(y), key = (Y + 4096) * 8192 + X + 4096, cur = cells.get(key);
+        if (!cur || rank > cur.r) cells.set(key, { x: X, y: Y, c, a, r: rank });
+      };
+      const n = Math.ceil(rt * TAU * 1.6);
+      for (let i = 0; i < n; i++) {
+        const a = i / n * TAU, s = Math.sin(a), c = Math.cos(a);
+        if (s < 0 !== back) continue;
+        const lane = Math.floor((a + phi) * rt / 2.2), streak = rand(lane, 31) < 0.3, H2 = scallop(a, h);
+        const keep = 1 - clamp((u - 0.13 - 0.14 * rand(lane, 7)) / 0.1), steps = Math.ceil(H2 * 1.4) + 2;
+        for (let k = 0; k <= steps * keep; k++) {
+          const v = k / steps, r = r0 + (rt - r0) * Math.pow(v, 2.2), x = c * r, y = s * r * SY4 - H2 * v;
+          if (white) put(x, y, WHITE, 1, 3);
+          else if (back) put(x, y, v > 0.72 ? streak ? C[5] : C[4] : streak ? C[3] : C[2], 1, 1);
+          else if (Math.abs(c) > 0.9) put(x, y, c < 0 ? Math.abs(c) > 0.97 ? WHITE : C[6] : C[4], 1, 2);
+          else if (v < 0.1) put(x, y, v < 0.05 ? WHITE : C[6], 1, 2);
+          else if (streak) put(x, y, c < -0.2 ? C[6] : C[5], 1, 1);
+          else put(x, y, c < 0 ? C[5] : C[4], 0.22, 0);
+        }
+        if (!white && keep >= 1) {
+          const x = c * rt, y = s * rt * SY4 - H2;
+          put(x, y, back ? C[5] : c < 0.45 ? WHITE : C[6], 1, 3);
+          if (!back && c < 0.2) put(x, y + 1, C[6], 1, 2);
+        }
+      }
+      for (const q of cells.values()) {
+        if (q.r === 0) p.blend(q.x, q.y, q.c, q.a);
+        else p.px(q.x, q.y, q.c);
+      }
+      const reach2 = 1 - smooth(TEAR2, TEAR2 + 0.1, u);
+      for (const f of spikes2) {
+        if (Math.sin(f.a) < 0 !== back || reach2 <= 0) continue;
+        const H2 = scallop(f.a, h), L = h * f.L * reach2, x0 = Math.cos(f.a) * rt, y0 = Math.sin(f.a) * rt * SY4 - H2, x1 = x0 + Math.cos(f.a) * L * 0.45, y1 = y0 - L;
+        if (L >= 1) p.line(x0, y0, x1, y1, white ? WHITE : back ? C[4] : C[6]);
+        if (u > 0.04 && u < TEAR2) bead(p, x1 - (back ? 0 : 0.5), y1 - 1, 0, -1, back ? 1 : 2, C);
+        if (!back && Math.sin(f.a) > 0.3) p.glow(x0, y0, 6, C[5], 0.22 * reach2);
+      }
+    }
+    function jet(p) {
+      const u = t - HIT4 - JET, h = jetH(u);
+      if (u < 0 || h < 0.8) return;
+      const top = -h;
+      p.ellipse(0, 0, 5, 2.4, (d, a) => Math.sin(a) > 0 ? null : d < 0.5 ? WHITE : Math.cos(a) < 0 ? C[6] : C[5]);
+      p.shade(-3, top - 2, 3, 0, (x, y, out) => {
+        const v = clamp((y - top) / h), w = 1.15 + 1.5 * v * v * v, q = x / w;
+        if (Math.abs(q) > 1) return;
+        out.c = q < -0.5 ? C[6] : q < 0.3 ? WHITE : q < 0.72 ? C[5] : C[4];
+      });
+      if (u < 0.12) {
+        p.circle(0, top - 1, 1.7, C[5]);
+        p.circle(-0.3, top - 1.3, 1.1, C[6]);
+        p.px(-1, top - 2, WHITE);
+      }
+      p.glowLine(0, -1, 0, top, 7, C[5], 0.3);
+    }
+    return {
+      update(dt) {
+        t += dt;
+        if (once("hit", HIT4)) {
+          lights.add(0, -6, 52, C[5], 0.6, 0.45);
+          lights.add(0, -4, 16, WHITE, 0.5, 0.08);
+          rings.add(0, 0, 8, 56, 2, { n: 2, gap: 3.4, k: 1.35, hot: 0.16, glint: 1 });
+          rings.add(0, 0, 5, 38, 1.7, { n: 1, k: 0.9, delay: 0.14 });
+          for (let i = 0; i < 20; i++) {
+            const a = R.range(0, TAU), v = R.range(50, 125);
+            drops.add({ x: Math.cos(a) * 3, z: Math.sin(a) * 3, h: R.range(1, 6), vx: Math.cos(a) * v, vz: Math.sin(a) * v, vh: R.range(160, 270), s: R.chance(0.25) ? 2 : 1, delay: R.range(0, 0.04) });
+          }
+          for (let i = 0; i < 9; i++) {
+            const s = i % 2 ? 1 : -1, x = s * R.range(4, 12);
+            mist.add(x, -R.range(1, 7), s * R.range(25, 70), -R.range(4, 16), R.range(2.5, 4), R.range(7, 11), R.range(0.9, 1.5), R.chance(0.5) ? C[6] : C[5], R.range(0.3, 0.42), R.range(0, 0.1));
+          }
+        }
+        if (once("spray", HIT4 + 0.04)) {
+          for (let i = 0; i < 20; i++) {
+            const a = R.range(0, TAU);
+            ps.spawn(P.FLAKE, Math.cos(a) * 9, Math.sin(a) * 9 * SY4 - R.range(6, 15), Math.cos(a) * R.range(25, 90), -R.range(30, 100), R.range(0.7, 1.3), R.chance(0.5) ? WHITE : C[6], R.range(0.6, 1.5));
+          }
+          for (let i = 0; i < 5; i++) ps.spawn(P.STAR, R.range(-13, 13), -R.range(6, 20), 0, -4, R.range(0.25, 0.55), C[6], R.range(1, 2.4), R.range(0, 0.15));
+        }
+        if (once("tear", HIT4 + TEAR2)) {
+          const h = height(TEAR2), rt = lip(TEAR2);
+          for (const f of spikes2) {
+            const a = f.a + R.range(-0.08, 0.08), v = R.range(32, 88), L = h * f.L;
+            drops.add({ x: Math.cos(f.a) * (rt + L * 0.45), z: Math.sin(f.a) * rt, h: h + L + 1, vx: Math.cos(a) * v, vz: Math.sin(a) * v, vh: R.range(90, 190), s: R.chance(0.3) ? 3 : 2 });
+          }
+        }
+        const u = t - HIT4;
+        if (u > 0.13 && u < 0.3 && R.chance(0.3)) {
+          const a = R.range(0, TAU), rt = lip(u), v = R.range(15, 45);
+          drops.add({ x: Math.cos(a) * rt, z: Math.sin(a) * rt, h: scallop(a, height(u)) * R.range(0.6, 1), vx: Math.cos(a) * v, vz: Math.sin(a) * v, vh: R.range(-10, 45), s: R.chance(0.3) ? 2 : 1 });
+        }
+        if (once("fall", HIT4 + 0.3)) {
+          for (let i = 0; i < 8; i++) {
+            const a = R.range(0, TAU), r = lip(0.3), v = R.range(15, 40);
+            drops.add({ x: Math.cos(a) * r, z: Math.sin(a) * r, h: R.range(3, 7), vx: Math.cos(a) * v, vz: Math.sin(a) * v, vh: R.range(30, 80), s: R.chance(0.4) ? 2 : 1 });
+          }
+        }
+        if (once("bead", HIT4 + JET + 0.12)) {
+          drops.add({ x: 0, z: 0.2, h: jetH(0.12) + 1, vx: R.range(-6, 6), vz: 0, vh: 55, s: 3 });
+          for (let i = 0; i < 3; i++) mist.add(R.range(-3, 3), -jetH(0.12) + R.range(2, 8), R.range(-14, 14), -R.range(4, 12), 2, R.range(4, 6), R.range(0.6, 1), C[6], 0.3);
+        }
+        if (once("slump", HIT4 + JET + 0.38)) {
+          rings.add(0, 0, 3, 30, 1.5, { n: 2, gap: 2.6, k: 0.9 });
+          for (let i = 0; i < 4; i++) mist.add(R.range(-6, 6), -R.range(1, 4), R.range(-30, 30), -R.range(3, 10), 2.5, R.range(6, 9), R.range(0.8, 1.2), C[5], 0.28);
+        }
+        for (const [i, at] of [[0, 0.95], [1, 1.2], [2, 1.5]])
+          if (once("glug" + i, HIT4 + at)) bubbles.push({ x: R.range(-5, 5), z: R.range(-6, 6), t0: t, r: R.range(1.3, 2.3), popped: false });
+        for (const b of bubbles)
+          if (!b.popped && t - b.t0 > 0.2) {
+            b.popped = true;
+            rings.add(b.x, b.z, 1, 7, 0.6, { n: 1, k: 0.9 });
+            plinks.push({ x: b.x, y: b.z * SY4, s: 1, age: 0 });
+            for (let i = 0; i < 2; i++) drops.add({ x: b.x, z: b.z, h: 1, vx: R.range(-20, 20), vz: R.range(-10, 10), vh: R.range(50, 90), s: 1, small: true, life: 1 });
+          }
+        for (let i = plinks.length - 1; i >= 0; i--) if ((plinks[i].age += dt) > 0.14) plinks.splice(i, 1);
+        drops.update(dt);
+        rings.update(dt);
+        mist.update(dt);
+        ps.update(dt);
+        lights.update(dt);
+      },
+      drawBack(p) {
+        const u = t - HIT4;
+        if (u > 0 && u < 0.26) {
+          const r = foot(u) * 0.85 * (1 - smooth(0.12, 0.26, u));
+          p.ellipse(0, 0, r, r * SY4 + 0.6, (d, a) => Math.sin(a) < 0 ? C[1] : C[2]);
+        }
+        rings.draw(p, C, -1);
+        crown(p, true);
+        drops.draw(p, C, "back");
+      },
+      draw(p) {
+        const u = t - HIT4;
+        rings.draw(p, C, 1);
+        if (u > 0.2) {
+          const rx = 4 + 11 * ease.outCubic(clamp((u - 0.2) / 0.7)), k = smooth(0.2, 0.32, u) * (1 - smooth(0.5, 2, u)) * 0.9;
+          lace(p, 0, 0, rx, rx * SY4 + 0.5, k, C, t, o.seed);
+        }
+        crown(p, false);
+        jet(p);
+        for (const b of bubbles) {
+          const g = (t - b.t0) / 0.2;
+          if (g > 1) continue;
+          const r = b.r * ease.outBack(g), x = b.x, y = b.z * SY4;
+          for (let a = Math.PI; a <= TAU + 0.01; a += 0.5 / Math.max(1, r)) p.dot(x + Math.cos(a) * r, y + Math.sin(a) * r, C[6]);
+          p.px(x - r * 0.4, y - r * 0.6, WHITE);
+          p.glow(x, y - 1, 4, C[5], 0.25);
+        }
+        for (const q of plinks) {
+          const k = q.age / 0.14;
+          if (k < 0.5) p.px(q.x, q.y, WHITE);
+          if (q.s > 1) p.line(q.x, q.y - 1, q.x, q.y - 1 - 3 * (1 - k), k < 0.4 ? WHITE : C[6]);
+          p.glow(q.x, q.y, 4, C[5], 0.3 * (1 - k));
+        }
+        drops.draw(p, C, "front");
+        if (u >= 0 && u < 0.07) {
+          p.ellipse(0, 0, 10, 2.4, (d) => d < 0.6 ? WHITE : C[6]);
+          sparkle(p, 0, -3, 5 * (1 - u / 0.07), C[6], C[5], 0.5);
+        }
+        if (o.stone && t < HIT4) {
+          const v = t / HIT4, y = -70 + 70 * (0.4 * v + 0.6 * v * v);
+          p.line(0, y - 12, 0, y - 3, ST[4], (w) => w * 0.8);
+          pebble(p, 0, y, 2.6, ST);
+        }
+        mist.draw(p, C[5]);
+        ps.draw(p);
+        lights.draw(p);
+        if (u > 0) {
+          p.glow(0, -2, 34, C[4], 0.2 * (1 - smooth(0, 1.6, u)));
+          p.glow(0, 2, 64, C[3], 0.16 * (1 - smooth(0.1, 2.1, u)));
+        }
+      }
+    };
+  }
+
   // fx-pixel.js
   var EFFECTS = {
     "heavy-cleave": heavy_cleave_exports,
@@ -4801,7 +6864,18 @@
     "claw-swipe": claw_swipe_exports,
     thrust: thrust_exports,
     cursed: cursed_exports,
-    "shadow-tendrils": shadow_tendrils_exports
+    "shadow-tendrils": shadow_tendrils_exports,
+    "muzzle-pistol": muzzle_pistol_exports,
+    poisoned: poisoned_exports,
+    "poison-skull": poison_skull_exports,
+    "necro-skulls": necro_skulls_exports,
+    "heal-aoe": heal_aoe_exports,
+    heal: heal_exports,
+    "healing-bloom": healing_bloom_exports,
+    "cartoon-pow": cartoon_pow_exports,
+    "ground-slam": ground_slam_exports,
+    "shield-block": shield_block_exports,
+    splash: splash_exports
   };
   var STEP = 1 / 60;
   var SCALE = 2;
@@ -4882,7 +6956,7 @@
     }
     for (let i = active.length - 1; i >= 0; i--) if (active[i].fx.done()) active.splice(i, 1);
   }
-  function draw4(ctx) {
+  function draw6(ctx) {
     for (const e of active) {
       if (e.delay > 0) continue;
       if (e.dirty) {
@@ -4904,5 +6978,5 @@
   function clear() {
     active.length = 0;
   }
-  window.pixelFx = { spawn, update, draw: draw4, clear, actorOf };
+  window.pixelFx = { spawn, update, draw: draw6, clear, actorOf };
 })();

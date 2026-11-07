@@ -110,6 +110,7 @@ function knockOut(fighter) {
     if (fighter.isInsideOpponent && fighter.zarekHost) fighter.exitHost(fighter.zarekHost);
     turrets.filter(t => t.owner === fighter).forEach(t => t.destroy(true)); // as torretas caem junto com o Gear
     fighter.mambaCloudTimer = 0;
+    if (fighter.mambaCloudFx) { fighter.mambaCloudFx.forEach(e => e.stop()); fighter.mambaCloudFx = null; }
     syncStatusFx(fighter); // apaga o fogo e a maldição da pixelfx de quem caiu
     // Aspas: cada inimigo derrotado reforça o próximo Exército das Sombras (a sombra dele voa até o Aspas)
     for (const aspas of fighters.filter(f => alive(f) && f.characterType === 'aspas' && f.team !== fighter.team)) {

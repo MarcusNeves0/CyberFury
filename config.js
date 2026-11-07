@@ -284,10 +284,26 @@ const MELEE_FX = {
     jack: { punch: { id: 'sword-slash', palette: 'ember' }, strong_punch: { id: 'double-slash', palette: 'ember' } },
     fenris: { punch: { id: 'claw-swipe', palette: 'arcane' }, strong_punch: { id: 'claw-swipe', palette: 'shadow', scale: 2.6 } },
     weaver: { punch: { id: 'hit-spark', on: 'hit', palette: 'cyber' } },
+    // Tanques: pancadas pesadas no impacto, cada um no seu elemento
+    aegis: { punch: { id: 'blunt-hit', on: 'hit', palette: 'electric', warm: '#7cc8ff' }, strong_punch: { id: 'blunt-hit', on: 'hit', palette: 'electric', warm: '#7cc8ff', scale: 2.5 } },
+    rhino: { punch: { id: 'blunt-hit', on: 'hit', palette: 'earth', warm: '#dcb47c' }, strong_punch: { id: 'blunt-hit', on: 'hit', palette: 'earth', warm: '#dcb47c', scale: 2.5 } },
+    anchor: { punch: { id: 'blunt-hit', on: 'hit', palette: 'water', warm: '#78ccf4' }, strong_punch: { id: 'hammer-smash', palette: 'water', advance: 0.07 } },
+    coleone: { punch: { id: 'hit-spark', on: 'hit', palette: 'ember' }, strong_punch: { id: 'cartoon-pow', on: 'hit', text: 'TOCO!', scale: 1 } },
     spark: { punch: { id: 'hit-spark', on: 'hit', palette: 'electric' }, strong_punch: { id: 'blunt-hit', on: 'hit', palette: 'electric', warm: '#7cc8ff' } },
     sina: { punch: { id: 'sword-slash', palette: 'metal', radius: 32 }, strong_punch: { id: 'thrust', palette: 'metal' } },
     aspas: { punch: { id: 'sword-slash', palette: 'arcane', radius: 34 }, strong_punch: { id: 'double-slash', palette: 'shadow' } },
 };
+// Efeito quando um tiro acerta (pixelfx), por tipo de projétil, e o clarão no cano de quem atira
+const PROJECTILE_FX = {
+    mamba_shot: { id: 'hit-spark', palette: 'poison' },
+    nail: { id: 'hit-spark', palette: 'metal', scale: 1.5 },
+    turret_shot: { id: 'hit-spark', palette: 'metal', scale: 1.2 },
+    pistol_shot: { id: 'hit-spark', palette: 'neon', scale: 1.5 },
+    football: { id: 'cartoon-pow', scale: 1 },
+};
+const MUZZLE_FX = { roxy: { palette: 'neon', scale: 1.5 }, mamba: { palette: 'poison', scale: 1.5 } };
+// Mamba: veneno com caveiras (caveiras rodando na ultimate, caveira em quem é envenenado)
+const POISON_SKULL_PALETTE = ['#020a04', '#05200c', '#0a3c16', '#106624', '#1a9a34', '#3cd650', '#a4ffa8', '#e8ffe8'];
 const HIT_STOP = 4; // passos em que a luta congela quando um soco forte acerta (dá peso à pancada)
 let hitStop = 0;
 let bershowSlashes = [];               // rastros do Corte Devastador (só visual)

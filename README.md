@@ -133,7 +133,7 @@ Depois abra **http://localhost:8123** no navegador.
 
 - Começou como um jogo para **aprender HTML, CSS e JavaScript** e testar a criação de um jogo do zero.
 - Feito em **colaboração com IA** (Gemini e Claude) em todas as partes: mecânicas, personagens, arte e código. O balanceamento é testado com milhares de lutas simuladas entre IAs.
-- Os efeitos dos golpes corpo a corpo (cortes, garras, socos, fogo, maldição, sombras) vêm da [pixelfx](https://github.com/patch-gg/pixelfx), de Patch e Hugo Duprez, licença MIT (cópia em `vendor/pixelfx`); o raio do Spark foi feito com as ferramentas dela.
+- Os efeitos dos golpes, tiros, curas e ultimates (cortes, garras, socos, fogo, veneno, maldição, sombras, luz) vêm da [pixelfx](https://github.com/patch-gg/pixelfx), de Patch e Hugo Duprez, licença MIT (cópia em `vendor/pixelfx`); o raio do Spark e as caveiras tóxicas da Mamba foram feitos com as ferramentas dela.
 - Todos os lutadores são **originais**: os que começaram inspirados em personagens de outros jogos ganharam nome, história e identidade próprios.
 - Recebe **atualizações regularmente**. Antes era "sempre que o código não quebrava" 😅, mas agora cada mudança passa por testes e lutas simuladas antes de subir.
 

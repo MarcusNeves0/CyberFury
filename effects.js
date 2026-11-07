@@ -311,6 +311,7 @@ function updateProjectiles() {
 
         if (projectile.type === 'mamba_shot') {
             const defended = target.takeDamage(projectile.damage, {}, attacker);
+            if (!defended) spawnProjectileHitFx(projectile, target);
             // 20% de chance de envenenar
             if (!defended && Math.random() < MAMBA_POISON_CHANCE) target.applyPoison(1);
             projectile.done = true;
@@ -335,6 +336,7 @@ function updateProjectiles() {
         }
 
         const defended = target.takeDamage(projectile.damage, {}, attacker);
+        if (!defended) spawnProjectileHitFx(projectile, target);
         // Teia do Weaver: gruda e deixa o alvo lento
         if (projectile.type === 'web' && !defended) target.slowTimer = WEB_SLOW_DURATION;
         // Roxy: cada acerto aumenta a adrenalina (atira mais rápido)
@@ -448,6 +450,8 @@ function updateColeoneBalls() {
             if (circleHitsObstacle(ball.tx, ball.ty, COLEONE_SLAM_RADIUS * 0.6, box)) damageBox(box, 40);
         }
         shockwaves.push({ x: ball.tx, y: ball.ty, life: 20, radius: COLEONE_SLAM_RADIUS });
+        // A bola enterrada explode no chão (pixelfx)
+        if (window.pixelFx) pixelFx.spawn('ground-slam', { x: ball.tx, y: ball.ty, palette: 'ember', reach: Math.round(COLEONE_SLAM_RADIUS / 2), seed: Math.floor(Math.random() * 1000) });
         for (let i = 0; i < 22; i++) {
             const a = Math.random() * Math.PI * 2, speed = 2 + Math.random() * 4;
             particles.push(new Particle(ball.tx, ball.ty - 6, i % 3 ? '#ff7a1a' : '#f4f6fb', 0, { x: Math.cos(a) * speed, y: Math.sin(a) * speed * 0.6 - 2 }));
@@ -744,10 +748,32 @@ function spawnHitFx(attacker, target) {
     pixelFx.spawn(id, { height: Math.round((target.y - target.chestY) / 2), ...options, x: target.x, y: target.y - target.z, flip: attacker.x > target.x, seed: Math.floor(Math.random() * 1000) });
 }
 
-// Efeitos que acompanham o corpo enquanto um estado dura (pixelfx): fogo de quem queima, maldição do Jack
+// Tiro que acertou (PROJECTILE_FX no config.js): estalo no alvo, no sentido do tiro
+function spawnProjectileHitFx(projectile, target) {
+    const fx = window.pixelFx && PROJECTILE_FX[projectile.type];
+    if (!fx) return;
+    const { id, ...options } = fx;
+    pixelFx.spawn(id, { height: Math.round((target.y - target.chestY) / 2), ...options, x: target.x, y: target.y - target.z, flip: projectile.vx < 0, seed: Math.floor(Math.random() * 1000) });
+}
+
+// Clarão no cano da arma (MUZZLE_FX), na altura do peito, virado para onde o tiro vai
+function spawnMuzzleFx(shooter, dir) {
+    const fx = window.pixelFx && MUZZLE_FX[shooter.characterType];
+    if (!fx) return;
+    const scale = fx.scale || 2, tilt = Math.max(-0.5, Math.min(0.5, Math.atan2(dir.y, Math.abs(dir.x) || 0.001)));
+    pixelFx.spawn('muzzle-pistol', { ...fx, x: shooter.x + Math.sign(dir.x || 1) * 14, y: shooter.y - shooter.z, height: Math.round((shooter.y - shooter.chestY) / scale), flip: dir.x < 0, angle: tilt, seed: Math.floor(Math.random() * 1000) });
+}
+
+// Efeito que segue um lutador (o pé dele) enquanto dura
+function followFighter(fighter) {
+    return e => { e.x = fighter.x; e.y = fighter.y - fighter.z; e.flip = fighter.facing < 0; };
+}
+
+// Efeitos que acompanham o corpo enquanto um estado dura (pixelfx): fogo, maldição do Jack, veneno da Mamba
 const STATUS_FX = [
     { id: 'burning', key: 'burnFx', on: f => f.burnDuration > 0 },
     { id: 'cursed', key: 'curseFx', on: f => f.curseDuration > 0 },
+    { id: 'poisoned', key: 'poisonFx', on: f => f.poisonStacks > 0 },
 ];
 function syncStatusFx(fighter) {
     if (!window.pixelFx) return;

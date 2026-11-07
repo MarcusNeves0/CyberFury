@@ -16,12 +16,17 @@ Object.assign(Fighter.prototype, {
         this.mambaCloudTick = 0;
         this.poseSpecial();
         sfx.play('mamba_special');
+        // Caveiras rodando em volta de uma chama verde (pixelfx) em cima da área tóxica, acompanhando a Mamba
+        if (window.pixelFx) {
+            this.mambaCloudFx = [pixelFx.spawn('necro-skulls', { x: this.x, y: this.y, palette: POISON_SKULL_PALETTE, seed: Math.floor(Math.random() * 1000), follow: followFighter(this) })];
+        }
     },
 
     // A cada 0,5 s fere quem está dentro; a cada 1 s soma um acúmulo de veneno
     updateMambaCloud() {
         if (this.mambaCloudTimer <= 0) return;
         this.mambaCloudTimer--;
+        if (this.mambaCloudTimer === 0 && this.mambaCloudFx) { this.mambaCloudFx.forEach(e => e.stop()); this.mambaCloudFx = null; }
         this.mambaCloudTick++;
         if (this.mambaCloudTick % 30 !== 0) return;
         for (const enemy of enemiesOf(this)) {
@@ -66,6 +71,7 @@ Object.assign(Fighter.prototype, {
         const dir = leadAim(this, 14);
         this.target = realTarget;
         projectiles.push(new Projectile(this, 'pistol_shot', ROXY_SHOT_DAMAGE, dir, 14));
+        spawnMuzzleFx(this, dir);
         sfx.play('pistol_shot');
     },
 
@@ -143,6 +149,8 @@ Object.assign(Fighter.prototype, {
         });
         this.poseSpecial();
         sfx.play('aegis_special');
+        // A muralha sobe com uma cúpula de energia acendendo na frente dele (pixelfx)
+        if (window.pixelFx) pixelFx.spawn('shield-block', { x: this.x, y: this.y, flip: dir.x < 0, seed: Math.floor(Math.random() * 1000) });
     },
 
     // Rhino: Estouro — dispara em linha reta atropelando todos (quebra caixas e torretas no caminho)
@@ -173,6 +181,8 @@ Object.assign(Fighter.prototype, {
             const side = (enemy.x - this.x) * -dir.y + (enemy.y - this.y) * dir.x >= 0 ? 1 : -1;
             const defended = enemy.takeDamage(RHINO_CHARGE_DAMAGE, { sound: 'hit_heavy' }, this);
             enemy.push({ x: -dir.y * side, y: dir.x * side }, defended ? 5 : 11);
+            // Atropelado: golpe crítico cor de terra (pixelfx)
+            if (window.pixelFx) pixelFx.spawn('crit-hit', { x: enemy.x, y: enemy.y, flip: dir.x < 0, height: Math.round((enemy.y - enemy.chestY) / 2), palette: 'earth', seed: Math.floor(Math.random() * 1000) });
             if (!defended) {
                 enemy.isParalyzed = true;
                 enemy.paralysisTimer = Math.max(enemy.paralysisTimer, RHINO_CHARGE_STUN);
@@ -227,6 +237,8 @@ Object.assign(Fighter.prototype, {
         target.paralysisTimer = Math.max(target.paralysisTimer, ANCHOR_HOOK_STUN);
         target.takeDamage(ANCHOR_HOOK_DAMAGE, { unblockable: true, sound: 'hit_heavy' }, this);
         screenShake = Math.max(screenShake, 6);
+        // A âncora chega espirrando água do mar (pixelfx)
+        if (window.pixelFx) pixelFx.spawn('splash', { x: target.x, y: target.y, stone: false, seed: Math.floor(Math.random() * 1000) });
         for (let i = 0; i < 14; i++) {
             particles.push(new Particle(target.x, target.chestY, i % 2 ? '#c0c8d8' : '#ffe34a', 0, { x: (Math.random() - 0.5) * 6, y: (Math.random() - 0.5) * 6 }));
         }
@@ -362,6 +374,8 @@ Object.assign(Fighter.prototype, {
         target.isParalyzed = true;
         target.paralysisTimer = Math.max(target.paralysisTimer, COLEONE_DUNK_STUN);
         target.takeDamage(COLEONE_DUNK_DAMAGE, { unblockable: true, sound: 'hit_heavy' }, this);
+        // O chão racha e as ondas de choque correm pela quadra (pixelfx)
+        if (window.pixelFx) pixelFx.spawn('ground-slam', { x: target.x, y: target.y, palette: 'ember', reach: Math.round(COLEONE_SLAM_RADIUS / 2), seed: Math.floor(Math.random() * 1000) });
         for (const enemy of enemiesOf(this)) {
             if (enemy === target || enemy.isInsideOpponent || distance(enemy, target) > COLEONE_SLAM_RADIUS + enemy.radius) continue;
             const defended = enemy.takeDamage(COLEONE_SLAM_DAMAGE, { sound: 'hit_heavy' }, this);
@@ -880,6 +894,8 @@ Object.assign(Fighter.prototype, {
         this.celestiaUltTimer = CELESTIA_ULT_DURATION;
         this.poseSpecial();
         sfx.play('celestia_special');
+        // Semente de luz afunda no chão e o anel de cura rola até a borda da área grande (pixelfx)
+        if (window.pixelFx) pixelFx.spawn('heal-aoe', { x: this.x, y: this.y, scale: 3.25, reach: Math.round(CELESTIA_AURA_RADIUS * CELESTIA_ULT_MULTIPLIER / 3.25), seed: Math.floor(Math.random() * 1000) });
         for (let i = 0; i < 36; i++) {
             const angle = (i / 36) * Math.PI * 2;
             particles.push(new Particle(this.x, this.chestY, '#ffe98a', 0, { x: Math.cos(angle) * 7, y: Math.sin(angle) * 7 }));
@@ -928,6 +944,8 @@ Object.assign(Fighter.prototype, {
         this.nyxLinkTimer = NYX_LINK_DURATION;
         this.poseSpecial();
         sfx.play('nyx_special');
+        // O aliado que vai receber a vida brilha (pixelfx)
+        if (window.pixelFx && this.nyxLinkAlly) pixelFx.spawn('heal', { x: this.nyxLinkAlly.x, y: this.nyxLinkAlly.y, scale: 1, actor: pixelFx.actorOf(this.nyxLinkAlly), palette: 'blood', follow: followFighter(this.nyxLinkAlly) });
     },
 
     updateNyxLink() {
@@ -995,7 +1013,11 @@ class HealingFlower {
 
         if (d < 24) {
             const amount = this.target === this.owner ? FLORA_SELF_HEAL : FLORA_HEAL;
-            if (this.target.heal(amount, this.owner) > 0) sfx.play('heal');
+            if (this.target.heal(amount, this.owner) > 0) {
+                sfx.play('heal');
+                // A flor desabrocha no pé de quem foi curado (pixelfx)
+                if (window.pixelFx) pixelFx.spawn('healing-bloom', { x: this.target.x + 22, y: this.target.y + 2, scale: 1.4, seed: Math.floor(Math.random() * 1000) });
+            }
             // Pétalas e brilhos verdes ao desabrochar
             for (let i = 0; i < 18; i++) {
                 const angle = (i / 18) * Math.PI * 2;

@@ -32,12 +32,26 @@ import * as clawSwipe from './vendor/pixelfx/src/fx/melee/claw-swipe.js';
 import * as thrust from './vendor/pixelfx/src/fx/melee/thrust.js';
 import * as cursed from './vendor/pixelfx/src/fx/status/cursed.js';
 import * as shadowTendrils from './vendor/pixelfx/src/fx/shadow/shadow-tendrils.js';
+import * as muzzlePistol from './vendor/pixelfx/src/fx/projectiles/muzzle-pistol.js';
+import * as poisoned from './vendor/pixelfx/src/fx/status/poisoned.js';
+import * as poisonSkull from './vendor/pixelfx/src/fx/status/poison-skull.js'; // feito para a Mamba (não vem da pixelfx)
+import * as necroSkulls from './vendor/pixelfx/src/fx/shadow/necro-skulls.js';
+import * as healAoe from './vendor/pixelfx/src/fx/holy/heal-aoe.js';
+import * as heal from './vendor/pixelfx/src/fx/holy/heal.js';
+import * as healingBloom from './vendor/pixelfx/src/fx/nature/healing-bloom.js';
+import * as cartoonPow from './vendor/pixelfx/src/fx/explosions/cartoon-pow.js';
+import * as groundSlam from './vendor/pixelfx/src/fx/impacts/ground-slam.js';
+import * as shieldBlock from './vendor/pixelfx/src/fx/impacts/shield-block.js';
+import * as splash from './vendor/pixelfx/src/fx/water/splash.js';
 
 const EFFECTS = {
     'heavy-cleave': heavyCleave, 'spark-beam': sparkBeam, electrified, 'zap-hit': zapHit,
     'sword-slash': swordSlash, 'double-slash': doubleSlash, 'scythe-reap': scytheReap,
     uppercut, 'hammer-smash': hammerSmash, 'hit-spark': hitSpark, 'blunt-hit': bluntHit, 'crit-hit': critHit,
     'fire-ring': fireRing, burning, 'claw-swipe': clawSwipe, thrust, cursed, 'shadow-tendrils': shadowTendrils,
+    'muzzle-pistol': muzzlePistol, poisoned, 'poison-skull': poisonSkull, 'necro-skulls': necroSkulls,
+    'heal-aoe': healAoe, heal, 'healing-bloom': healingBloom, 'cartoon-pow': cartoonPow,
+    'ground-slam': groundSlam, 'shield-block': shieldBlock, splash,
 };
 const STEP = 1 / 60;
 // Os efeitos foram desenhados para um boneco de 38 px de altura; os nossos têm 64

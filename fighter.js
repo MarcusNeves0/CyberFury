@@ -83,6 +83,8 @@ class Fighter {
         this.sparkFx = null;     // Spark: efeitos do choque (raio e alvo eletrocutado) enquanto ele dura
         this.burnFx = null;      // fogo da pixelfx enquanto o lutador está queimando
         this.curseFx = null;     // maldição do Jack (pixelfx) enquanto dura
+        this.poisonFx = null;    // veneno da Mamba (pixelfx) enquanto dura
+        this.mambaCloudFx = null; // nuvem tóxica e caveiras da ultimate da Mamba (pixelfx)
         this.channelingTick = 0;
         this.channelingDamage = SPARK_CHAIN_START_DAMAGE;
         this.isDashing = false;
@@ -194,6 +196,8 @@ class Fighter {
     applyPoison(stacks) {
         this.poisonStacks = Math.min(POISON_MAX_STACKS, this.poisonStacks + stacks);
         this.poisonDuration = POISON_DURATION;
+        // Caveira tóxica saltando em cima da cabeça (pixelfx)
+        if (window.pixelFx) pixelFx.spawn('poison-skull', { x: this.x, y: this.y, height: Math.round(this.height / 2) + 6, follow: followFighter(this), seed: Math.floor(Math.random() * 1000) });
     }
 
     // Atiradores: o golpe básico é um tiro com mira automática
@@ -207,11 +211,14 @@ class Fighter {
                 const angle = baseAngle + spread;
                 projectiles.push(new Projectile(this, 'pistol_shot', strong ? ROXY_DOUBLE_DAMAGE : ROXY_SHOT_DAMAGE, { x: Math.cos(angle), y: Math.sin(angle) }, 14));
             }
+            spawnMuzzleFx(this, base);
             sfx.play('pistol_shot');
             return;
         }
         if (this.characterType === 'mamba') {
-            projectiles.push(new Projectile(this, 'mamba_shot', strong ? MAMBA_STRONG_DAMAGE : MAMBA_SHOT_DAMAGE, leadAim(this, 16), 16));
+            const dir = leadAim(this, 16);
+            projectiles.push(new Projectile(this, 'mamba_shot', strong ? MAMBA_STRONG_DAMAGE : MAMBA_SHOT_DAMAGE, dir, 16));
+            spawnMuzzleFx(this, dir);
             sfx.play('mamba_shot');
         } else {
             // Gear: um prego; o tiro forte solta três em leque
@@ -629,7 +636,7 @@ class Fighter {
     }
 
     handleStatusEffects() {
-        syncStatusFx(this); // fogo e maldição da pixelfx enquanto duram
+        syncStatusFx(this); // fogo, maldição e veneno da pixelfx enquanto duram
         if (this.burnDuration > 0) {
             this.burnDuration--;
             this.burnTick++;
