@@ -1068,6 +1068,8 @@ function tryMelee(attacker) {
         } else if (damage > 0) {
             attacker.energy = Math.min(attacker.maxEnergy, attacker.energy + 15);
             spawnHitFx(attacker, target); // soco com efeito da pixelfx: estalo no ponto do impacto
+            // Rhino com embalo: o soco vira um golpe crítico cor de terra
+            if (rhinoCharged && window.pixelFx) pixelFx.spawn('crit-hit', { x: target.x, y: target.y - target.z, flip: attacker.x > target.x, height: Math.round((target.y - target.chestY) / 2), palette: 'earth', seed: Math.floor(Math.random() * 1000) });
             if (attacker.attackType === 'strong_punch') hitStop = HIT_STOP; // soco forte acertou: a luta congela por um instante
             const pushForce = rhinoCharged ? 12 : attacker.characterType === 'aegis' ? 6
                 : attacker.characterType === 'coleone' && attacker.attackType === 'strong_punch' ? 9 // toco: manda para longe

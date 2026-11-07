@@ -162,6 +162,8 @@ Object.assign(Fighter.prototype, {
         this.rhinoChargeDir = leadAim(this, RHINO_CHARGE_SPEED);
         this.rhinoChargeLeft = RHINO_CHARGE_DISTANCE;
         this.rhinoChargeHits = new Set();
+        // Arranca afundando o chão e levantando poeira (pixelfx)
+        if (window.pixelFx) pixelFx.spawn('heavy-landing', { x: this.x, y: this.y, palette: 'earth', seed: Math.floor(Math.random() * 1000) });
         this.poseSpecial();
         sfx.play('rhino_special');
     },
@@ -199,6 +201,8 @@ Object.assign(Fighter.prototype, {
         if (this.rhinoChargeLeft <= 0 || hitTree || hitWall) {
             this.rhinoChargeLeft = 0;
             if (hitTree || hitWall) screenShake = Math.max(screenShake, 4);
+            // Bateu de frente na parede ou numa árvore: o chão racha com a pancada (pixelfx)
+            if ((hitTree || hitWall) && window.pixelFx) pixelFx.spawn('ground-slam', { x: this.x + dir.x * this.radius, y: this.y, palette: 'earth', reach: 30, scale: 1.5, seed: Math.floor(Math.random() * 1000) });
         }
     },
 
@@ -214,6 +218,11 @@ Object.assign(Fighter.prototype, {
         this.hookTimer = 40; // no máximo ~0,7 s voando (se ficar preso num obstáculo, solta)
         this.poseSpecial();
         sfx.play('anchor_special');
+        // A âncora sai voando num rastro de água até o alvo (pixelfx)
+        if (window.pixelFx) {
+            const dir = directionTo(this, target);
+            pixelFx.spawn('thrust', { x: this.x, y: this.y, flip: dir.x < 0, angle: Math.max(-0.5, Math.min(0.5, Math.atan2(dir.y, Math.abs(dir.x) || 0.001))), palette: 'water', reach: Math.min(150, Math.round(distance(this, target) / 2)), seed: Math.floor(Math.random() * 1000) });
+        }
     },
 
     updateAnchorHook() {
@@ -237,8 +246,11 @@ Object.assign(Fighter.prototype, {
         target.paralysisTimer = Math.max(target.paralysisTimer, ANCHOR_HOOK_STUN);
         target.takeDamage(ANCHOR_HOOK_DAMAGE, { unblockable: true, sound: 'hit_heavy' }, this);
         screenShake = Math.max(screenShake, 6);
-        // A âncora chega espirrando água do mar (pixelfx)
-        if (window.pixelFx) pixelFx.spawn('splash', { x: target.x, y: target.y, stone: false, seed: Math.floor(Math.random() * 1000) });
+        // A âncora chega espirrando água do mar e o Anchor afunda o chão com o peso (pixelfx)
+        if (window.pixelFx) {
+            pixelFx.spawn('splash', { x: target.x, y: target.y, stone: false, seed: Math.floor(Math.random() * 1000) });
+            pixelFx.spawn('heavy-landing', { x: this.x, y: this.y, palette: 'water', seed: Math.floor(Math.random() * 1000) });
+        }
         for (let i = 0; i < 14; i++) {
             particles.push(new Particle(target.x, target.chestY, i % 2 ? '#c0c8d8' : '#ffe34a', 0, { x: (Math.random() - 0.5) * 6, y: (Math.random() - 0.5) * 6 }));
         }
@@ -277,6 +289,7 @@ Object.assign(Fighter.prototype, {
         this.dunkTimer = 0;
         this.dunkBallThrown = false;
         this.vz = COLEONE_DUNK_JUMP;
+        if (window.pixelFx) pixelFx.spawn('heavy-landing', { x: this.x, y: this.y, palette: 'ember', seed: Math.floor(Math.random() * 1000) }); // impulso do salto
         this.dunkHoop = { x: spot.x, y: spot.y, life: Math.round(airTime) + 40, slam: 0 };
         this.poseSpecial();
         sfx.play('coleone_grab');
@@ -319,6 +332,7 @@ Object.assign(Fighter.prototype, {
             this.dunkPhase = 'air';
             this.dunkDir = d > 0 ? directionTo(this, target) : { ...this.aim };
             this.vz = COLEONE_DUNK_JUMP;
+            if (window.pixelFx) pixelFx.spawn('heavy-landing', { x: this.x, y: this.y, palette: 'ember', seed: Math.floor(Math.random() * 1000) }); // impulso do salto
             this.dunkTimer = 0;
             target.heldBy = this;
             target.isDefending = false;

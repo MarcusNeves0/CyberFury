@@ -674,6 +674,8 @@ function blockedByShield(projectile) {
     const spark = color => {
         for (let i = 0; i < 5; i++) particles.push(new Particle(projectile.x, projectile.y, color, 0, { x: (Math.random() - 0.5) * 4, y: (Math.random() - 0.5) * 4 }));
         sfx.play('block');
+        // O tiro bate no escudo de energia e espirra de volta (pixelfx)
+        if (window.pixelFx) pixelFx.spawn('hit-spark', { x: projectile.x, y: projectile.y + 10, height: 5, flip: projectile.vx > 0, palette: 'electric', scale: 1.5, seed: Math.floor(Math.random() * 1000) });
     };
     for (const wall of walls) {
         if (wall.team !== team && distanceToWall(projectile.x, projectile.y, wall) < projectile.radius + 6) { spark('#7fd0ff'); return true; }

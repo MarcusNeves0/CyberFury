@@ -1204,23 +1204,23 @@
   }
   var FADE = 0.3;
   var isRamp = (v) => Array.isArray(v) && v.length > 0 && v.every((c) => typeof c === "number" || /^#[0-9a-f]{3,8}$/i.test(c));
-  function resolveOptions(meta30, o = {}) {
+  function resolveOptions(meta31, o = {}) {
     var _a, _b;
-    const opts = { ...(_a = meta30.options) != null ? _a : {}, ...o };
-    for (const [k, def] of Object.entries((_b = meta30.options) != null ? _b : {}))
+    const opts = { ...(_a = meta31.options) != null ? _a : {}, ...o };
+    for (const [k, def] of Object.entries((_b = meta31.options) != null ? _b : {}))
       if (isRamp(def) && isRamp(o[k]) && o[k].length !== def.length) opts[k] = fit(o[k], def.length).map(toHex);
-    if (meta30.actor && !opts.actor) opts.actor = stockActor(meta30.actor === 2 ? 2 : 1);
+    if (meta31.actor && !opts.actor) opts.actor = stockActor(meta31.actor === 2 ? 2 : 1);
     return opts;
   }
   function createFx(mod, o = {}) {
     var _a, _b;
-    const meta30 = (_a = mod.meta) != null ? _a : {};
-    const opts = resolveOptions(meta30, o);
+    const meta31 = (_a = mod.meta) != null ? _a : {};
+    const opts = resolveOptions(meta31, o);
     const impl = mod.create ? mod.create(opts) : mod;
-    const D5 = (_b = meta30.duration) != null ? _b : 1;
+    const D5 = (_b = meta31.duration) != null ? _b : 1;
     let t = 0, stopAt = Infinity;
     return {
-      meta: meta30,
+      meta: meta31,
       options: opts,
       get t() {
         return t;
@@ -1237,7 +1237,7 @@
         p.place((_a2 = opts.x) != null ? _a2 : 0, (_b2 = opts.y) != null ? _b2 : 0, !!opts.flip, (_c = opts.angle) != null ? _c : 0);
         p.fade = stopAt === Infinity ? 1 : clamp(1 - (t - stopAt) / FADE);
         p.lightK = (_d = opts.light) != null ? _d : 1;
-        const tt = meta30.loop ? t % D5 : Math.min(t, D5);
+        const tt = meta31.loop ? t % D5 : Math.min(t, D5);
         if (layer !== "front" && impl.drawBack) {
           p.layer = "back";
           impl.drawBack(p, tt, opts);
@@ -1252,7 +1252,7 @@
         if (stopAt === Infinity) stopAt = t;
       },
       done() {
-        return t - stopAt >= FADE || !meta30.loop && t >= D5;
+        return t - stopAt >= FADE || !meta31.loop && t >= D5;
       }
     };
   }
@@ -3417,6 +3417,21 @@
       out.c = q < 0.28 ? cols[0] : q < 0.62 ? cols[1] : cols[2];
       out.a = k * (ey < -0.8 ? 0.7 : 1) * (q > 0.7 ? 1.25 - q * 0.8 : 1);
     });
+  }
+  function dustRing(p, cx, cy, r, w, k, c, { sy = 1, ph = 0, brk = 0, lit = 0.35, maxY = Infinity, half = 0 } = {}) {
+    if (k <= 0.01 || r <= 0) return;
+    const W = w * 1.6, lite = mix(c, WHITE, lit);
+    for (let y = Math.floor(cy - (r + W) * sy) - 1; y <= Math.min(maxY - 1, Math.ceil(cy + (r + W) * sy) + 1); y++)
+      for (let x = Math.floor(cx - r - W) - 1; x <= Math.ceil(cx + r + W) + 1; x++) {
+        const dx = x + 0.5 - cx, dy = (y + 0.5 - cy) / sy, d = Math.hypot(dx, dy), g = Math.atan2(dy, dx);
+        if (half < 0 && dy >= 0 || half > 0 && dy < 0) continue;
+        const lumpy = 0.6 + 0.3 * Math.sin(5 * g + ph) + 0.18 * Math.sin(11 * g + ph * 2.1) + 0.12 * Math.sin(17 * g + ph * 0.7);
+        const wt = w * lumpy, off = Math.abs(d - r - w * 0.25 * Math.sin(7 * g + ph));
+        if (off >= wt) continue;
+        const tear = brk > 0 ? clamp((0.55 + 0.45 * Math.sin(6 * g + ph * 1.7) - brk) / 0.25) : 1;
+        const a = k * (1 - Math.pow(off / wt, 2)) * tear;
+        if (a > 0.01) p.blend(x, y, dy < 0 && d > r - wt * 0.3 ? lite : c, a);
+      }
   }
   var rockShape = (R, n = 6) => Array.from({ length: n }, () => R.range(0.7, 1.12));
   function rock2(p, b, st) {
@@ -6845,6 +6860,115 @@
     };
   }
 
+  // vendor/pixelfx/src/fx/impacts/heavy-landing.js
+  var heavy_landing_exports = {};
+  __export(heavy_landing_exports, {
+    act: () => act16,
+    create: () => create25,
+    meta: () => meta30
+  });
+  var meta30 = {
+    name: "Heavy landing",
+    desc: "A character lands hard: the floor dents and cracks under their feet, two rings of dust roll out along the floor one after the other, and pebbles hop away.",
+    tags: ["impact", "landing", "ground", "stomp", "dust", "rocks", "actor", "one-shot"],
+    size: [176, 80],
+    origin: [88, 60],
+    duration: 1.6,
+    loop: false,
+    fps: 30,
+    bg: "ground",
+    actor: 2,
+    options: { palette: ["#1c1a24", "#2f2a3a", "#4a4258", "#6b6280", "#9088a4", "#bdb6cc", "#e6e1ee"], stone: "#4a3f69", seed: 14 }
+  };
+  var FALL = { turn: 0.8, y: -46, crouch: -1, lean: -1, fx: -9, fy: -42, bx: 10, by: -42, ffx: 6, ffy: -8, fbx: -3, fby: -3, toeB: true, ghost: 1 };
+  var HERO_ = { y: 0, crouch: 8, lean: 5, fx: 13, fy: -8, bx: -6, by: -23, ffx: 11, fbx: -10 };
+  var act16 = {
+    poses: [
+      [-0.26, FALL],
+      [-0.01, { ...FALL, y: -6 }, "in"],
+      [0, HERO_, "snap"],
+      [0.55, { ...HERO_, crouch: 7 }],
+      [0.95, { ...HERO_, crouch: 5, lean: 3, fx: 13, fy: -15, bx: -5, by: -20 }],
+      [1.3, READY],
+      [1.6, READY]
+    ],
+    hits: [{ t: 5e-3, stop: 0.13, shake: 0.32, amp: 3 }]
+  };
+  function dent(p, st, k) {
+    for (let x = -10; x <= 9; x++) {
+      const q = Math.abs(x + 0.5) / 10, dep = Math.round(1.8 * (1 - q * q));
+      if (q < 0.82) {
+        for (let y = 0; y < dep; y++) p.dot(x, y, SOOT4, k);
+        p.dot(x, dep, st.lip, k);
+      } else p.dot(x, -1, q > 0.92 ? st.light : st.lip, k);
+    }
+  }
+  function create25(o) {
+    const C = fit(o.palette, 7), st = stone2(o.stone), R = new Rng(o.seed), floor = () => 0, D5 = meta30.duration;
+    const back = new Particles({ rng: R, ground: floor }), front = new Particles({ rng: R, ground: floor });
+    const bits = new Bits({ ground: floor }), cracks2 = makeCracks(R, 6, { len: [8, 20], dive: 0.7, maxY: 12, forks: 0.4, x0: [2, 6] });
+    const DUST2 = mix(st.dust, C[5], 0.4), LIT = mix(DUST2, WHITE, 0.3), PH = R.range(0, TAU);
+    const ring2 = (n, v0, v1, size, delay) => {
+      for (let i = 0; i < n; i++) {
+        const g = i / n * TAU + R.range(-0.1, 0.1), v = R.range(v0, v1), far = Math.sin(g) < 0;
+        (far ? back : front).spawn(P.DUST, Math.cos(g) * 4, Math.sin(g) * 0.7 - 1, Math.cos(g) * v, Math.sin(g) * v * 0.16 - R.range(2, 10), R.range(0.45, 0.8), R.chance(0.45) ? LIT : DUST2, R.range(size[0], size[1]), delay + R.range(0, 0.03));
+      }
+    };
+    ring2(20, 140, 190, [2.2, 3.4], 0.01);
+    ring2(18, 70, 110, [3.4, 5.4], 0.12);
+    for (let i = 0; i < 12; i++) {
+      const s = R.sign(), up = i < 6;
+      (i % 2 ? front : back).spawn(P.DUST, s * R.range(2, 10), -R.range(1, 4), s * R.range(10, 35) * (up ? 0.6 : 1), -(up ? R.range(25, 60) : R.range(4, 12)), R.range(0.55, 0.9), R.chance(0.5) ? LIT : DUST2, R.range(3, 5), R.range(0.02, 0.1));
+    }
+    for (let i = 0; i < 12; i++) {
+      const s = R.sign(), v = R.range(50, 130);
+      bits.add({ kind: B.CHUNK, x: s * R.range(3, 8), y: -1, vx: s * v, vy: -R.range(140, 230), g: 1, drag: 0.5, bounce: 0.55, life: R.range(1, 1.45), a: R.range(0, TAU), va: s * R.range(8, 16), s: R.chance(0.3) ? 2 : 1, pts: rockShape(R) });
+    }
+    for (let i = 0; i < 24; i++) {
+      const s = R.sign(), a = -Math.PI / 2 + s * R.range(0.3, 1.2), v = R.range(60, 170);
+      front.spawn(P.GRIT, s * R.range(2, 7), -1, Math.cos(a) * v, Math.sin(a) * v, R.range(0.6, 1.1), R.pick([st.light, st.body, st.lip]), R.chance(0.3) ? 2 : 1);
+    }
+    let t = 0;
+    const rings = (p, far) => {
+      for (const [t0, dur, r1, w, k0, edge] of [[0.01, 0.45, 58, 4.5, 0.75, 1], [0.12, 0.85, 42, 6, 0.8, 0]]) {
+        const g = (t - t0) / dur;
+        if (g <= 0 || g >= 1) continue;
+        const r = 6 + r1 * ease.outCubic(g);
+        dustRing(p, 0, 0, r, w * (1 + g), k0 * Math.pow(1 - g, 1.2) * Math.min(1, g / 0.06), DUST2, { sy: 0.2, ph: PH + t0 * 10, brk: g * 0.8, half: far ? -1 : 1 });
+        if (edge && g < 0.75) band(p, 0, 0.5, r + 2, 0.2, Math.max(1, 2.5 * (1 - g)), 1.1 - g / 0.75, [st.body, st.light, LIT, WHITE], (a) => Math.sin(a) < 0 === far);
+      }
+    };
+    return {
+      update(dt) {
+        t += dt;
+        for (const b of bits.list) b.pvy = b.vy;
+        bits.update(dt);
+        for (const b of bits.list)
+          if (b.pvy > 80 && b.vy <= 0) {
+            front.spawn(P.DUST, b.x, -0.5, R.sign() * R.range(6, 20), -R.range(2, 10), R.range(0.25, 0.45), DUST2, R.range(1, 1.8));
+            b.pvy = 0;
+          }
+        back.update(dt);
+        front.update(dt);
+      },
+      drawBack(p) {
+        const fade = 1 - smooth(D5 - 0.5, D5 - 0.1, t);
+        dent(p, st, fade);
+        drawCracks(p, cracks2, (c) => c.len * ease.outCubic(clamp((t - c.t0) / 0.08)), () => 0, [WHITE, WHITE, WHITE, WHITE], SOOT4, st.light, fade);
+        rings(p, true);
+        back.draw(p);
+      },
+      draw(p) {
+        rings(p, false);
+        front.draw(p);
+        for (const b of bits.list) rock2(p, b, st);
+        if (t < 0.035) p.ellipse(0, 0, 15, 2.5, (d) => d < 0.55 ? WHITE : C[6]);
+        else if (t < 0.07) for (let x = -22; x <= 22; x++) p.dot(x, 0, Math.abs(x) < 10 ? WHITE : C[5], 1 - Math.abs(x) / 24);
+        if (t < 0.12) p.glowLine(-20, 0, 20, 0, 8, C[6], 0.45 * (1 - t / 0.12));
+      }
+    };
+  }
+
   // fx-pixel.js
   var EFFECTS = {
     "heavy-cleave": heavy_cleave_exports,
@@ -6875,7 +6999,8 @@
     "cartoon-pow": cartoon_pow_exports,
     "ground-slam": ground_slam_exports,
     "shield-block": shield_block_exports,
-    splash: splash_exports
+    splash: splash_exports,
+    "heavy-landing": heavy_landing_exports
   };
   var STEP = 1 / 60;
   var SCALE = 2;

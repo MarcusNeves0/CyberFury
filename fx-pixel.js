@@ -43,6 +43,7 @@ import * as cartoonPow from './vendor/pixelfx/src/fx/explosions/cartoon-pow.js';
 import * as groundSlam from './vendor/pixelfx/src/fx/impacts/ground-slam.js';
 import * as shieldBlock from './vendor/pixelfx/src/fx/impacts/shield-block.js';
 import * as splash from './vendor/pixelfx/src/fx/water/splash.js';
+import * as heavyLanding from './vendor/pixelfx/src/fx/impacts/heavy-landing.js';
 
 const EFFECTS = {
     'heavy-cleave': heavyCleave, 'spark-beam': sparkBeam, electrified, 'zap-hit': zapHit,
@@ -51,7 +52,7 @@ const EFFECTS = {
     'fire-ring': fireRing, burning, 'claw-swipe': clawSwipe, thrust, cursed, 'shadow-tendrils': shadowTendrils,
     'muzzle-pistol': muzzlePistol, poisoned, 'poison-skull': poisonSkull, 'necro-skulls': necroSkulls,
     'heal-aoe': healAoe, heal, 'healing-bloom': healingBloom, 'cartoon-pow': cartoonPow,
-    'ground-slam': groundSlam, 'shield-block': shieldBlock, splash,
+    'ground-slam': groundSlam, 'shield-block': shieldBlock, splash, 'heavy-landing': heavyLanding,
 };
 const STEP = 1 / 60;
 // Os efeitos foram desenhados para um boneco de 38 px de altura; os nossos têm 64
