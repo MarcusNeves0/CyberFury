@@ -301,7 +301,18 @@ const PROJECTILE_FX = {
     pistol_shot: { id: 'hit-spark', palette: 'neon', scale: 1.5 },
     football: { id: 'cartoon-pow', scale: 1 },
 };
-const MUZZLE_FX = { roxy: { palette: 'neon', scale: 1.5 }, mamba: { palette: 'poison', scale: 1.5 } };
+const MUZZLE_FX = {
+    roxy: { palette: 'neon', scale: 1.5 }, mamba: { palette: 'poison', scale: 1.5 },
+    gear: { palette: 'metal', scale: 1.3 }, sina: { palette: 'gold', scale: 1.5 },
+};
+// O tiro em voo (pixelfx): um efeito que acompanha o projétil, girado na direção em que ele vai
+const PROJECTILE_TRAIL = {
+    mamba_shot: { id: 'plasma-shot', palette: 'poison', scale: 1.4 },
+    pistol_shot: { id: 'laser-bolt', palette: 'neon', length: 26, scale: 1.4 },
+    turret_shot: { id: 'laser-bolt', palette: 'cyber', length: 22, scale: 1.3 },
+    sina_bullet: { id: 'bullet-tracer', palette: 'gold', scale: 1 },
+    nail: { id: 'nail-shot', scale: 1.6 },
+};
 // Mamba: veneno com caveiras (caveiras rodando na ultimate, caveira em quem é envenenado)
 const POISON_SKULL_PALETTE = ['#020a04', '#05200c', '#0a3c16', '#106624', '#1a9a34', '#3cd650', '#a4ffa8', '#e8ffe8'];
 const HIT_STOP = 4; // passos em que a luta congela quando um soco forte acerta (dá peso à pancada)

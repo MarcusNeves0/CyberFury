@@ -54,6 +54,28 @@ class Projectile {
         if (this.type === 'shark' && this.life % 2 === 0) {
             particles.push(new Particle(this.x, this.y - 22, 'rgba(120, 200, 255, 0.7)', 0, { x: -this.vx * 0.2 + (Math.random() - 0.5), y: -Math.random() * 1.5 }));
         }
+        // Tiro em voo com efeito da pixelfx (PROJECTILE_TRAIL): acompanha o projétil, girado na direção dele
+        if (window.pixelFx && !this.trailFx && PROJECTILE_TRAIL[this.type]) {
+            const shot = this, { id, ...options } = PROJECTILE_TRAIL[this.type];
+            this.trailFx = pixelFx.spawn(id, {
+                ...options, x: this.x, y: this.y - 30, rotate: Math.atan2(this.vy, this.vx), seed: Math.floor(Math.random() * 1000),
+                follow: e => {
+                    e.x = shot.x; e.y = shot.y - 30; e.rotate = Math.atan2(shot.vy, shot.vx);
+                    if (shot.done || shot.life <= 0) { e.follow = null; e.stop(); }
+                },
+            });
+        }
+        // Rastro do tubarão visto de cima: um V de espuma que se abre atrás da barbatana, em qualquer direção (pixelfx)
+        if (this.type === 'shark' && window.pixelFx && !this.wakeFx) {
+            const shark = this;
+            this.wakeFx = pixelFx.spawn('shark-wake', {
+                x: this.x, y: this.y, dir: [this.vx, this.vy], speed: Math.hypot(this.vx, this.vy) * 60 / 2, seed: Math.floor(Math.random() * 1000),
+                follow: e => {
+                    e.x = shark.x; e.y = shark.y;
+                    if (shark.done || shark.life <= 0) { e.follow = null; e.stop(); }
+                },
+            });
+        }
 
         if (this.isReturning) return;
         if (this.life <= 0) {
@@ -151,7 +173,7 @@ class Projectile {
             ctx.restore();
             return;
         }
-        const bolt = bolts[this.type];
+        const bolt = !this.trailFx && bolts[this.type]; // com o efeito da pixelfx, o risco antigo não aparece
         if (bolt) {
             const dir = normalize(this.vx, this.vy);
             ctx.save();
@@ -383,6 +405,8 @@ function sharkBite(shark) {
         enemy.push(dir, defended ? 4 : 10);
         sfx.play('chomp');
         for (let i = 0; i < 8; i++) particles.push(new Particle(enemy.x, enemy.chestY, i % 2 ? '#6ec8ff' : '#e8fbff', 0, { x: dir.x * 3 + (Math.random() - 0.5) * 3, y: (Math.random() - 0.5) * 3 }));
+        // A mordida espirra água para todo lado (pixelfx)
+        if (window.pixelFx) pixelFx.spawn('splash', { x: enemy.x, y: enemy.y, stone: false, scale: 1.5, seed: Math.floor(Math.random() * 1000) });
     }
 }
 
@@ -413,6 +437,12 @@ function updateSinaBoats() {
             screenShake = Math.max(screenShake, 12);
             sfx.play('sina_boat');
             boat.splash = 24;
+            // O barco explode em água: um respingo enorme e duas ondas quebrando para os lados (pixelfx)
+            if (window.pixelFx) {
+                const seed = Math.floor(Math.random() * 1000);
+                pixelFx.spawn('splash', { x: boat.x, y: boat.y, stone: false, scale: 3, seed });
+                for (const flip of [false, true]) pixelFx.spawn('wave-crash', { x: boat.x + (flip ? -1 : 1) * SINA_BOAT_RADIUS * 0.6, y: boat.y + 8, flip, scale: 1.6, advance: 0.9, seed: seed + (flip ? 1 : 2) });
+            }
         } else if (boat.splash > 0) {
             boat.splash--;
         }

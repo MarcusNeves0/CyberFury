@@ -592,7 +592,9 @@ Object.assign(Fighter.prototype, {
             if (--this.sinaPistolTimer <= 0) {
                 this.sinaPistolShots--;
                 this.sinaPistolTimer = SINA_PISTOL_INTERVAL;
-                projectiles.push(new Projectile(this, 'sina_bullet', SINA_PISTOL_DAMAGE, leadAim(this, 15), 15));
+                const shotDir = leadAim(this, 15);
+                projectiles.push(new Projectile(this, 'sina_bullet', SINA_PISTOL_DAMAGE, shotDir, 15));
+                spawnMuzzleFx(this, shotDir);
                 sfx.play('pistol_shot');
                 this.specialPoseTimer = Math.max(this.specialPoseTimer, 8);
             }

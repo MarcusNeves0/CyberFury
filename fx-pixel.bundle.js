@@ -1204,23 +1204,23 @@
   }
   var FADE = 0.3;
   var isRamp = (v) => Array.isArray(v) && v.length > 0 && v.every((c) => typeof c === "number" || /^#[0-9a-f]{3,8}$/i.test(c));
-  function resolveOptions(meta31, o = {}) {
+  function resolveOptions(meta37, o = {}) {
     var _a, _b;
-    const opts = { ...(_a = meta31.options) != null ? _a : {}, ...o };
-    for (const [k, def] of Object.entries((_b = meta31.options) != null ? _b : {}))
+    const opts = { ...(_a = meta37.options) != null ? _a : {}, ...o };
+    for (const [k, def] of Object.entries((_b = meta37.options) != null ? _b : {}))
       if (isRamp(def) && isRamp(o[k]) && o[k].length !== def.length) opts[k] = fit(o[k], def.length).map(toHex);
-    if (meta31.actor && !opts.actor) opts.actor = stockActor(meta31.actor === 2 ? 2 : 1);
+    if (meta37.actor && !opts.actor) opts.actor = stockActor(meta37.actor === 2 ? 2 : 1);
     return opts;
   }
   function createFx(mod, o = {}) {
     var _a, _b;
-    const meta31 = (_a = mod.meta) != null ? _a : {};
-    const opts = resolveOptions(meta31, o);
+    const meta37 = (_a = mod.meta) != null ? _a : {};
+    const opts = resolveOptions(meta37, o);
     const impl = mod.create ? mod.create(opts) : mod;
-    const D5 = (_b = meta31.duration) != null ? _b : 1;
+    const D5 = (_b = meta37.duration) != null ? _b : 1;
     let t = 0, stopAt = Infinity;
     return {
-      meta: meta31,
+      meta: meta37,
       options: opts,
       get t() {
         return t;
@@ -1237,7 +1237,7 @@
         p.place((_a2 = opts.x) != null ? _a2 : 0, (_b2 = opts.y) != null ? _b2 : 0, !!opts.flip, (_c = opts.angle) != null ? _c : 0);
         p.fade = stopAt === Infinity ? 1 : clamp(1 - (t - stopAt) / FADE);
         p.lightK = (_d = opts.light) != null ? _d : 1;
-        const tt = meta31.loop ? t % D5 : Math.min(t, D5);
+        const tt = meta37.loop ? t % D5 : Math.min(t, D5);
         if (layer !== "front" && impl.drawBack) {
           p.layer = "back";
           impl.drawBack(p, tt, opts);
@@ -1252,7 +1252,7 @@
         if (stopAt === Infinity) stopAt = t;
       },
       done() {
-        return t - stopAt >= FADE || !meta31.loop && t >= D5;
+        return t - stopAt >= FADE || !meta37.loop && t >= D5;
       }
     };
   }
@@ -2938,7 +2938,7 @@
   function create7(o) {
     const C = fit(o.palette, 7), INK3 = hex(o.outline), Rg = new Rng(o.seed), ps = new Particles({ rng: Rg, ground: () => 0, sparks: o.sparks }), lights = new Lights();
     const A = swing({ cx: 8, cy: -25, R: 27, sy: 1, rot: 0, a0: 1.08, dir: -1, span: 2.5, W: 13, t0: 0.02, sweep: 0.07, hold: 0.05, trail: 0.22, ramp: C });
-    const top = slashEnd(A), SX = top.x + 3, SY5 = top.y - 5, HIT5 = A.t0 + A.sweep * 0.8;
+    const top = slashEnd(A), SX = top.x + 3, SY6 = top.y - 5, HIT5 = A.t0 + A.sweep * 0.8;
     const spikes2 = Array.from({ length: 10 }, (_, i) => ({ a: i / 10 * TAU + Rg.range(-0.12, 0.12) - Math.PI / 2, len: (i % 2 ? 7 : 13) + Rg.range(0, 4), w: i % 2 ? 2.2 : 3 }));
     const bursts = Array.from({ length: 8 }, (_, i) => ({ a: i / 8 * TAU + 0.2 + Rg.range(-0.15, 0.15), r0: Rg.range(15, 18), L: Rg.range(5, 9) }));
     let t = 0, hit = false, kicked = false;
@@ -2951,15 +2951,15 @@
         }
         if (!hit && t >= HIT5) {
           hit = true;
-          lights.add(SX, SY5, 56, C[4], 0.6, 0.4);
-          lights.add(SX, SY5, 18, WHITE, 0.7, 0.08);
+          lights.add(SX, SY6, 56, C[4], 0.6, 0.4);
+          lights.add(SX, SY6, 18, WHITE, 0.7, 0.08);
           for (let i = 0; i < 16; i++) {
             const a = -Math.PI / 2 + Rg.range(-1.6, 1.6), sp = Rg.range(120, 320);
-            ps.spawn(P.SPARK, SX, SY5, Math.cos(a) * sp, Math.sin(a) * sp, Rg.range(0.15, 0.45));
+            ps.spawn(P.SPARK, SX, SY6, Math.cos(a) * sp, Math.sin(a) * sp, Rg.range(0.15, 0.45));
           }
           for (let i = 0; i < 6; i++) {
             const a = Rg.range(0, TAU), d = Rg.range(14, 24);
-            ps.spawn(P.STAR, SX + Math.cos(a) * d, SY5 + Math.sin(a) * d, Math.cos(a) * 20, Math.sin(a) * 20 - 10, Rg.range(0.25, 0.5), Rg.chance(0.5) ? C[5] : WHITE, Rg.range(1.4, 2.6), Rg.range(0.04, 0.18));
+            ps.spawn(P.STAR, SX + Math.cos(a) * d, SY6 + Math.sin(a) * d, Math.cos(a) * 20, Math.sin(a) * 20 - 10, Rg.range(0.25, 0.5), Rg.chance(0.5) ? C[5] : WHITE, Rg.range(1.4, 2.6), Rg.range(0.04, 0.18));
           }
         }
         ps.update(dt);
@@ -2982,20 +2982,20 @@
           const pop = ease.outBack(clamp(q / 0.05), 2.6), out = 1 - smooth(0.16, 0.36, q), sc = pop * (0.35 + 0.65 * out), turn = q * 1.2;
           const sp = spikes2.map((s) => ({ ...s, a: s.a + turn }));
           if (sc > 0.08) {
-            star(p, SX, SY5, sp, sc * 1.12, 1, INK3, INK3, INK3, INK3);
-            star(p, SX, SY5, sp, sc, 1, q < 0.05 ? WHITE : C[6], C[4], C[3], C[2]);
+            star(p, SX, SY6, sp, sc * 1.12, 1, INK3, INK3, INK3, INK3);
+            star(p, SX, SY6, sp, sc, 1, q < 0.05 ? WHITE : C[6], C[4], C[3], C[2]);
           }
-          p.glow(SX, SY5, 30, C[4], 0.45 * out);
+          p.glow(SX, SY6, 30, C[4], 0.45 * out);
         }
         if (q >= 0.02 && q < 0.24) {
           const k = (q - 0.02) / 0.22, r = 7 + 17 * ease.outCubic(k), th = Math.max(1, 2.2 * (1 - k)), col = k < 0.25 ? WHITE : k < 0.5 ? C[5] : k < 0.75 ? C[4] : C[3];
-          for (let a = 0; a < TAU; a += 0.6 / r) for (let o2 = 0; o2 < th; o2 += 0.5) p.dot(SX + Math.cos(a) * (r - o2), SY5 + Math.sin(a) * (r - o2), col, 1.15 - k);
+          for (let a = 0; a < TAU; a += 0.6 / r) for (let o2 = 0; o2 < th; o2 += 0.5) p.dot(SX + Math.cos(a) * (r - o2), SY6 + Math.sin(a) * (r - o2), col, 1.15 - k);
         }
         if (q >= 0.02 && q < 0.2) {
           const k = (q - 0.02) / 0.18;
           for (const b of bursts) {
             const r0 = b.r0 + 10 * ease.outCubic(k), ca = Math.cos(b.a), sa = Math.sin(b.a);
-            p.line(SX + ca * r0, SY5 + sa * r0, SX + ca * (r0 + b.L * (1 - k)), SY5 + sa * (r0 + b.L * (1 - k)), k < 0.4 ? WHITE : C[5], 1.1 - k);
+            p.line(SX + ca * r0, SY6 + sa * r0, SX + ca * (r0 + b.L * (1 - k)), SY6 + sa * (r0 + b.L * (1 - k)), k < 0.4 ? WHITE : C[5], 1.1 - k);
           }
         }
         ps.draw(p);
@@ -3389,13 +3389,13 @@
       return h > 0.75 ? hot[0] : h > 0.5 ? hot[1] : h > 0.3 ? hot[2] : h > 0.12 ? hot[3] : dark;
     };
     for (const c of cracks2) {
-      const G3 = g(c);
-      if (G3 <= 0) continue;
+      const G4 = g(c);
+      if (G4 <= 0) continue;
       for (const path of [c.pts, ...c.kids]) {
         for (let i = 1; i < path.length; i++) {
           const [x0, y0, d0] = path[i - 1], [x1, y1, d1] = path[i];
-          if (d0 >= G3) break;
-          const f = d1 > G3 ? (G3 - d0) / (d1 - d0) : 1, ex = x0 + (x1 - x0) * f, ey = y0 + (y1 - y0) * f;
+          if (d0 >= G4) break;
+          const f = d1 > G4 ? (G4 - d0) / (d1 - d0) : 1, ex = x0 + (x1 - x0) * f, ey = y0 + (y1 - y0) * f;
           p.line(x0, y0 + 1, ex, ey + 1, lip2, (u) => rand(Math.round(x0 + (ex - x0) * u), Math.round(y0 + (ey - y0) * u), 5) < 0.3 ? k * 0.8 : 0);
           p.line(x0, y0, ex, ey, (u) => col(d0 + (d1 - d0) * f * u), k);
           const h = heat(d0);
@@ -4900,6 +4900,16 @@
   });
 
   // vendor/pixelfx/src/fx/projectiles/_lib.js
+  function beat(t, period, n, seed, life, fn) {
+    for (let i = 0; i < n; i++) {
+      const L = typeof life === "function" ? life(rng(seed, i, 911)) : life;
+      for (let age = wrap(t - i * period / n + 1e-7, period); age < L; age += period) fn(age, L, rng(seed, i), i);
+    }
+  }
+  function wake(x, y, vx, vy, age, V, k, g = 0) {
+    const e = Math.exp(-k * age), f = (1 - e) / k, vt = g / k;
+    return [x + vx * f - V * age, y + vt * age + (vy - vt) * f, vx * e - V, vt + (vy - vt) * e];
+  }
   function cloud(p, list, R, WR, { dens = 1.5, max = 0.86, clip, lit = 1 } = {}) {
     if (!list.length) return;
     let X0 = Infinity, Y0 = Infinity, X1 = -Infinity, Y1 = -Infinity;
@@ -4999,6 +5009,13 @@
       }
     }
     return out;
+  }
+  function spark2(p, x, y, vx, vy, k, S, glow = 0.45, stretch = 0.022, max = 9) {
+    const sp = Math.hypot(vx, vy) || 1, ux = vx / sp, uy = vy / sp, len2 = Math.min(max, 1 + sp * stretch);
+    const head4 = k > 0.6 ? S[0] : k > 0.3 ? S[1] : S[2];
+    p.line(x - ux * len2, y - uy * len2, x - ux * len2 * 0.4, y - uy * len2 * 0.4, k > 0.5 ? head4 : S[3]);
+    p.line(x - ux * len2 * 0.45, y - uy * len2 * 0.45, x, y, head4);
+    p.glow(x, y, 3, head4, glow * k);
   }
   function flashShape(r, f, { size = 1, spike = [12, 20], diag = [5, 10], cross: cross3 = [3, 6], back = [2, 4.5], core = 0.7 } = {}) {
     const k = f === 1 ? 1 : 0.6, w = f === 1 ? 1 : 0.72, S = size;
@@ -6627,6 +6644,12 @@
       }
     }
   };
+  function billow(p, x, y, r, C, a = 1) {
+    if (r < 0.9) return p.dot(x, y, C[6], a);
+    p.circle(x + r * 0.12, y + r * 0.2, r, C[4], a);
+    p.circle(x, y, r * 0.84, C[6], a);
+    if (r > 1.6) p.circle(x - r * 0.3, y - r * 0.32, r * 0.46, WHITE, a);
+  }
   function pebble(p, x, y, r, ST) {
     p.shade(x - r - 1, y - r - 1, x + r + 1, y + r + 1, (px, py, o) => {
       const dx = px - x, dy = py - y, d = Math.hypot(dx * 1.1, dy);
@@ -6969,6 +6992,532 @@
     };
   }
 
+  // vendor/pixelfx/src/fx/water/wave-crash.js
+  var wave_crash_exports = {};
+  __export(wave_crash_exports, {
+    create: () => create26,
+    meta: () => meta31
+  });
+  var meta31 = {
+    name: "Wave crash",
+    desc: "A swell rolls in and steepens, its lip throws forward and curls over a dark barrel, then crashes into a burst of white foam and spray that surges on and fades to lace.",
+    tags: ["water", "wave", "crash", "surf", "foam", "spray", "one-shot"],
+    size: [224, 104],
+    origin: [112, 86],
+    duration: 3.2,
+    loop: false,
+    fps: 30,
+    bg: "ground",
+    options: { palette: WATER, seed: 6 }
+  };
+  var SY5 = 0.22;
+  var G3 = 820;
+  var CRASH = 1.2;
+  var LIP0 = 0.62;
+  var EDGE = 110;
+  var crestX = (t) => t < CRASH ? -80 + 72 * ease.inOutSine(t / CRASH) : -8 + 30 * ease.outCubic(clamp((t - CRASH) / 1.4));
+  var crestH = (t) => t < CRASH ? 5 + 33 * ease.inOutSine(clamp(t / (CRASH * 0.92))) : 38 * (1 - ease.outCubic(clamp((t - CRASH) / 0.45))) + 5 * (1 - smooth(CRASH, CRASH + 1.6, t));
+  var faceW = (t) => t < CRASH ? 24 - 16 * smooth(0.3, CRASH, t) : 8 + 14 * smooth(CRASH, CRASH + 0.6, t);
+  var lipK = (t) => clamp((t - LIP0) / (CRASH - LIP0));
+  function create26(o) {
+    const C = fit(o.palette, 8), R = new Rng(o.seed), S = o.seed;
+    const ps = new Particles({ rng: R }), mist = new Mist(), lights = new Lights(), rings = new Ripples({ sy: SY5 }), puffs = [], plinks = [];
+    const drops = new Drops2({
+      sy: SY5,
+      g: G3,
+      onLand: (d) => {
+        rings.add(d.x, d.z, 0.6, 2 + d.s * 1.8, 0.3 + d.s * 0.1, { n: 1, k: 0.9, hot: 0.05 });
+        plinks.push({ x: d.x, y: d.z * SY5, age: 0 });
+      }
+    });
+    let t = 0, crashed = false;
+    const height2 = (x, tt) => {
+      const xc = crestX(tt), A = crestH(tt), dx = x - xc;
+      return A * Math.exp(-((dx / (dx < 0 ? 30 : faceW(tt))) ** 2));
+    };
+    const lip2 = (s, tt) => {
+      const k = lipK(tt), xc = crestX(tt), A = crestH(tt);
+      return [xc + 1 + s * 30 * Math.pow(k, 0.8), -A - 4 * s * (1 - s) * (1 + 4 * k) + s * s * A * ease.inQuad(k) * 0.98, (11 - 8.5 * s) * (0.5 + 0.5 * k)];
+    };
+    const puff = (x, y, vx, vy, r0, r1, life, delay = 0) => puffs.push({ x, y, vx, vy, r0, r1, life, max: life, delay });
+    function body2(p, fade) {
+      const xc = crestX(t), A = crestH(t);
+      for (let X = -EDGE; X < EDGE; X++) {
+        const x = X + 0.5, h = height2(x, t), edge = 1 - smooth(EDGE - 24, EDGE, Math.abs(x));
+        if (h < 0.6 || edge <= 0) continue;
+        const face = x > xc, near = Math.exp(-(((x - xc) / 9) ** 2)), a = fade * edge * 1.4;
+        for (let Y = Math.floor(-h); Y < 0; Y++) {
+          const y = Y + 0.5, u = (y + h) / h, depth = y + h;
+          let c;
+          if (depth < 1) c = near > 0.5 && A > 14 && noise(x * 0.6 + t * 9, S) > -0.35 ? WHITE : face ? C[5] : C[6];
+          else if (depth < 2.4 && near > 0.35 && A > 14) c = noise2(x * 0.5, y * 0.5 + t * 6, S + 1) > -0.1 ? WHITE : C[6];
+          else {
+            const win = near * (1 - u) * 1.6, up = noise2((x * 0.9 - y * 0.35) * 0.8, y * 0.12 + t * 5, S + 2), wind = noise2(x * 0.18 - t * 2, y * 0.9, S + 3);
+            const fi = up > 0.55 && u < 0.85 ? 6 : win > 0.8 ? 5 : win > 0.45 || up > 0.3 ? 4 : win > 0.2 || up > 0.05 ? 3 : u < 0.6 ? 2 : 1;
+            const bi = u < 0.14 ? 4 : wind > 0.55 ? 4 : wind > 0.25 || u < 0.32 ? 3 : u < 0.7 ? 2 : 1;
+            c = C[Math.round(bi + (fi - bi) * smooth(xc - 5, xc + 5, x))];
+          }
+          p.dot(X, Y, c, a);
+        }
+      }
+    }
+    function curl(p) {
+      const k = lipK(t);
+      if (k <= 0 || t >= CRASH) return;
+      const cells = /* @__PURE__ */ new Map();
+      for (let s = 0; s <= 1; s += 0.012) {
+        const [x, y, w] = lip2(s, t), [x2, y2] = lip2(Math.min(1, s + 0.012), t), tx2 = x2 - x, ty2 = y2 - y, l = Math.hypot(tx2, ty2) || 1, nx = ty2 / l, ny = -tx2 / l;
+        for (let q = 0; q <= 1; q += 0.5 / Math.max(1, w)) {
+          const px = x + nx * (q - 0.5) * w, py = y + ny * (q - 0.5) * w, key = Math.floor(py) * 1024 + Math.floor(px);
+          const c = q < 0.18 ? WHITE : q < 0.36 ? s > 0.8 ? WHITE : C[6] : q < 0.56 ? C[5] : q < 0.76 ? C[4] : C[3];
+          const cur = cells.get(key);
+          if (!cur || q < cur.q) cells.set(key, { x: px, y: py, c, q });
+        }
+      }
+      for (const c of cells.values()) p.px(c.x, c.y, c.c);
+      for (let s = 0; s <= 1; s += 0.125) {
+        const [x, y, w] = lip2(s, t);
+        p.glow(x, y, 6 + w, C[5], 0.24 * k);
+      }
+      const [tx, ty] = lip2(1, t), g = Math.sin(Math.PI * clamp((k - 0.55) / 0.45));
+      if (g > 0.05) sparkle(p, tx, ty, 6 * g, C[6], C[5], 0.5 * g);
+      const [bx, by] = lip2(0.6, t);
+      p.glow(bx - 3, by + 8, 16, C[4], 0.25 * k);
+    }
+    function sea(p, fade) {
+      for (let X = -EDGE; X < EDGE; X++) {
+        const x = X + 0.5, edge = 1 - smooth(EDGE - 30, EDGE, Math.abs(x)), a = fade * edge;
+        if (a <= 0.02) continue;
+        const g = noise(x * 0.3 - t * 3, S + 4);
+        p.dot(X, 0, g > 0.55 ? C[6] : C[4], a * 1.2);
+        p.blend(x, 1.5, C[2], 0.6 * a);
+        p.blend(x, 2.5, C[1], 0.45 * a);
+      }
+    }
+    return {
+      update(dt) {
+        t += dt;
+        const k = lipK(t);
+        if (t < CRASH && crestH(t) > 14 && R.chance(0.5)) {
+          const xc = crestX(t), A = crestH(t);
+          ps.spawn(P.FLAKE, xc + R.range(-4, 3), -A - R.range(0, 2), -R.range(20, 60), -R.range(10, 40), R.range(0.5, 0.9), R.chance(0.5) ? WHITE : C[6], R.range(0.6, 1.3));
+        }
+        if (k > 0.3 && t < CRASH && R.chance(0.35)) {
+          const [x, y] = lip2(1, t);
+          drops.add({ x, z: R.range(-3, 3), h: -y, vx: R.range(30, 90), vz: R.range(-10, 10), vh: R.range(-20, 40), s: R.chance(0.3) ? 2 : 1 });
+        }
+        if (!crashed && t >= CRASH) {
+          crashed = true;
+          const [X0] = lip2(1, CRASH - 1e-3);
+          lights.add(X0, -20, 56, C[5], 0.8, 0.55);
+          lights.add(X0, -4, 22, WHITE, 0.6, 0.1);
+          for (let i = 0; i < 46; i++) {
+            const a = R.range(-0.9, 0.6) * Math.PI, v = R.range(30, 120);
+            drops.add({ x: X0 + R.range(-6, 6), z: R.range(-4, 4), h: R.range(2, 8), vx: Math.cos(a) * v * 0.85 + 18, vz: Math.sin(a) * v * 0.5, vh: R.range(120, 320), s: R.chance(0.15) ? 3 : R.chance(0.35) ? 2 : 1, delay: R.range(0, 0.1) });
+          }
+          for (let i = 0; i < 14; i++) drops.add({ x: X0 + R.range(-3, 3), z: R.range(-2, 2), h: R.range(2, 6), vx: R.range(-15, 25), vz: R.range(-8, 8), vh: R.range(220, 300), s: R.chance(0.3) ? 2 : 1, delay: R.range(0.04, 0.16) });
+          for (let i = 0; i < 34; i++) puff(X0 + R.range(-12, 10), -R.range(2, 12), R.range(-40, 130), -R.range(30, 150), R.range(1, 2), R.range(1.8, 4.2), R.range(0.4, 0.95), R.range(0, 0.14));
+          for (let i = 0; i < 34; i++) {
+            const a = R.range(-Math.PI * 0.95, -Math.PI * 0.05), v = R.range(40, 160);
+            ps.spawn(P.FLAKE, X0 + R.range(-8, 8), -R.range(4, 14), Math.cos(a) * v + 25, Math.sin(a) * v, R.range(0.6, 1.3), R.chance(0.5) ? WHITE : C[6], R.range(0.6, 1.4), R.range(0, 0.1));
+          }
+          for (let i = 0; i < 12; i++) mist.add(X0 + R.range(-10, 14), -R.range(3, 16), R.range(-20, 70), -R.range(6, 24), 3, R.range(9, 15), R.range(1.1, 1.7), R.chance(0.5) ? C[6] : WHITE, 0.26, R.range(0, 0.2));
+          for (let i = 0; i < 10; i++) ps.spawn(P.STAR, X0 + R.range(-20, 24), -R.range(6, 40), 0, -5, R.range(0.3, 0.6), C[6], R.range(1, 2.4), R.range(0.05, 0.4));
+          rings.add(X0, 0, 6, 40, 1.2, { n: 2, gap: 3, k: 1.1, hot: 0.12 });
+        }
+        if (crashed && t < CRASH + 1.1 && R.chance(0.45 * (1 - (t - CRASH) / 1.1))) {
+          const x = crestX(t) + R.range(-6, 14);
+          puff(x, -R.range(1, 4), R.range(10, 40), -R.range(10, 40), R.range(0.9, 1.8), R.range(1.8, 3.6), R.range(0.4, 0.8));
+        }
+        if (crashed && t < CRASH + 0.8 && R.chance(0.12)) mist.add(crestX(t) + R.range(-8, 8), -R.range(2, 6), R.range(10, 40), -R.range(3, 10), 3, R.range(7, 11), R.range(0.8, 1.1), C[6], 0.2);
+        for (let i = puffs.length - 1; i >= 0; i--) {
+          const f = puffs[i];
+          if (f.delay > 0) {
+            f.delay -= dt;
+            continue;
+          }
+          if ((f.life -= dt) <= 0) {
+            puffs.splice(i, 1);
+            continue;
+          }
+          f.vx -= f.vx * 2.5 * dt;
+          f.vy += (160 - f.vy * 2.5) * dt;
+          f.x += f.vx * dt;
+          f.y = Math.min(f.y + f.vy * dt, -1);
+        }
+        for (let i = plinks.length - 1; i >= 0; i--) if ((plinks[i].age += dt) > 0.12) plinks.splice(i, 1);
+        drops.update(dt);
+        rings.update(dt);
+        mist.update(dt);
+        ps.update(dt);
+        lights.update(dt);
+      },
+      drawBack(p) {
+        const fade = smooth(0, 0.25, t) * (1 - smooth(meta31.duration - 0.7, meta31.duration - 0.1, t));
+        sea(p, fade);
+        rings.draw(p, C, -1);
+        drops.draw(p, C, "back");
+      },
+      draw(p) {
+        const fade = smooth(0, 0.25, t) * (1 - smooth(meta31.duration - 0.7, meta31.duration - 0.1, t));
+        body2(p, fade);
+        curl(p);
+        rings.draw(p, C, 1);
+        if (crashed) {
+          const k = 1 - smooth(CRASH + 0.4, meta31.duration - 0.15, t), x0 = -20, x1 = crestX(t) + 10;
+          for (let X = Math.floor(x0); X < x1; X++) {
+            const x = X + 0.5, n = 1 - Math.abs(noise2(x * 0.35, t * 0.8, S + 7)) * 4;
+            if (n > 1.15 - k * 1.1) p.px(X, 0, n > 1.4 - k ? WHITE : C[6]);
+            if (n > 1.4 - k * 0.9) p.px(X, 1, C[5]);
+          }
+        }
+        for (const f2 of puffs) {
+          if (f2.delay > 0) continue;
+          const g = 1 - f2.life / f2.max, r = (f2.r0 + (f2.r1 - f2.r0) * ease.outCubic(g)) * (1 - smooth(0.7, 1, g));
+          if (r > 0.6) billow(p, f2.x, f2.y, r, C);
+        }
+        for (const q of plinks) {
+          if (q.age < 0.06) p.px(q.x, q.y, WHITE);
+          p.glow(q.x, q.y, 4, C[5], 0.25 * (1 - q.age / 0.12));
+        }
+        drops.draw(p, C, "front");
+        const f = (t - CRASH) / 0.08;
+        if (f >= 0 && f < 1) {
+          const [X0] = lip2(1, CRASH - 1e-3);
+          p.circle(X0, -3, 8 * (1 - f * 0.4), WHITE);
+          p.ellipse(X0, 0, 14, 2.6, (d) => d < 0.6 ? WHITE : C[6]);
+        }
+        ps.draw(p);
+        mist.draw(p, C[5]);
+        lights.draw(p);
+        if (t < CRASH) {
+          p.glow(crestX(t) + 4, -crestH(t) + 2, 26, C[4], 0.22 * smooth(0.2, CRASH, t));
+          p.glowLine(crestX(t) - 26, -crestH(t) * 0.45, crestX(t), -crestH(t), 10, C[5], 0.14 * smooth(0.2, CRASH, t));
+        } else p.glow(crestX(t), -10, 34, C[4], 0.26 * (1 - smooth(CRASH, meta31.duration - 0.3, t)));
+      }
+    };
+  }
+
+  // vendor/pixelfx/src/fx/water/shark-wake.js
+  var shark_wake_exports = {};
+  __export(shark_wake_exports, {
+    create: () => create27,
+    meta: () => meta32
+  });
+  var meta32 = {
+    name: "Shark wake",
+    desc: "A V of foam peels off a fin seen from above, at any heading: it stays on the water as the fin moves on, with a churned streak and spray at the fin.",
+    tags: ["water", "wake", "foam", "shark", "trail", "top-down", "loop"],
+    size: [240, 180],
+    origin: [120, 90],
+    duration: 2,
+    loop: true,
+    fps: 30,
+    bg: "dark",
+    // dir: heading (unit vector, screen space); speed: how fast the fin moves, px/s; spread: how fast the V opens, px/s
+    options: { palette: ["#0a1630", "#123063", "#1b5596", "#2a7fc4", "#45a9e3", "#86d3f5", "#cdf1ff", "#ffffff"], dir: [1, 0], speed: 200, spread: 58, seed: 7 }
+  };
+  var LIFE = 0.5;
+  var EMIT = 1 / 90;
+  function create27(o) {
+    const C = fit(o.palette, 8), R = new Rng(o.seed);
+    const foam = [], churn = [], spray = [];
+    let t = 0, acc = 0;
+    return {
+      update(dt) {
+        t += dt;
+        const [dx, dy] = o.dir, len2 = Math.hypot(dx, dy) || 1, ux = dx / len2, uy = dy / len2, px = -uy, py = ux, back = o.speed;
+        for (const list of [foam, churn, spray]) for (const b of list) {
+          b.age += dt;
+          b.x += b.vx * dt - ux * back * dt;
+          b.y += b.vy * dt - uy * back * dt;
+        }
+        for (const s of spray) s.vz -= 160 * dt, s.z += s.vz * dt;
+        acc += dt;
+        while (acc >= EMIT) {
+          acc -= EMIT;
+          for (const side of [-1, 1]) {
+            if (!R.chance(0.75)) continue;
+            const k = R.range(0.6, 1.3) * o.spread;
+            foam.push({ x: px * side * 2 - ux * 2, y: py * side * 2 - uy * 2, vx: px * side * k, vy: py * side * k, age: 0, life: LIFE * R.range(0.7, 1.1), side, ax: -ux + px * side * (o.spread / back) * 1.2, ay: -uy + py * side * (o.spread / back) * 1.2 });
+          }
+          if (R.chance(0.45)) churn.push({ x: -ux * 3 + px * R.range(-3, 3), y: -uy * 3 + py * R.range(-3, 3), vx: px * R.range(-10, 10), vy: py * R.range(-10, 10), age: 0, life: LIFE * R.range(0.6, 1), r: R.range(1.5, 3) });
+          if (R.chance(0.35)) spray.push({ x: ux * 2 + R.range(-2, 2), y: uy * 2 + R.range(-2, 2), vx: px * R.range(-30, 30) + ux * back * 0.6, vy: py * R.range(-30, 30) + uy * back * 0.6, z: 0, vz: R.range(30, 60), age: 0, life: 0.4 });
+        }
+        for (const list of [foam, churn, spray]) for (let i = list.length - 1; i >= 0; i--) if (list[i].age >= list[i].life || list[i].z !== void 0 && list[i].z < 0) list.splice(i, 1);
+      },
+      draw(p) {
+        for (const c of churn) {
+          const k = 1 - c.age / c.life;
+          p.disc(c.x, c.y, c.r * (1 + (1 - k) * 1.4), C[4], 0.14 * k);
+        }
+        for (const f of foam) {
+          const k = 1 - f.age / f.life, al = Math.hypot(f.ax, f.ay) || 1, ax = f.ax / al, ay = f.ay / al;
+          const c = k > 0.8 ? WHITE : k > 0.55 ? C[6] : k > 0.3 ? C[5] : C[4];
+          const d = k > 0.7 ? 2.5 : k > 0.4 ? 1.5 : 0.5;
+          p.line(f.x - ax * d, f.y - ay * d, f.x + ax * d, f.y + ay * d, c, Math.min(1, k * 1.6));
+          if (k > 0.55) p.dot(f.x + -ay * f.side * 1, f.y + ax * f.side * 1, C[5], k);
+        }
+        p.glow(0, 0, 9, C[5], 0.35);
+        p.dot(0, 0, WHITE, 1);
+        for (const s of spray) p.dot(s.x, s.y - s.z, s.age < 0.15 ? WHITE : C[6], 1 - s.age / s.life);
+      }
+    };
+  }
+
+  // vendor/pixelfx/src/fx/projectiles/bullet-tracer.js
+  var bullet_tracer_exports = {};
+  __export(bullet_tracer_exports, {
+    draw: () => draw6,
+    meta: () => meta33
+  });
+  var meta33 = {
+    name: "Bullet tracer",
+    desc: "A white-hot slug tearing along, its tracer burning behind it in a long streak that sputters and cools from white through gold to red, shedding sparks and a thread of smoke.",
+    tags: ["projectile", "bullet", "tracer", "gun", "directional", "loop"],
+    size: [200, 40],
+    origin: [184, 18],
+    duration: 0.6,
+    loop: true,
+    fps: 30,
+    bg: "sky",
+    options: {
+      palette: ["#4a1712", "#8a1f17", "#c9281f", "#f2561d", "#ff8a2a", "#ffc23d", "#ffe26b", "#fff3a6", "#ffffff"],
+      smoke: ["#2e2a36", "#46404f", "#625b6b", "#817a8a", "#a39caa"],
+      length: 120,
+      speed: 520,
+      seed: 4
+    }
+  };
+  var SLUG = ["..oyyp..", ".ypwwwwp", "ywwwwwww", ".ypwwwwp", "..oyyp.."];
+  function draw6(p, t, o) {
+    const F = fit(o.palette, 9), SM = fit(o.smoke, 5), S = o.seed, D5 = meta33.duration, L = o.length, V = o.speed;
+    const fr = Math.floor(t * 30 + 1e-6), ph = TAU * t / D5, left = -meta33.origin[0] + 2;
+    const puffs = [];
+    beat(t, D5, 18, S + 7, (r) => r.range(0.5, 0.7), (age, life, r) => {
+      const k = age / life, x = -L * r.range(0.45, 0.8) - age * 90, y = 0.5 + Math.sin(age * 6 + r.range(0, TAU)) * age * 3 - age * age * 8;
+      if (x < left + 6) return;
+      puffs.push({ x, y, r: 1.2 + age * 4, a: 0.55 * (1 - k) * Math.min(1, age * 8) * smooth(left, left + 30, x), b: 0.95 - k * 0.4, w: 0 });
+    });
+    cloud(p, puffs, SM, SM, { dens: 1.2, max: 0.6 });
+    const heat = (d) => 1 - Math.pow(d / L, 0.8) + noise(d * 0.12 - t * 40, S) * 0.12 + 0.08 * Math.sin(d * 0.35 - ph * 9);
+    const yAt = (d) => 0.5 + Math.sin(d * 0.09 + ph * 2) * (d / L) * 0.8, HOT3 = L * 0.32;
+    p.shade(-HOT3 - 1, -4, 1, 5, (x, y) => {
+      const d = -x, u = d / HOT3;
+      if (u < 0 || u > 1) return;
+      const w = 0.7 + 2.3 * Math.pow(1 - u, 1.4) * (0.9 + 0.1 * Math.sin(d * 0.8 - ph * 12)), v = Math.abs(y - yAt(d)) / w;
+      if (v > 1) return;
+      const h = heat(d);
+      return v < 0.38 ? h > 0.8 ? WHITE : F[7] : v < 0.7 ? h > 0.75 ? F[7] : h > 0.6 ? F[6] : F[5] : u < 0.5 ? F[5] : F[4];
+    });
+    for (let d = HOT3; d <= L; d += 0.5) {
+      const u = d / L, h = heat(d);
+      if (u > 0.55 && rand(Math.floor(d / 3), fr, S) < (u - 0.55) * 1.6) continue;
+      const c = h > 0.55 ? F[6] : h > 0.42 ? F[5] : h > 0.3 ? F[4] : h > 0.18 ? F[3] : h > 0.08 ? F[2] : F[1];
+      p.dot(-d, yAt(d), c, u < 0.85 ? 1 : (1 - u) / 0.15);
+    }
+    p.glowLine(-2, 1, -L * 0.45, 1, 6, F[4], 0.35);
+    p.glowLine(-2, 1, -L * 0.2, 1, 3, F[7], 0.3);
+    const SP = [F[7], F[6], F[4], F[3]];
+    beat(t, D5, 16, S + 2, (r) => r.range(0.1, 0.28), (age, life, r) => {
+      const [x, y, vx, vy] = wake(-r.range(4, L * 0.5), 0.5 + r.range(-0.5, 1), -r.range(10, 80), r.range(-60, 50), age, V * 0.35, 3, 260);
+      if (x > left + 8) spark2(p, x, y, vx, vy, 1 - age / life, SP, 0.45, 0.012, 6);
+    });
+    p.sprite(SLUG, { w: WHITE, p: F[7], y: F[6], o: F[5] }, -1, -1);
+    p.glow(2, 1, 24, F[4], 0.5);
+    p.glow(3, 1, 8, WHITE, 0.55);
+  }
+
+  // vendor/pixelfx/src/fx/projectiles/laser-bolt.js
+  var laser_bolt_exports = {};
+  __export(laser_bolt_exports, {
+    draw: () => draw7,
+    meta: () => meta34
+  });
+  var meta34 = {
+    name: "Laser bolt",
+    desc: "A red laser bolt: a white-hot core in a rounded head, red bands tapering back, pulses racing down it, a tail that shimmers apart into wavering dashes.",
+    tags: ["projectile", "laser", "energy", "sci-fi", "directional", "loop"],
+    size: [128, 32],
+    origin: [108, 16],
+    duration: 0.5,
+    loop: true,
+    fps: 30,
+    bg: "sky",
+    options: { palette: ["#2a0610", "#5c0d1c", "#9a1428", "#d8243a", "#ff4d5e", "#ff8a94", "#ffd0d4", "#ffffff"], length: 40, seed: 2 }
+  };
+  function draw7(p, t, o) {
+    const C = fit(o.palette, 8), L = o.length, S = o.seed, D5 = meta34.duration, ph = t / D5, fr = Math.floor(t * 30 + 1e-6);
+    const left = -meta34.origin[0] + 2;
+    beat(t, D5, 14, S, (r) => r.range(0.18, 0.3), (age, life, r) => {
+      const k = age / life, x0 = -L * 0.8 - age * r.range(150, 230), len2 = r.range(3, 7) * (1 - k * 0.5), y = 0.5 + Math.sin(x0 * 0.25 + ph * TAU * 2) * (0.5 + k * 1.5) + r.range(-0.6, 0.6) * k;
+      if (x0 - len2 < left || rand(fr, r.int(0, 999)) < k * 0.5) return;
+      p.line(x0, y, x0 - len2, y, k < 0.3 ? C[5] : k < 0.6 ? C[4] : C[3]);
+      if (k < 0.4) p.glow(x0 - len2 / 2, y, 4, C[4], 0.3 * (1 - k));
+    });
+    p.shade(-L - 1, -5, 4, 6, (x, y) => {
+      const d = -x + 3, u = d / (L + 3);
+      if (u < 0 || u > 1) return;
+      const head4 = d < 3 ? Math.sqrt(Math.max(0, 1 - ((3 - d) / 3) ** 2)) : 1;
+      const w = (3.4 * Math.pow(1 - u, 0.9) + 0.5) * head4 * (1 + 0.08 * Math.sin(d * 0.9 - ph * TAU * 4)), v = Math.abs(y - 0.5) / w;
+      if (v > 1.2) return;
+      if (v > 1 && (u > 0.5 || rand(Math.floor(x), fr) > 0.6)) return;
+      const pulse = ((d * 0.05 - ph * 3) % 1 + 1) % 1 < 0.12 ? 1 : 0;
+      const lvl = v < 0.22 ? u < 0.6 ? 7 : 6 : v < 0.45 ? 6 - (u > 0.5 ? 1 : 0) : v < 0.72 ? 4 : v <= 1 ? 3 : 2;
+      return C[Math.min(7, lvl + (v < 0.72 ? pulse : 0))];
+    });
+    for (const s of [0, Math.PI]) {
+      for (let d = 2; d < L * 0.7; d += 1) {
+        const a = d * 0.45 - ph * TAU * 3 + s, y = 0.5 + Math.sin(a) * (2.2 * (1 - d / L) + 0.6);
+        if (Math.cos(a) > 0.3) p.dot(-d, y, Math.cos(a) > 0.8 ? WHITE : C[6]);
+      }
+    }
+    const g = 0.75 + 0.25 * Math.sin(ph * TAU * 2);
+    sparkle(p, 1, 0.5, 3 + Math.round(g * 2), C[6], C[4], 0.5);
+    p.glowLine(1, 0.5, -L, 0.5, 9, C[3], 0.4);
+    p.glow(-2, 0.5, 20, C[3], 0.5 * g);
+    p.glow(1, 0.5, 6, WHITE, 0.25);
+  }
+
+  // vendor/pixelfx/src/fx/projectiles/plasma-shot.js
+  var plasma_shot_exports = {};
+  __export(plasma_shot_exports, {
+    draw: () => draw8,
+    meta: () => meta35
+  });
+  var meta35 = {
+    name: "Plasma shot",
+    desc: "A glowing plasma blob: hot knots churning in its core, a corona crackling over its skin, its tail necking into droplets that tear off, cool and wink out behind.",
+    tags: ["projectile", "plasma", "energy", "sci-fi", "directional", "loop"],
+    size: [144, 60],
+    origin: [108, 30],
+    duration: 0.8,
+    loop: true,
+    fps: 30,
+    bg: "sky",
+    options: {
+      palette: ["#061a1c", "#0b3b34", "#0f6a4a", "#18a05a", "#3fd46a", "#8cf57e", "#d6ffc4", "#ffffff"],
+      size: 6,
+      speed: 200,
+      seed: 3
+    }
+  };
+  function draw8(p, t, o) {
+    const C = fit(o.palette, 8), R = o.size, V = o.speed, S = o.seed, D5 = meta35.duration, w = TAU * t / D5;
+    const fr = Math.floor(t * 30 + 1e-6), left = -meta35.origin[0] + 2;
+    const T02 = -R * 3.2, tail2 = (x) => Math.sin(x * 0.2 + w * 2) * (0.3 + (T02 - x) / 44 * 1.8);
+    for (let x = T02; x > T02 - 44; x -= 1) {
+      const u = (T02 - x) / 44, y = tail2(x);
+      p.dot(x, y, u < 0.2 ? C[6] : u < 0.45 ? C[5] : C[4], u < 0.55 ? 1 : (1 - u) / 0.45);
+      if (u < 0.3) p.px(x, y + 1, u < 0.15 ? C[5] : C[4]);
+    }
+    const balls = [{ x: 0, y: 0, r: R, h: 1, core: 0.8 }];
+    for (let i = 0; i < 3; i++) {
+      const a = w * [2, -3, 5][i] + i * TAU / 3, d = R * (0.5 + 0.1 * Math.sin(w * 3 + i * 2));
+      balls.push({ x: Math.cos(a) * d - 0.4, y: Math.sin(a) * d * 0.8, r: R * 0.32, h: 1, core: 1 });
+    }
+    for (let i = 1; i <= 6; i++) {
+      const x = -R * (0.5 + i * 0.42), wag = Math.sin(w * 2 - i * 0.9) * (0.3 + i * 0.28), r = R * (0.62 - i * 0.08);
+      balls.push({ x, y: wag, r, h: 0.96 - i * 0.05, core: Math.sqrt((5.2 - i * 0.65) * 0.3) / r });
+    }
+    const drops = [];
+    cycle(t, D5, 11, S, (r) => r.range(0.34, 0.5), (age, life, r) => {
+      const k = age / life, pull = r.range(450, 800), x = -R * 2.9 - 0.5 * pull * age * age - r.range(0, 16) * age;
+      const y = Math.sin(w * 2 - 5.4 + age * 12) * 2 + r.range(-30, 30) * age * (0.4 + age);
+      const rad = R * r.range(0.3, 0.48) * (1 - k * 0.6);
+      drops.push({ x, y, r: rad, h: 0.97 * (1 - k * 0.75), core: Math.sqrt(Math.max(0, 1 - k * 1.3) * 7 * 0.3) / rad, k });
+    });
+    const all = balls.concat(drops);
+    p.shade(-R * 2.6 - 60, -R * 2 - 8, R * 1.6, R * 2 + 8, (x, y) => {
+      let f = 0, heat = 0, hh = 0;
+      for (const b of all) {
+        const dx = x - b.x, dy = y - b.y, d2 = dx * dx + dy * dy, q = d2 / (4 * b.r * b.r);
+        if (q < 1) {
+          const c = (1 - q) * (1 - q) / 0.5625;
+          f += c;
+          heat += c * b.h;
+        }
+        if (b.core) hh += b.core * b.core * b.r * b.r / (d2 + 0.3);
+      }
+      if (f < 1) return;
+      const lvl = hh > 10 ? 7 : hh > 4.6 ? 6 : hh > 2.2 ? 5 : f > 1.4 ? 4 : 3, cap = Math.round(2 + heat / f * 5.4);
+      return C[Math.max(2, Math.min(x > R * 0.3 && lvl < 5 ? lvl + 1 : lvl, cap))];
+    });
+    for (let j = 0; j < 3; j++) {
+      const g = rng(fr, j, S), a0 = g.range(-2.3, 2.3), span = g.range(0.45, 0.9) * g.sign(), n = 6, hgt = g.range(1.5, 3.5);
+      const pts = [];
+      for (let i = 0; i <= n; i++) {
+        const a = a0 + span * i / n, rr = R + 0.6 + hgt * Math.sin(Math.PI * i / n) + (i % n ? g.range(-0.5, 0.5) : 0);
+        pts.push([Math.cos(a) * rr - 0.4, Math.sin(a) * rr * 0.92]);
+      }
+      p.polyline(pts, j ? C[5] : C[6]);
+      p.px(pts[3][0], pts[3][1], WHITE);
+      p.glow(pts[3][0], pts[3][1], 6, C[5], 0.4);
+    }
+    for (let j = 0; j < 4; j++) {
+      const g = rng(fr, j + 9, S), a = g.range(-2.2, 2.2), l = g.range(1.5, 4), r0 = R + 1;
+      const x0 = Math.cos(a) * r0 - 0.4, y0 = Math.sin(a) * r0 * 0.92;
+      p.line(x0, y0, x0 + Math.cos(a) * l, y0 + Math.sin(a) * l, j % 2 ? C[4] : C[5]);
+    }
+    const SP = [WHITE, C[6], C[5], C[3]];
+    beat(t, D5, 14, S + 5, (r) => r.range(0.12, 0.3), (age, life, r) => {
+      const a = r.range(-2.4, 2.4), sp = r.range(60, 130), [x, y, vx, vy] = wake(Math.cos(a) * (R + 1), Math.sin(a) * (R + 1), Math.cos(a) * sp, Math.sin(a) * sp, age, V * 0.7, 4, 0);
+      if (x > left + 4 && Math.abs(y) < 26) spark2(p, x, y, vx, vy, 1 - age / life, SP, 0.4, 0.015, 6);
+    });
+    const pulse = 0.85 + 0.15 * Math.sin(w * 4);
+    p.glow(-2, 0, 34, C[3], 0.8 * pulse);
+    p.glow(0, 0, 16, C[4], 0.35 * pulse);
+    p.glow(1, 0, 7, C[6], 0.3 * pulse);
+    p.glowLine(-R, 0, -R * 4.6, 0, 7, C[3], 0.3);
+    for (const d of drops) {
+      if (d.x < left + 4) continue;
+      if (d.k < 0.6 && d.x < -R * 3.5) p.px(d.x, d.y, d.k < 0.3 ? C[7] : C[6]);
+      p.glow(d.x, d.y, 3 + d.r * 2, C[2], 0.6 * (1 - d.k));
+    }
+  }
+
+  // vendor/pixelfx/src/fx/projectiles/nail-shot.js
+  var nail_shot_exports = {};
+  __export(nail_shot_exports, {
+    draw: () => draw9,
+    meta: () => meta36
+  });
+  var meta36 = {
+    name: "Nail shot",
+    desc: "A steel nail flies point first: a flat head and a lit shank with a glint sliding down it, a short streak behind and sparks flicking off the tip.",
+    tags: ["projectile", "nail", "steel", "bullet", "mechanic", "loop"],
+    size: [64, 24],
+    origin: [52, 12],
+    duration: 0.6,
+    loop: true,
+    fps: 30,
+    bg: "dark",
+    // palette: steel, dark to light; sparks: hot to cool
+    options: { palette: ["#0c0e14", "#2e3648", "#4a5468", "#6e7a90", "#9aa6ba", "#d0d8e6", "#ffffff"], sparks: ["#fff3a6", "#ffc23d", "#f2561d"], seed: 3 }
+  };
+  function draw9(p, t, o) {
+    const C = fit(o.palette, 7), f = Math.floor(t * 30 + 1e-6), r = rng(o.seed, 5, f);
+    for (let i = 0; i < 3; i++) {
+      const y = (i - 1) * 2, x0 = -14 - r.int(0, 4), len2 = 10 + r.int(0, 10) - Math.abs(y) * 2;
+      p.line(x0 - len2, y, x0, y, i === 1 ? C[3] : C[2], 0.7);
+    }
+    p.px(0, 0, C[5]);
+    p.line(-1, -1, -10, -1, C[5]);
+    p.line(-1, 0, -10, 0, C[4]);
+    p.line(-2, 1, -10, 1, C[2]);
+    p.rect(-13, -3, 3, 7, C[3]);
+    p.line(-13, -3, -13, 3, C[5]);
+    const g = -1 - f * 3 % 10;
+    p.px(g, -1, WHITE);
+    p.glow(-5, 0, 7, C[4], 0.25);
+    if (f % 4 === 0) {
+      const s = fit(o.sparks, 3);
+      p.px(1, r.int(-2, 2), s[0]);
+      p.px(-1 - r.int(1, 3), -2 - r.int(0, 2), s[1]);
+      p.glow(0, 0, 4, s[1], 0.4);
+    }
+  }
+
   // fx-pixel.js
   var EFFECTS = {
     "heavy-cleave": heavy_cleave_exports,
@@ -7000,12 +7549,18 @@
     "ground-slam": ground_slam_exports,
     "shield-block": shield_block_exports,
     splash: splash_exports,
-    "heavy-landing": heavy_landing_exports
+    "heavy-landing": heavy_landing_exports,
+    "wave-crash": wave_crash_exports,
+    "shark-wake": shark_wake_exports,
+    "bullet-tracer": bullet_tracer_exports,
+    "laser-bolt": laser_bolt_exports,
+    "plasma-shot": plasma_shot_exports,
+    "nail-shot": nail_shot_exports
   };
   var STEP = 1 / 60;
   var SCALE = 2;
   var active = [];
-  function spawn(id, { x, y, flip = false, delay = 0, scale: scale2 = SCALE, follow = null, advance = 0, ...options } = {}) {
+  function spawn(id, { x, y, flip = false, delay = 0, scale: scale2 = SCALE, follow = null, advance = 0, rotate = 0, ...options } = {}) {
     const mod = EFFECTS[id];
     if (!mod) return null;
     const [w, h] = mod.meta.size, [ox, oy] = mod.meta.origin;
@@ -7032,6 +7587,7 @@
       w,
       h,
       follow,
+      rotate,
       dirty: true,
       stop() {
         fx.stop();
@@ -7081,7 +7637,7 @@
     }
     for (let i = active.length - 1; i >= 0; i--) if (active[i].fx.done()) active.splice(i, 1);
   }
-  function draw6(ctx) {
+  function draw10(ctx) {
     for (const e of active) {
       if (e.delay > 0) continue;
       if (e.dirty) {
@@ -7095,6 +7651,7 @@
       ctx.save();
       ctx.imageSmoothingEnabled = false;
       ctx.translate(e.x, e.y);
+      if (e.rotate) ctx.rotate(e.rotate);
       if (e.flip) ctx.scale(-1, 1);
       ctx.drawImage(e.canvas, -e.ox * e.scale, -e.oy * e.scale, e.w * e.scale, e.h * e.scale);
       ctx.restore();
@@ -7103,5 +7660,5 @@
   function clear() {
     active.length = 0;
   }
-  window.pixelFx = { spawn, update, draw: draw6, clear, actorOf };
+  window.pixelFx = { spawn, update, draw: draw10, clear, actorOf };
 })();

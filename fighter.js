@@ -228,6 +228,7 @@ class Fighter {
                 const angle = Math.atan2(base.y, base.x) + a;
                 projectiles.push(new Projectile(this, 'nail', GEAR_NAIL_DAMAGE, { x: Math.cos(angle), y: Math.sin(angle) }, 12));
             }
+            spawnMuzzleFx(this, base);
             sfx.play('gear_shot');
         }
     }

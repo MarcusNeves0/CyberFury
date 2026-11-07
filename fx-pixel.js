@@ -9,7 +9,7 @@
 //   follow(efeito): chamado a cada passo para o efeito acompanhar alguém (muda efeito.x, .y, .flip e
 //   efeito.fx.options). Devolve o efeito; efeito.stop() termina um efeito em loop (ele some em 0,3 s).
 //   palette: nome de uma rampa da pixelfx ('ice', 'blood', 'fire'...) ou lista de cores; angle: inclinação;
-//   advance: segundos do começo do efeito a pular.
+//   advance: segundos do começo do efeito a pular; rotate: gira o quadro na tela (radianos), efeito.rotate muda depois.
 // pixelFx.actorOf(lutador): a silhueta do sprite do lutador, para efeitos que envolvem o corpo (electrified).
 // pixelFx.update(): avança um passo do jogo (1/60 s). pixelFx.draw(ctx): desenha tudo. pixelFx.clear(): limpa.
 
@@ -44,6 +44,12 @@ import * as groundSlam from './vendor/pixelfx/src/fx/impacts/ground-slam.js';
 import * as shieldBlock from './vendor/pixelfx/src/fx/impacts/shield-block.js';
 import * as splash from './vendor/pixelfx/src/fx/water/splash.js';
 import * as heavyLanding from './vendor/pixelfx/src/fx/impacts/heavy-landing.js';
+import * as waveCrash from './vendor/pixelfx/src/fx/water/wave-crash.js';
+import * as sharkWake from './vendor/pixelfx/src/fx/water/shark-wake.js'; // feito para o tubarão da Sina (não vem da pixelfx)
+import * as bulletTracer from './vendor/pixelfx/src/fx/projectiles/bullet-tracer.js';
+import * as laserBolt from './vendor/pixelfx/src/fx/projectiles/laser-bolt.js';
+import * as plasmaShot from './vendor/pixelfx/src/fx/projectiles/plasma-shot.js';
+import * as nailShot from './vendor/pixelfx/src/fx/projectiles/nail-shot.js'; // feito para os pregos do Gear (não vem da pixelfx)
 
 const EFFECTS = {
     'heavy-cleave': heavyCleave, 'spark-beam': sparkBeam, electrified, 'zap-hit': zapHit,
@@ -52,7 +58,8 @@ const EFFECTS = {
     'fire-ring': fireRing, burning, 'claw-swipe': clawSwipe, thrust, cursed, 'shadow-tendrils': shadowTendrils,
     'muzzle-pistol': muzzlePistol, poisoned, 'poison-skull': poisonSkull, 'necro-skulls': necroSkulls,
     'heal-aoe': healAoe, heal, 'healing-bloom': healingBloom, 'cartoon-pow': cartoonPow,
-    'ground-slam': groundSlam, 'shield-block': shieldBlock, splash, 'heavy-landing': heavyLanding,
+    'ground-slam': groundSlam, 'shield-block': shieldBlock, splash, 'heavy-landing': heavyLanding, 'wave-crash': waveCrash, 'shark-wake': sharkWake,
+    'bullet-tracer': bulletTracer, 'laser-bolt': laserBolt, 'plasma-shot': plasmaShot, 'nail-shot': nailShot,
 };
 const STEP = 1 / 60;
 // Os efeitos foram desenhados para um boneco de 38 px de altura; os nossos têm 64
@@ -60,7 +67,7 @@ const SCALE = 2;
 
 const active = [];
 
-function spawn(id, { x, y, flip = false, delay = 0, scale = SCALE, follow = null, advance = 0, ...options } = {}) {
+function spawn(id, { x, y, flip = false, delay = 0, scale = SCALE, follow = null, advance = 0, rotate = 0, ...options } = {}) {
     const mod = EFFECTS[id];
     if (!mod) return null;
     const [w, h] = mod.meta.size, [ox, oy] = mod.meta.origin;
@@ -75,7 +82,7 @@ function spawn(id, { x, y, flip = false, delay = 0, scale = SCALE, follow = null
     canvas.height = h;
     const g = canvas.getContext('2d');
     const effect = {
-        fx, frame: createFrame(w, h), canvas, g, image: g.createImageData(w, h), x, y, flip, delay, scale, ox, oy, w, h, follow, dirty: true,
+        fx, frame: createFrame(w, h), canvas, g, image: g.createImageData(w, h), x, y, flip, delay, scale, ox, oy, w, h, follow, rotate, dirty: true,
         stop() { fx.stop(); },
     };
     active.push(effect);
@@ -130,6 +137,7 @@ function draw(ctx) {
         ctx.save();
         ctx.imageSmoothingEnabled = false;
         ctx.translate(e.x, e.y);
+        if (e.rotate) ctx.rotate(e.rotate); // gira o quadro inteiro (projéteis na direção do tiro, sem cortar a ponta)
         if (e.flip) ctx.scale(-1, 1);
         ctx.drawImage(e.canvas, -e.ox * e.scale, -e.oy * e.scale, e.w * e.scale, e.h * e.scale);
         ctx.restore();
