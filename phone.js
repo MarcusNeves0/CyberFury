@@ -72,122 +72,27 @@ function renderPhoneRoom() {
         connecting: 'Abrindo a sala para celulares...',
         error: 'Não deu para abrir a sala para celulares (verifique a internet)',
     }[roomStatus];
-    const screens = [...phones.values()].filter(seat => seat.kind === 'screen').length;
     box.innerHTML = text
         ? `<span>📱 ${text}</span>`
         : `<span>📱 No celular, abra <strong>${controllerUrl()}</strong> e digite</span>
            <span class="phone-room-code">${roomCode}</span>
-           <button id="phone-room-new" class="phone-room-new" title="Sortear outro código">↻ novo código</button>
-           <span class="phone-room-remote">📡 Jogando de longe: <strong>${remoteUrl()}</strong> com o mesmo código
-               <button id="broadcast-button" class="broadcast-button ${broadcastStream ? 'on' : ''}">${broadcastStream
-                   ? `■ Parar transmissão${screens ? ` (${screens} ${screens === 1 ? 'tela' : 'telas'})` : ''}`
-                   : '📡 Transmitir'}</button></span>`;
+           <button id="phone-room-new" class="phone-room-new" title="Sortear outro código">↻ novo código</button>`;
     const again = document.getElementById('phone-room-new');
     if (again) again.addEventListener('click', changeRoomCode);
-    const broadcast = document.getElementById('broadcast-button');
-    if (broadcast) broadcast.addEventListener('click', () => (broadcastStream ? stopBroadcast() : startBroadcast()));
 }
 
-// --- Transmissão para quem joga de longe (tela.html) ---
-// Transmite a aba inteira do jogo (a luta, o HUD e os menus, que são HTML por cima do canvas), com o som.
-// O navegador pergunta uma vez qual aba compartilhar; a deste jogo já vem marcada.
-const remoteUrl = () => new URL('tela.html', location.href).href.replace(/^https?:\/\//, '');
-let broadcastStream = null;
-
-// Qualidade da transmissão. 1280x720 é o tamanho do mundo do jogo: a pixel art fica nítida sem gastar
-// internet à toa com a resolução do monitor. Quem transmite precisa de upload acima da taxa máxima.
-const BROADCAST_WIDTH = 1280, BROADCAST_HEIGHT = 720, BROADCAST_FPS = 30;
-const BROADCAST_MAX_BITRATE = 6000000;  // 6 Mbps por tela remota (o navegador baixa sozinho se a internet não aguentar)
-const BROADCAST_CODECS = ['VP9', 'VP8', 'H264']; // VP9 é o melhor para imagem de tela/jogo com pouca internet
-
-async function startBroadcast() {
-    try {
-        broadcastStream = await navigator.mediaDevices.getDisplayMedia({
-            video: { width: { ideal: BROADCAST_WIDTH }, height: { ideal: BROADCAST_HEIGHT }, frameRate: { ideal: BROADCAST_FPS, max: BROADCAST_FPS } },
-            audio: true,
-            preferCurrentTab: true,     // Chrome/Edge: a aba do jogo já vem selecionada
-            selfBrowserSurface: 'include',
-            surfaceSwitching: 'exclude',
-        });
-    } catch (e) {
-        return; // cancelou a pergunta ou o navegador não deixa
-    }
-    shareStream(broadcastStream);
-}
-
-// Começa a mandar um vídeo para todas as telas remotas (e para as que entrarem depois)
-function shareStream(stream) {
-    broadcastStream = stream;
-    stream.getVideoTracks().forEach(track => {
-        // 'detail': não deixa o navegador derreter a resolução da pixel art quando a internet aperta
-        // (com 'motion' ele preferia baixar a resolução e a imagem ficava borrada)
-        track.contentHint = 'detail';
-        track.addEventListener('ended', stopBroadcast); // parou pela barra do navegador
-    });
-    for (const seat of phones.values()) if (seat.kind === 'screen') callScreen(seat);
-    renderPhoneRoom();
-}
-
-function stopBroadcast() {
-    if (!broadcastStream) return;
-    broadcastStream.getTracks().forEach(track => track.stop());
-    broadcastStream = null;
-    for (const seat of phones.values()) {
-        if (seat.call) { seat.call.close(); seat.call = null; }
-    }
-    renderPhoneRoom();
-}
-
-function callScreen(seat) {
-    if (!broadcastStream || !hostPeer || seat.call) return;
-    seat.call = hostPeer.call(seat.conn.peer, broadcastStream, { sdpTransform: preferVideoCodecs });
-    seat.call.on('close', () => { seat.call = null; });
-    tuneBroadcastSender(seat.call);
-}
-
-// Põe os codecs preferidos na frente da lista de vídeo da oferta (quem recebe escolhe o primeiro que conhece)
-function preferVideoCodecs(sdp) {
-    const lines = sdp.split('\r\n');
-    const m = lines.findIndex(l => l.startsWith('m=video'));
-    if (m < 0) return sdp;
-    const codecOf = {};
-    for (const l of lines) {
-        const found = l.match(/^a=rtpmap:(\d+) ([\w-]+)\//);
-        if (found) codecOf[found[1]] = found[2].toUpperCase();
-    }
-    const parts = lines[m].split(' ');
-    const rank = pt => { const i = BROADCAST_CODECS.indexOf(codecOf[pt]); return i < 0 ? BROADCAST_CODECS.length : i; };
-    const payloads = parts.slice(3).map((pt, i) => ({ pt, i })).sort((a, b) => rank(a.pt) - rank(b.pt) || a.i - b.i).map(p => p.pt);
-    lines[m] = [...parts.slice(0, 3), ...payloads].join(' ');
-    return lines.join('\r\n');
-}
-
-// Libera uma taxa maior que o padrão do navegador e pede equilíbrio entre nitidez e fluidez.
-// Os parâmetros do envio só existem depois que a conexão negocia, então tenta por alguns segundos.
-function tuneBroadcastSender(call, tries = 0) {
-    const pc = call.peerConnection;
-    const sender = pc && pc.getSenders().find(s => s.track && s.track.kind === 'video');
-    const params = sender && sender.getParameters();
-    if (!params || !params.encodings || !params.encodings.length) {
-        if (tries < 40 && call.open !== false) setTimeout(() => tuneBroadcastSender(call, tries + 1), 250);
-        return;
-    }
-    params.encodings[0].maxBitrate = BROADCAST_MAX_BITRATE;
-    params.encodings[0].maxFramerate = BROADCAST_FPS;
-    params.degradationPreference = 'balanced';
-    sender.setParameters(params).catch(() => {
-        // Navegador sem degradationPreference: tenta só com a taxa
-        delete params.degradationPreference;
-        sender.setParameters(params).catch(() => {});
-    });
-}
 
 // --- Mensagens dos celulares ---
 const PHONE_TIMEOUT = 5000; // sem notícia do celular por 5 s (aba fechada, sem sinal): considera que saiu
 
 function onPhoneMessage(conn, msg) {
     if (!msg || typeof msg !== 'object') return;
-    if (msg.t === 'hello') { seatPhone(conn, msg.kind === 'screen' ? 'screen' : 'pad'); return; }
+    if (msg.t === 'hello') {
+        // A tela remota (jogar de longe) foi tirada do jogo: só entram celulares
+        if (msg.kind === 'screen') { conn.send({ t: 'bye', reason: 'Jogar de longe não existe mais: use o celular como controle' }); setTimeout(() => conn.close(), 500); return; }
+        seatPhone(conn);
+        return;
+    }
     const seat = phones.get(conn.peer);
     if (seat) seat.lastSeen = Date.now();
     if (msg.t === 'ping') { if (seat) conn.send({ t: 'pong' }); return; }
@@ -271,13 +176,12 @@ setInterval(() => {
     }
 }, 200);
 
-// Celular (ou tela remota) chegou: fica com a vaga de quem está esperando; se ninguém estiver, entra como jogador novo
-function seatPhone(conn, kind) {
+// Celular chegou: fica com a vaga de quem está esperando; se ninguém estiver, entra como jogador novo
+function seatPhone(conn) {
     const known = phones.get(conn.peer);
     if (known) {
-        // Reconectou sem o jogo perceber que caiu (oscilação na internet): passa a falar pela conexão nova.
-        // Antes o jogo continuava respondendo pela antiga, já morta, e logo largava a vaga: a pessoa via
-        // o vídeo, mas os comandos dela eram ignorados.
+        // Reconectou sem o jogo perceber que caiu (oscilação na rede): passa a falar pela conexão nova.
+        // Antes o jogo continuava respondendo pela antiga, já morta, e logo largava a vaga e ignorava os comandos.
         if (known.conn !== conn) {
             const old = known.conn;
             known.conn = conn;
@@ -285,7 +189,6 @@ function seatPhone(conn, kind) {
         }
         known.lastSeen = Date.now();
         greetPhone(conn.peer);
-        if (known.kind === 'screen') callScreen(known);
         return;
     }
     const waiting = activePlayers().find(p => match.inputs[p].type === 'phone' && match.inputs[p].index === null);
@@ -300,11 +203,10 @@ function seatPhone(conn, kind) {
         setTimeout(() => conn.close(), 500);
         return;
     }
-    Object.assign(match.inputs[player], { index: conn.peer, name: kind === 'screen' ? 'Tela remota' : 'Celular' });
-    const seat = { conn, player, kind, lastSeen: Date.now() };
+    Object.assign(match.inputs[player], { index: conn.peer, name: 'Celular' });
+    const seat = { conn, player, lastSeen: Date.now() };
     phones.set(conn.peer, seat);
     greetPhone(conn.peer);
-    if (kind === 'screen') callScreen(seat); // já transmitindo: manda o vídeo na hora
     sfx.play('heal');
     renderInputStatus();
     renderPhoneRoom();
@@ -337,7 +239,6 @@ function onPhoneGone(conn) {
     const seat = phones.get(conn.peer);
     if (!seat || seat.conn !== conn) return;
     phones.delete(conn.peer);
-    if (seat.call) seat.call.close();
     renderPhoneRoom();
     const input = match.inputs[seat.player];
     if (input.index === conn.peer) { input.index = null; input.name = ''; }

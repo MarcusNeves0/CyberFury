@@ -1,17 +1,15 @@
-// Conexão com a sala do jogo, usada pelo controle no celular (controle.html) e pela tela remota (tela.html).
-// O jogo abre a sala no PeerJS (phone.js); quem entra manda comandos e recebe avisos. A tela remota também
-// recebe o vídeo da partida. O servidor gratuito do PeerJS só apresenta um ao outro; depois a conversa é direta.
+// Conexão com a sala do jogo, usada pelo controle no celular (controle.html).
+// O jogo abre a sala no PeerJS (phone.js); o celular manda comandos e recebe avisos. O servidor gratuito do
+// PeerJS só apresenta um ao outro; depois a conversa é direta.
 //
-// Mensagens: veja o começo do controle.js. Ao entrar, cada um se apresenta com { t: 'hello', room, kind },
-// onde kind = 'pad' (controle no celular) ou 'screen' (tela remota).
+// Mensagens: veja o começo do controle.js. Ao entrar, o celular se apresenta com { t: 'hello', room, kind: 'pad' }.
 
 const PEER_PREFIX = 'cyberfury-sala-'; // o mesmo do phone.js
 const ROOM_RETRY_MS = 2500;            // sala não encontrada ou conexão caiu: tenta de novo
 const ROOM_TIMEOUT_MS = 5000;          // sem resposta do jogo por 5 s: considera que caiu
 
-// onMessage(msg): mensagem do jogo; onStatus(estado, texto): 'connecting' | 'online' | 'offline';
-// onStream(stream, call): vídeo da partida (só a tela remota recebe)
-function createRoomLink({ kind, onMessage, onStatus, onStream }) {
+// onMessage(msg): mensagem do jogo; onStatus(estado, texto): 'connecting' | 'online' | 'offline'
+function createRoomLink({ kind, onMessage, onStatus }) {
     const link = {
         room: null,
         peer: null,
@@ -36,11 +34,6 @@ function createRoomLink({ kind, onMessage, onStatus, onStream }) {
                     ? `Sala ${this.room} não encontrada. Tentando de novo...`
                     : 'Problema na conexão. Tentando de novo...');
                 this.retry();
-            });
-            // A tela remota recebe uma "chamada" de vídeo do jogo
-            this.peer.on('call', call => {
-                call.answer();
-                call.on('stream', stream => { if (onStream) onStream(stream, call); });
             });
         },
         dial() {

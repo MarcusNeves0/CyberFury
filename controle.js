@@ -1,8 +1,8 @@
 // Controle no celular: analógico virtual, botões de soco/ultimate/defesa, vibração e tela cheia.
 // Conversa com o jogo por mensagens curtas; a conexão (PeerJS, reconexão, sinal de vida) fica no sala.js.
 //
-// Do celular (ou da tela remota) para o jogo:
-//   { t: 'hello', room, kind }           pede uma vaga na sala; kind = 'pad' (celular) ou 'screen' (tela remota)
+// Do celular para o jogo:
+//   { t: 'hello', room, kind: 'pad' }    pede uma vaga na sala
 //   { t: 'move', x, y }                  analógico (-1 a 1; 0, 0 = parado)
 //   { t: 'down', a } / { t: 'up', a }    botão apertado / solto; a = 'punch' | 'special' | 'defend'
 // Do jogo para o celular:
