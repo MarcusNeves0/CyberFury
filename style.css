@@ -774,6 +774,24 @@ body {
 }
 
 /* --- HUD do Jogo --- */
+/* Aviso de erro: aparece no canto quando algo dá errado no meio da luta (o jogo continua rodando) */
+.error-toast {
+    position: fixed;
+    left: 12px;
+    bottom: 12px;
+    max-width: min(560px, calc(100vw - 24px));
+    padding: 8px 12px;
+    background: rgba(40, 6, 12, 0.92);
+    border: 1px solid #ff5a5a;
+    border-radius: 8px;
+    color: #ffd0d0;
+    font: 12px/1.4 monospace;
+    white-space: pre-wrap;
+    z-index: 1000;
+    display: none;
+}
+.error-toast.show { display: block; }
+
 /* Modo Treino: barra embaixo da arena com o dano no boneco e os botões de trocar lutador e sair */
 .training-bar {
     position: absolute;
@@ -1091,6 +1109,21 @@ body {
     min-width: 3.5em;
     font-size: 0.9rem;
     color: var(--neon-blue);
+}
+
+#sfx-mode {
+    padding: 3px 10px;
+    border: 1px solid var(--neon-pink);
+    border-radius: 12px;
+    background: rgba(255, 0, 170, 0.15);
+    color: #fff;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+#sfx-mode.off {
+    border-color: var(--neon-blue);
+    background: rgba(0, 255, 255, 0.1);
 }
 
 #win-text {

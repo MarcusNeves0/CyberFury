@@ -7660,5 +7660,5 @@
   function clear() {
     active.length = 0;
   }
-  window.pixelFx = { spawn, update, draw: draw10, clear, actorOf };
+  window.pixelFx = { spawn, update, draw: draw10, clear, actorOf, count: () => active.length };
 })();

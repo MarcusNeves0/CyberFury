@@ -115,6 +115,7 @@ function step() {
     screenShake = screenShake > 0.3 ? screenShake * 0.85 : 0;
 
     if (training) updateTraining();
+    announcer.update();
     for (const f of fighters) {
         if (!f.isDead && f.health <= 0) knockOut(f);
         else if (f.isDead && f.deathTimer > 0) f.deathTimer--;
@@ -130,15 +131,41 @@ function gameLoop(now) {
     pollGamepads();
     if (lastFrameTime === null) lastFrameTime = now;
     timeAccumulator += Math.min(250, now - lastFrameTime); // evita "pular" muito tempo após a aba voltar
+    // Nunca recupera mais que 1/4 de segundo de uma vez: um quadro lento não vira uma bola de neve de passos
+    timeAccumulator = Math.min(timeAccumulator, 250);
     lastFrameTime = now;
     while (timeAccumulator >= STEP_MS && gameState === 'FIGHT') {
-        step();
+        // O passo conta mesmo se der erro (antes o tempo acumulava e o jogo travava tentando recuperar)
         timeAccumulator -= STEP_MS;
+        try { step(); } catch (e) { reportError(e); }
     }
 
-    draw();
-    updateHUD();
+    try { draw(); } catch (e) { reportError(e); }
+    try { updateHUD(); } catch (e) { reportError(e); }
 }
+
+// Um erro no meio da luta não trava mais o jogo: ele segue e o erro aparece num aviso pequeno no canto
+// (para mandar um print). O mesmo erro só aparece uma vez a cada 10 s.
+let lastErrorShown = { text: '', at: 0 };
+function reportError(e) {
+    const text = `${e && e.message || e}`;
+    const where = ((e && e.stack) || '').split('\n').slice(1, 3).map(l => l.trim().replace(/^at /, '').replace(/https?:\/\/[^/]+\//, '')).join(' ← ');
+    console.error('Erro no jogo:', e);
+    if (text === lastErrorShown.text && Date.now() - lastErrorShown.at < 10000) return;
+    lastErrorShown = { text, at: Date.now() };
+    let box = document.getElementById('error-toast');
+    if (!box) {
+        box = document.createElement('div');
+        box.id = 'error-toast';
+        box.className = 'error-toast';
+        document.body.appendChild(box);
+    }
+    box.innerText = `⚠ Erro (o jogo continuou): ${text}\n${where}`;
+    box.classList.add('show');
+    clearTimeout(box.hideTimer);
+    box.hideTimer = setTimeout(() => box.classList.remove('show'), 12000);
+}
+window.addEventListener('error', e => reportError(e.error || e.message));
 
 function draw() {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -196,6 +223,7 @@ function draw() {
     fighters.forEach(f => { if (alive(f) && f.sentenceTimer > 0) drawSentenceMark(f); });
     floatingTexts.forEach(t => t.draw());
     drawMapOverlay();
+    announcer.draw();
     if (courtSession) drawCourt(courtSession);
 }
 
@@ -347,6 +375,7 @@ async function startGame() {
         aiControllers.forEach(ai => ai.start());
 
         gameState = 'FIGHT';
+        announcer.onStart();
         lastFrameTime = null;
         timeAccumulator = 0;
         gameLoopId = requestAnimationFrame(gameLoop);
@@ -416,6 +445,23 @@ function setupVolumeControl() {
         if (value > 0) lastVolume = value;
         try { localStorage.setItem('cyberfury-volume', value); } catch (e) { }
     }
+
+    // Sons gravados ou sintetizados (os de antes), para comparar; lembra a escolha
+    const mode = document.getElementById('sfx-mode');
+    try { sfx.recorded = localStorage.getItem('cyberfury-sfx') !== 'synth'; } catch (e) { }
+    function applyMode() {
+        mode.innerText = sfx.recorded ? '🎧 Gravados' : '🎹 Sintetizados';
+        mode.classList.toggle('off', !sfx.recorded);
+        try { localStorage.setItem('cyberfury-sfx', sfx.recorded ? 'recorded' : 'synth'); } catch (e) { }
+    }
+    mode.addEventListener('click', () => {
+        sfx.recorded = !sfx.recorded;
+        applyMode();
+        sfx.play('hit_heavy'); // amostra na hora, para ouvir a diferença
+        mode.blur();
+    });
+    applyMode();
+    sfx.preload();
 
     slider.addEventListener('input', applyVolume);
     // Tira o foco do controle para as teclas voltarem a controlar o lutador

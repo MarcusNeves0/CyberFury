@@ -12,7 +12,7 @@
 <img height="34" src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/css3/css3-original.svg" />
 <img height="34" src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/javascript/javascript-original.svg" />
 
-*HTML, CSS e JavaScript puro, sem engine: só Canvas 2D e Tone.js para os sons.*
+*HTML, CSS e JavaScript puro, sem engine: só Canvas 2D, sons gravados e Tone.js para os sons sintetizados.*
 
 </div>
 
@@ -28,6 +28,8 @@ Neo-Cidade está tomada por neon, chuva e gente disposta a brigar por qualquer m
 - 📱 **Celular como controle:** abra `controle.html` no celular e digite o código que aparece no menu do jogo. O celular vira analógico + botões, vibra ao levar dano e também navega nos menus (sem instalar nada)
 - 💚 **Healer obrigatório:** no 2v2 e no 3v3, todo time tem pelo menos um curandeiro
 - 🗺️ **5 arenas** com perigos próprios, escolhidas no menu ou sorteadas a cada luta
+- 🎙️ **Locutor:** "LUTEM!", "PRIMEIRO SANGUE!", "COMBO x10!", "DUPLO ABATE!", "ÚLTIMO DE PÉ!", "POR UM FIO!" e "VITÓRIA PERFEITA!" em letras grandes, com som e a voz de um locutor de verdade (em inglês: "Ready... Fight!", "Combo!", "Multi kill!", "Flawless victory!")
+- 🔊 **Sons gravados:** socos, espadas, escudos, explosões, lasers e ultimates com sons de verdade; o botão ao lado do volume troca para os sons sintetizados de antes
 - 📊 **Estatísticas no fim da luta:** dano causado, dano sofrido, cura, abates e o ⭐ destaque da partida
 - 🎨 **Pixel art em 64×64**, com animações de andar, atacar, soltar a ultimate, cair e comemorar
 
@@ -133,6 +135,8 @@ Depois abra **http://localhost:8123** no navegador.
 - Começou como um jogo para **aprender HTML, CSS e JavaScript** e testar a criação de um jogo do zero.
 - Feito em **colaboração com IA** (Gemini e Claude) em todas as partes: mecânicas, personagens, arte e código. O balanceamento é testado com milhares de lutas simuladas entre IAs.
 - Os efeitos dos golpes, tiros, curas e ultimates (cortes, garras, socos, fogo, veneno, maldição, sombras, luz) vêm da [pixelfx](https://github.com/patch-gg/pixelfx), de Patch e Hugo Duprez, licença MIT (cópia em `vendor/pixelfx`); o raio do Spark e as caveiras tóxicas da Mamba foram feitos com as ferramentas dela.
+- A voz do locutor (`sounds/locutor`) é o [Voiceover Pack: Fighter](https://kenney.nl/assets/voiceover-pack-fighter), de Kenney.nl, licença CC0.
+- Os sons de golpes, espadas, explosões e tiros (`sounds/sfx`) vêm dos pacotes [Impact Sounds](https://kenney.nl/assets/impact-sounds), [RPG Audio](https://kenney.nl/assets/rpg-audio) e [Sci-Fi Sounds](https://kenney.nl/assets/sci-fi-sounds), de Kenney.nl, e de [20 Sword Sound Effects](https://opengameart.org/content/20-sword-sound-effects-attacks-and-clashes) e [10 Impact/Shield Blocks](https://opengameart.org/content/10-impactshield-blocks), de StarNinjas; os disparos de pistola e rifle, de [Gunshots](https://opengameart.org/content/gunshots), de kurt; todos com licença CC0.
 - Todos os lutadores são **originais**: os que começaram inspirados em personagens de outros jogos ganharam nome, história e identidade próprios.
 - Recebe **atualizações regularmente**. Antes era "sempre que o código não quebrava" 😅, mas agora cada mudança passa por testes e lutas simuladas antes de subir.
 

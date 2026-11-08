@@ -161,6 +161,7 @@ function renderInputStatus() {
 
 // --- Lógica da Tela de Seleção ---
 function openSelection() {
+    if (gameState !== 'SELECT' && typeof announcer !== 'undefined') announcer.say('choose_your_character');
     gameState = 'SELECT';
     const humans = match.humans;
     const step = match.picks.length + 1;

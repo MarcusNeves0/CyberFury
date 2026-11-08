@@ -103,6 +103,7 @@ function knockOut(fighter) {
     fighter.deathTimer = DEATH_DURATION;
     const killer = fighter.lastAttacker;
     if (killer && killer.team !== fighter.team) killer.stats.kos++;
+    announcer.onKO(fighter, killer);
     fighter.health = 0;
     fighter.stopChanneling();
     fighter.isDefending = false;
@@ -137,6 +138,7 @@ function checkGameOver() {
     cancelAnimationFrame(gameLoopId);
     gameOverScreen.classList.remove('hidden');
     showMatchStats();
+    const shout = announcer.onGameOver([...aliveTeams][0]);
 
     const winningTeam = [...aliveTeams][0];
     const survivors = fighters.filter(f => alive(f) && f.team === winningTeam);
@@ -144,9 +146,9 @@ function checkGameOver() {
         winText.innerText = 'EMPATE!';
         return;
     }
-    winText.innerText = match.mode === '1v1'
+    winText.innerText = (shout === 'VITÓRIA PERFEITA!' ? '⭐ PERFEITO! ' : '') + (match.mode === '1v1'
         ? `${survivors[0].name.toUpperCase()} WINS!`
-        : `${TEAM_NAMES[winningTeam]} VENCE!`;
+        : `${TEAM_NAMES[winningTeam]} VENCE!`);
     winText.style.color = match.mode === '1v1' ? '' : TEAM_COLORS[winningTeam];
 
     // Todo o time vencedor comemora

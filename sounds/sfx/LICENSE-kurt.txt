@@ -1,0 +1,3 @@
+Disparos de pistola e rifle: "Gunshots", de kurt (OpenGameArt.org).
+Licença: CC0 1.0 (domínio público) - https://creativecommons.org/publicdomain/zero/1.0/
+Arquivos: pistol_*, rifle_*

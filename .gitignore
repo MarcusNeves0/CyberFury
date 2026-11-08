@@ -1,2 +1,6 @@
 # Configurações locais do Claude Code (servidor de teste etc.)
 .claude/
+
+# Arquivos que o Windows cria sozinho nas pastas
+Thumbs.db
+desktop.ini

@@ -148,4 +148,4 @@ function clear() {
     active.length = 0;
 }
 
-window.pixelFx = { spawn, update, draw, clear, actorOf };
+window.pixelFx = { spawn, update, draw, clear, actorOf, count: () => active.length };

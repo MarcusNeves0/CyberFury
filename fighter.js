@@ -765,6 +765,7 @@ class Fighter {
         if (this.characterType === 'zarek') addZarekCharge(this, ZAREK_CHARGE_ON_HURT);
         if (attacker && attacker.characterType === 'zarek') addZarekCharge(attacker, ZAREK_CHARGE_ON_HIT);
         this.loseHealth(damage, attacker);
+        announcer.onHit(attacker, this); // conta o combo de quem bateu (o locutor grita COMBO x5!...)
         if (this.onPhone) sendToPhone(this.controller, { t: 'hit' }); // o celular vibra
         if (effect.type === 'burn') { this.burnDuration = 180; }
         if (effect.type === 'curse') { this.applyCurse(attacker); }

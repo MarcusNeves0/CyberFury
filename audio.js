@@ -1,5 +1,8 @@
-// --- Áudio com Tone.js ---
-// Efeitos sonoros sintetizados na hora. Uso: sfx.play('hit_heavy')
+// --- Áudio ---
+// Uso: sfx.play('hit_heavy'). Cada som pode ter uma versão gravada (arquivos em sounds/sfx, de Kenney.nl,
+// StarNinjas e kurt, licença CC0) e uma sintetizada na hora com Tone.js. Com os sons gravados ligados, toca a gravação
+// (e, nos marcados com synth, a síntese por cima, que dá o "sabor" do personagem); sem gravação, ou com eles
+// desligados, toca só a síntese.
 
 const sfx = (() => {
     // Cadeia final: compressor + limiter para os sons terem "peso" sem estourar
@@ -139,17 +142,128 @@ const sfx = (() => {
         // Cangeras: o tribunal abrindo (órgão grave) e a martelada seca na madeira
         court_open: t => { zap(t, 65, 65, 1.2, -10, 'sawtooth'); zap(t, 98, 98, 1.2, -14, 'sawtooth'); thump(t, 'C1', -4, 0.8); whoosh(t, 200, 1200, 0.8, -14, 0.5); },
         gavel: t => { thump(t, 'G2', -2, 0.12); clang(t, 900, -8, 0.06); clang(t, 1500, -16, 0.04); whoosh(t, 4000, 1500, 0.05, -18, 2); },
+        // Locutor: tranco grave com um brilho subindo (chamada comum) e um impacto maior (abates em sequência, K.O.)
+        announce: t => { thump(t, 'C2', -6, 0.25); zap(t, 400, 1600, 0.25, -18, 'square'); },
+        announce_big: t => { thump(t, 'A0', -2, 0.6); clang(t, 220, -10, 0.3); zap(t, 200, 1800, 0.45, -14, 'sawtooth'); whoosh(t, 300, 5000, 0.5, -12, 0.8); },
         zarek_transform: t => { thump(t, 'A0', -2, 1); zap(t, 100, 900, 0.8, -12, 'sawtooth'); whoosh(t, 300, 6000, 0.9, -8, 0.8); },
     };
 
+    // --- Sons gravados ---
+    // Quantas variações cada som tem (sounds/sfx/<nome>_<n>.ogg); cada vez sai uma, sorteada
+    const VARIANTS = {
+        punch: 5, punch_heavy: 5, thud: 3, thud_heavy: 3, swish: 4, clash: 3, slice: 3, shield: 4, plate: 2,
+        metal: 3, metal_heavy: 3, bell: 1, glass: 3, wood: 2, rock: 2, boom: 3, lowboom: 2, field: 3, laser: 3,
+        laser_small: 3, blaster: 3, pistol: 4, rifle: 3,
+    };
+    // f: qual som, v: volume (0 a 1), d: atraso em segundos
+    const S = (f, v, d = 0) => ({ f, v, d });
+    const RECORDED = {
+        hit: [S('punch', 0.45)],
+        hit_heavy: [S('punch_heavy', 0.7)],
+        blade_swing: [S('swish', 0.3)],
+        blade_hit: [S('slice', 0.5), S('punch', 0.25)],
+        block: [S('shield', 0.4)],
+        defense_break: { layers: [S('plate', 0.7), S('bell', 0.35, 0.02)], synth: true },
+        explosion: [S('boom', 0.6), S('lowboom', 0.6)],
+        ko: [S('lowboom', 0.7), S('punch_heavy', 0.6)],
+        glass: [S('glass', 0.6)],
+        // Especiais
+        titan_special: { layers: [S('field', 0.4)], synth: true },
+        hades_special: [S('boom', 0.45), S('lowboom', 0.4)],
+        kaze_special: { layers: [S('swish', 0.4), S('swish', 0.35, 0.12), S('swish', 0.3, 0.26)], synth: true },
+        kenji_special: { layers: [S('punch_heavy', 0.6), S('boom', 0.35)], synth: true },
+        craque_kick: [S('thud', 0.55)],
+        akane_special: [S('swish', 0.4), S('clash', 0.35, 0.05), S('swish', 0.35, 0.08), S('swish', 0.3, 0.16)],
+        fenris_special: { layers: [S('thud_heavy', 0.6), S('clash', 0.3)], synth: true },
+        zarek_exit: { layers: [S('slice', 0.5), S('punch_heavy', 0.6)], synth: true },
+        zarek_transform: { layers: [S('field', 0.45), S('lowboom', 0.4)], synth: true },
+        celestia_special: { layers: [S('field', 0.3)], synth: true },
+        // Tiros: disparos de verdade (pistola e revólver), com um tranco grave por baixo para ter corpo
+        gear_shot: [S('metal_heavy', 0.45), S('thud', 0.35)], // pistola de pregos: pancada seca de metal
+        mamba_shot: { layers: [S('rifle', 0.95), S('thud_heavy', 0.25)], synth: true }, // rifle + o chiado tóxico
+        gear_special: { layers: [S('metal_heavy', 0.5)], synth: true },
+        turret_shot: [S('pistol', 0.45)],
+        pistol_shot: [S('pistol', 0.9), S('thud', 0.2)],
+        roxy_special: { layers: [S('pistol', 0.8), S('pistol', 0.7, 0.07), S('pistol', 0.6, 0.14)], synth: true },
+        laser: [S('laser', 0.4)],
+        aegis_special: { layers: [S('field', 0.55)], synth: true },
+        rhino_special: { layers: [S('thud_heavy', 0.8), S('thud_heavy', 0.5, 0.25)], synth: true },
+        anchor_special: { layers: [S('metal_heavy', 0.5)], synth: true },
+        thunder: [S('lowboom', 0.8), S('boom', 0.35, 0.05)],
+        chomp: { layers: [S('punch', 0.35)], synth: true },
+        // Mapas
+        statue_raise: { layers: [S('rock', 0.4)], synth: true },
+        stone_slam: [S('lowboom', 0.6), S('rock', 0.6)],
+        sina_shark: { layers: [S('thud_heavy', 0.4)], synth: true },
+        sina_boat: [S('boom', 0.6), S('lowboom', 0.6)],
+        coleone_grab: { layers: [S('thud', 0.5)], synth: true },
+        coleone_dunk: [S('plate', 0.5), S('punch_heavy', 0.7), S('lowboom', 0.45)],
+        bershow_armor: [S('plate', 0.5), S('plate', 0.5, 0.12), S('plate', 0.5, 0.24), S('punch_heavy', 0.55, 0.38)],
+        bershow_slash: { layers: [S('clash', 0.5), S('punch_heavy', 0.6, 0.05)], synth: true },
+        aspas_army: { layers: [S('lowboom', 0.5)], synth: true },
+        gavel: [S('wood', 0.8)],
+        announce: { layers: [S('punch_heavy', 0.35)], synth: true },
+        announce_big: { layers: [S('lowboom', 0.5)], synth: true },
+    };
+
+    // Cada arquivo ganha até 4 cópias (criadas só quando o mesmo som se sobrepõe), tocando em rodízio
+    const COPIES = 4;
+    const clips = {};
+    const broken = new Set(); // arquivo que não carregou: o som volta para a síntese
+    function newCopy(file) {
+        const a = new Audio(`sounds/sfx/${file}.ogg`);
+        a.preload = 'auto';
+        a.preservesPitch = false; // a pequena variação de velocidade muda o tom, como deve ser
+        a.addEventListener('error', () => broken.add(file));
+        return a;
+    }
+    function clip(file) {
+        const list = clips[file] || (clips[file] = Object.assign([newCopy(file)], { next: 0 }));
+        const free = list.find(a => a.paused || a.ended);
+        if (free) return free;
+        if (list.length < COPIES) { const a = newCopy(file); list.push(a); return a; }
+        return list[list.next++ % COPIES]; // todas tocando: corta a mais antiga
+    }
+    function playLayer(layer, level) {
+        const n = VARIANTS[layer.f] || 1;
+        const file = `${layer.f}_${Math.floor(Math.random() * n)}`;
+        if (broken.has(file)) return false;
+        const go = () => {
+            const a = clip(file);
+            a.volume = Math.min(1, layer.v * level);
+            a.playbackRate = 0.94 + Math.random() * 0.12;
+            a.currentTime = 0;
+            a.play().catch(() => {}); // sem permissão de tocar ainda (nenhum clique na página)
+        };
+        if (layer.d > 0) setTimeout(go, layer.d * 1000); else go();
+        return true;
+    }
+    // Carrega todos os arquivos de uma vez (uns 450 KB), para o primeiro golpe já sair com som
+    function preload() {
+        if (typeof Audio === 'undefined') return;
+        for (const [f, n] of Object.entries(VARIANTS)) for (let i = 0; i < n; i++) clip(`${f}_${i}`);
+    }
+
     return {
+        level: 1, // volume atual (o locutor usa para a voz e para ficar quieto no mudo)
+        recorded: true, // sons gravados ligados (false: só os sintetizados, como era antes)
+        preload,
         // Volume geral de 0 a 1 (0 = mudo)
         setVolume(level) {
+            this.level = level;
             Tone.Destination.mute = level <= 0;
             if (level > 0) Tone.Destination.volume.value = Tone.gainToDb(level);
         },
         play(name) {
-            if (Tone.context.state !== 'running' || !library[name]) return;
+            let synth = true;
+            const rec = this.recorded && this.level > 0 && typeof Audio !== 'undefined' && RECORDED[name];
+            if (rec) {
+                const layers = Array.isArray(rec) ? rec : rec.layers;
+                let ok = true;
+                try { for (const l of layers) ok = playLayer(l, this.level) && ok; } catch (e) { ok = false; }
+                synth = !ok || !!rec.synth;
+            }
+            if (!synth || Tone.context.state !== 'running' || !library[name]) return;
             try {
                 library[name](Tone.now() + 0.01);
             } catch (e) {
