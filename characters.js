@@ -3011,6 +3011,11 @@ function makePixelArt(type) {
                 // Quem tem quadro próprio de andar (Coleone sem a bola na mão) anda com ele
                 walk: buildWalkFrames(def.walk ? buildSprite(frame(spriteVariant(def.idle, def.walk)), palette, `${type} walk`, size) : idle, legStart, size),
                 special: buildSprite(frame(def.special || def.idle), palette, `${type} special`, size),
+                // Esqueleto (rig.js): quadros montados na hora a partir de peças articuladas
+                rig: def.rig && typeof buildRig === 'function' ? {
+                    built: Object.fromEntries(Object.entries(def.rig.rigs).map(([n, spec]) => [n, buildRig(def, spec)])),
+                    frames: {}, palette,
+                } : null,
             };
         }
         const sprites = spritesByForm[form];
@@ -3018,6 +3023,11 @@ function makePixelArt(type) {
         if (fighter && fighter.spriteFrame === 'attack') sprite = sprites.attack;
         else if (fighter && fighter.spriteFrame === 'special') sprite = sprites.special;
         else if (fighter && fighter.spriteFrame !== 'idle' && fighter.walkFrame !== null && fighter.walkFrame !== undefined) sprite = sprites.walk[fighter.walkFrame];
+        const rigPose = sprites.rig && rigPoseFor(def.rig, fighter);
+        if (rigPose) {
+            const key = rigPoseKey(rigPose), r = sprites.rig;
+            sprite = r.frames[key] || (r.frames[key] = buildSprite(renderRigPose(r.built[rigPose.rig || 'main'], rigPose), r.palette, `${type} rig`, def.size || HD_SIZE));
+        }
         ctx.imageSmoothingEnabled = false;
         // Sprite tem o dobro da largura da caixa: metade da caixa sobra de cada lado
         ctx.drawImage(sprite, x - width / 2, y, width * 2, height);

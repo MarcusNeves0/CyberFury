@@ -29,6 +29,7 @@ Neo-Cidade está tomada por neon, chuva e gente disposta a brigar por qualquer m
 - 💚 **Healer obrigatório:** no 2v2 e no 3v3, todo time tem pelo menos um curandeiro
 - 🗺️ **5 arenas** com perigos próprios, escolhidas no menu ou sorteadas a cada luta
 - 🎙️ **Locutor:** "LUTEM!", "PRIMEIRO SANGUE!", "COMBO x10!", "DUPLO ABATE!", "ÚLTIMO DE PÉ!", "POR UM FIO!" e "VITÓRIA PERFEITA!" em letras grandes, com som e a voz de um locutor de verdade (em inglês: "Ready... Fight!", "Combo!", "Multi kill!", "Flawless victory!")
+- 🦴 **Animação articulada:** os lutadores são recortados em peças (braços, coxas, canelas, armas) presas no ombro, quadril e joelho; andar, chutar, socar e atirar têm vários quadros, com preparação, tranco e recuperação (`rig.js`)
 - 🔊 **Sons gravados:** socos, espadas, escudos, explosões, lasers e ultimates com sons de verdade; o botão ao lado do volume troca para os sons sintetizados de antes
 - 📊 **Estatísticas no fim da luta:** dano causado, dano sofrido, cura, abates e o ⭐ destaque da partida
 - 🎨 **Pixel art em 64×64**, com animações de andar, atacar, soltar a ultimate, cair e comemorar

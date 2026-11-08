@@ -168,6 +168,7 @@ function reportError(e) {
 window.addEventListener('error', e => reportError(e.error || e.message));
 
 function draw() {
+    rigWarmTick();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     ctx.setTransform(viewScale, 0, 0, viewScale, 0, 0);
@@ -376,6 +377,7 @@ async function startGame() {
 
         gameState = 'FIGHT';
         announcer.onStart();
+        rigWarm(fighters); // monta os quadros de passada e golpe aos poucos (rig.js)
         lastFrameTime = null;
         timeAccumulator = 0;
         gameLoopId = requestAnimationFrame(gameLoop);
