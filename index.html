@@ -176,7 +176,8 @@
                 <div class="roster-label shooter" style="grid-column: 1 / span 4">Atiradores</div>
                 <div class="roster-label healer" style="grid-column: 5 / span 3">Healers</div>
                 <div class="roster-label tank" style="grid-column: 8 / span 4">Tanques</div>
-                <div class="roster-label random" style="grid-column: 12 / span 3">Sorte</div>
+                <div class="roster-label cyber" style="grid-column: 12 / span 2">Cibernéticos</div>
+                <div class="roster-label random" style="grid-column: 14 / span 1">Sorte</div>
                 <div class="character-card shooter" id="select-mamba" data-lore="Ex-atiradora de elite de uma corporação de armas químicas, Mamba fugiu levando o protótipo de um rifle que dispara toxinas. Escondida atrás da máscara de gás, ela espera pacientemente o momento certo: quando a linha vermelha aparece, o alvo já está condenado.">
                     <canvas id="mamba-thumbnail" class="thumbnail-canvas"></canvas>
                     <h2>MAMBA</h2>
@@ -221,7 +222,11 @@
                     <canvas id="coleone-thumbnail" class="thumbnail-canvas"></canvas>
                     <h2>COLEONE</h2>
                 </div>
-                <div class="character-card random" id="select-random" data-lore="Não sabe quem escolher? Deixa a sorte decidir: um lutador livre é sorteado na hora.">
+                <div class="character-card cyber" id="select-kairo" data-lore="Kairo cresceu remendando implantes roubados num beco de Neo-Cidade e virou o netrunner mais rápido do bairro. Numa invasão grande demais, ele encostou na muralha que separa a rede do mundo, e algo do outro lado encostou de volta: uma IA vermelha, presa ali há anos, que agora fala dentro da cabeça dele. Cada vez que ele abre a fenda, ela empresta um pouco do poder... e pede um pouco mais para sair.">
+                    <canvas id="kairo-thumbnail" class="thumbnail-canvas"></canvas>
+                    <h2>KAIRO</h2>
+                </div>
+                <div class="character-card random" id="select-random" style="grid-column: 14" data-lore="Não sabe quem escolher? Deixa a sorte decidir: um lutador livre é sorteado na hora.">
                     <div class="random-icon">?</div>
                     <h2>ALEATÓRIO</h2>
                 </div>
@@ -276,6 +281,7 @@
     <script src="effects.js"></script>
     <script src="fighter.js"></script>
     <script src="specials.js"></script>
+    <script src="kairo.js"></script>
     <script src="ai.js"></script>
     <script src="hud.js"></script>
     <script src="announcer.js"></script>

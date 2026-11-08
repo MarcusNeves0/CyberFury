@@ -88,6 +88,14 @@ Neo-Cidade está tomada por neon, chuva e gente disposta a brigar por qualquer m
 | ⚓ | **Anchor** | Não sai do lugar com empurrões | Gancho: a corrente arrasta ele até o inimigo e o atordoa |
 | 🏀 | **Coleone** | Pivô de rua, o toco manda o inimigo para longe | *Enterrada*: agarra o inimigo, voa até a cesta e enterra ele no chão; sem ninguém perto, salta e enterra a bola, que explode em área |
 
+### Cibernéticos
+
+Hackeiam os inimigos: os golpes infectam com **Corrupção** e, com 5, o implante do inimigo entra em **Pane** (dano e 3 s sem especial e sem defesa).
+
+| | Lutador | Estilo | Ultimate |
+|---|---|---|---|
+| 👾 | **Kairo "Glitch"** | Netrunner de rua de jaqueta bomber amarela e olho cibernético; cada toque corrompe, e segurando o golpe ele trava um *quickhack* à distância que atravessa a defesa | *Rompendo a Muralha*: flutua enquanto uma IA vermelha vaza pela fenda — a área em volta queima, puxa e corrompe, e fantasmas de dados caçam os inimigos |
+
 > Passe o mouse sobre cada lutador na tela de seleção para ler a história dele.
 
 ---

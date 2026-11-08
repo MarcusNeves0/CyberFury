@@ -513,6 +513,7 @@ body {
 .shooter { --class-color: #00e5ff; }
 .healer { --class-color: #5dff8a; }
 .tank { --class-color: #b07bff; }
+.cyber { --class-color: #ff3a2a; }
 .random { --class-color: #ffd23f; }
 
 /* Painel do lutador em destaque */

@@ -2934,6 +2934,111 @@ pixelCharacters.cangeras = {
     ],
 };
 
+// --- Kairo "Glitch": netrunner de rua com jaqueta bomber amarela de gola alta e um olho cibernético ---
+// Forma 'breach' (Rompendo a Muralha): a IA vermelha vaza pelo corpo — cabelo e faixas acendem em vermelho.
+pixelCharacters.kairo = {
+    size: 64,
+    palette: {
+        K: OUTLINE, S: '#d9a07a', s: '#a8714f', H: '#1c1c2c', h: '#3c3c5c', m: '#7a3a3a', C: '#ff2a3d', c: '#ffb0b8', r: '#c0182a',
+        Y: '#ffd21f', y: '#c99400', R: '#e8263a', B: '#15151d', b: '#2b2b38', P: '#24242f', p: '#17171f', W: '#eef0f6', w: '#b8bccc', G: '#9aa4b8', g: '#56607a',
+    },
+    forms: {
+        normal: {},
+        breach: { H: '#2a0610', h: '#ff2a3d', C: '#ffffff', c: '#ff2a3d', r: '#ff2a3d', R: '#ff4d5e', B: '#1a0006', b: '#3a0610', m: '#ff2a3d' },
+    },
+    idle: [
+        '........................KhK..KK.KhK',
+        '......................KKKHHKKhHKKHHK.KK',
+        '.....................KhHKHHKKHHKKHHKKhHKKK',
+        '.....................KHHHHHHKHHHKHHHKHHHhHK',
+        '.....................KHHHHHHHHHHHHHHHHHHHHK',
+        '....................KKHHhHHHhHHHhHHHhHHHHHK',
+        '...................KHHHHHhHHHhHHHhHHHhHHHHK',
+        '...................KHHHHHHHHHHHHHHHHHHHHHHK',
+        '...................KHHHHHHHHHHHHHHHHHHHHHHK',
+        '...................KHHHHHHSSSSHHHHHHHHHHHHHK',
+        '...................KHHHHHHssSSHHHHHHHHHHHHHK',
+        '...................KHHHHHHssSSSSSHSSSHSSSHSK',
+        '...................KHHHHHHssSSSSGgSSHHHHHHSK',
+        '...................KHHHHHHssSssSGGrrSCcCSSSSK',
+        '....................KKKHHHssSssSGGSSSCCrSSSSK',
+        '.....................KKKKKssSssSgGSSSSSSSSSK',
+        '....................KyyYYYssSSSSSSSSSSSSSSSK',
+        '....................KyyYYYssSSSSSSSSSSmmmSSK',
+        '....................KyyYYYssssssssssssSSSSSyK',
+        '..................KKKyyYBBssssssssssssSSSSSyKK',
+        '...........KKKKKKKyyyyyYBBBBYYYYYYYYYYYYYYyyYYKKKKKKK',
+        '..........KyyYYYYYYYyyyYBBBBYYYYYYYYYYYYYYyyyyYYYYYYYK',
+        '..........KyyYYYYYYYyyyYBBBBYYYyBBBBBYYYYYyyyyYYYYYYYK',
+        '..........KyyYYYYYYKyYYYYYYYYYYyBBBBBByYYYYYKyYYYYYYYK',
+        '..........KyyYYYYYYKyYYYYYYYYYYyBBBBBByYYYYYKyYYYYYYYK',
+        '..........KyyYYYYYYKyYYYYYYYYYYyBBBBBByYYYYYKyYYYYYYYK',
+        '..........KyyYYYYYYKyYYYYYYYYYYyBBBBBByYYYYYKyYYYYYYYK',
+        '..........KyyYYYYYYKyYYYYYYYYYYyBBBBBByYYYYYKyYYYYYYYK',
+        '..........KRRRRRRRRKRRRRRRRRRRRyBBBBBByRRRRRKRRRRRRRRK',
+        '..........KRRRRRRRRKRRRRRRRRRRRyBBBBBByRRRRRKRRRRRRRRK',
+        '..........KBBBBBBBBKBBBBBBBBBBByBBBBBByBBBBBKBBBBBBBBK',
+        '..........KyyYYYYYYKyYYYYYYYYYYyBBBBBByYYYYYKyYYYYYYYK',
+        '..........KyyYYYYYYKyYYYYYYYYYYyBBBBBByYYYYYKyYYYYYYYK',
+        '..........KyyYYYYYYKyYYYYYYYYYYyBBBBBByYYYYYKyYYYYYYYK',
+        '..........KyyYYYYYYKyYYYYYYYYYYyBBBBBByYYYYYKyYYYYYYYK',
+        '..........KbbbbbbbbKyYYYYYYYYYYyBBBBBByYYYYYKbbbbbbbbK',
+        '..........KbbbbbbbbKyYYYYYYYYYYyBBBBBByYYYYYKbbbbbbbbK',
+        '..........KbbbbbbbbKyYYYYYYYYYYyBBBBBByYYYYYKbbbbbbbbK',
+        '...........KsSSSSSyyyYYYYYYYYYYyBBBBBByYYYYYYYsSSSSSK',
+        '...........KsSSSSSbbbbbbbbbbbbbbbbbbbbbbbbbbbbsSSSSSK',
+        '...........KsSSSSSbBbBbBbBbBbBbBbBbBbBbBbBbBbbsSSSSSK',
+        '...........KsSSSSSbbbbbbbbbbbbbbbbbbbbbbbbbbbbsSSSSSK',
+        '............KKKKKKKKKppPPPPPPPPPPPPppPPPPPKKKKKKKKKK',
+        '....................KppPPPPPPPPPPPPppPPPPPK',
+        '....................KppPPPPPPPPPPPPppPPPPPK',
+        '....................KppPPPPPKKKKKKKppPPPPPK',
+        '....................KppPPPPPK.....KppPPPPPK',
+        '....................KppPPPPPK.....KppPPPPPK',
+        '....................KppPPPPPK.....KppPPPPPK',
+        '....................KppPPPPPK.....KppPPPPPK',
+        '....................KppPPPPPK.....KppPPPPPK',
+        '....................KppPPPPPK.....KppPPPPPK',
+        '....................KppPPPPPK.....KppPPPPPK',
+        '....................KppPPPPPK.....KppPPPPPK',
+        '....................KppPPPPPK.....KppPPPPPK',
+        '....................KppPPPPPKK....KppPPPPPKKK',
+        '...................KwwWWWWWWWWK..KwwWWWWWWWWWK',
+        '...................KwwWWWWWWWWK..KwwWWWWWWWWWK',
+        '...................KRRRRRRRRWWK..KRRRRRRRRRWWK',
+        '...................KWWWWWWWWWWK..KWWWWWWWWWWWK',
+        '...................KWWWWWWWWWWK..KWWWWWWWWWWWK',
+        '...................KBBBBBBBBBBK..KBBBBBBBBBBBK',
+        '...................KBBBBBBBBBBK..KBBBBBBBBBBBK',
+        '....................KKKKKKKKKK....KKKKKKKKKKK',
+    ],
+    attack: {
+        20: '...........KKKKKKKyyyyyYBBBBYYYYYYYYYYYYYYyyYYK',
+        21: '..........KyyYYYYYYYyyyYBBBBYYYYYYYYYYYYYYyyYYK',
+        22: '..........KyyYYYYYYYyyyYBBBBYYYyBBBBBYYYYYyyYYK.............K',
+        23: '..........KyyYYYYYYKyYYYYYYYYYYyBBBBBByYYYYYKYKKKKKKKKKKK..KCKK',
+        24: '..........KyyYYYYYYKyYYYYYYYYYYyBBBBBByYYYYYKYYYYYYYYYbbbKKKKKCK',
+        25: '..........KyyYYYYYYKyYYYYYYYYYYyBBBBBByYYYYYKYYYYYYYYYbbbSSSSSK',
+        26: '..........KyyYYYYYYKyYYYYYYYYYYyBBBBBByYYYYYKRRRRRRRRRbbbSSSSSKK',
+        27: '..........KyyYYYYYYKyYYYYYYYYYYyBBBBBByYYYYYKRRRRRRRRRbbbSSSSSKC',
+        28: '..........KRRRRRRRRKRRRRRRRRRRRyBBBBBByRRRRRKYYYYYYYYYbbbSSSSSKK',
+        29: '..........KRRRRRRRRKRRRRRRRRRRRyBBBBBByRRRRRKYYYYYYYYYbbbsssssKK',
+        30: '..........KBBBBBBBBKBBBBBBBBBBByBBBBBByBBBBBKyyyyyyyyybbbsssssKC',
+        31: '..........KyyYYYYYYKyYYYYYYYYYYyBBBBBByYYYYYKyyyyyyyyybbbKKKKKCK',
+        32: '..........KyyYYYYYYKyYYYYYYYYYYyBBBBBByYYYYYYYKKKKKKKKKKK.KCK.K',
+        33: '..........KyyYYYYYYKyYYYYYYYYYYyBBBBBByYYYYYYYK............K',
+        34: '..........KyyYYYYYYKyYYYYYYYYYYyBBBBBByYYYYYYYK',
+        35: '..........KbbbbbbbbKyYYYYYYYYYYyBBBBBByYYYYYYYK',
+        36: '..........KbbbbbbbbKyYYYYYYYYYYyBBBBBByYYYYYYYK',
+        37: '..........KbbbbbbbbKyYYYYYYYYYYyBBBBBByYYYYYYYK',
+        38: '...........KsSSSSSyyyYYYYYYYYYYyBBBBBByYYYYYYYK',
+        39: '...........KsSSSSSbbbbbbbbbbbbbbbbbbbbbbbbbbbbK',
+        40: '...........KsSSSSSbBbBbBbBbBbBbBbBbBbBbBbBbBbbK',
+        41: '...........KsSSSSSbbbbbbbbbbbbbbbbbbbbbbbbbbbbK',
+        42: '............KKKKKKKKKppPPPPPPPPPPPPppPPPPPKKKK',
+    },
+};
+
 // --- Pose de especial ---
 // Gerada a partir do sprite parado: recorta o braço da frente (e a arma, se estiver nele)
 // e cola mais para cima, como se o personagem erguesse o braço para soltar o poder.
@@ -2972,12 +3077,13 @@ const SPECIAL_POSE = {
     sina: { x0: 42, x1: 56, y0: 24, y1: 52, lift: 12 }, // grade 64x64
     coleone: { x0: 42, x1: 57, y0: 24, y1: 48, lift: 16 }, // grade 64x64
     bershow: { x0: 42, x1: 53, y0: 22, y1: 42, lift: 10 }, // grade 64x64
+    kairo: { x0: 43, x1: 54, y0: 20, y1: 42, lift: 12 }, // grade 64x64
 };
 
 // Linha onde as pernas se separam em cada sprite (abaixo do short, da saia ou do casaco)
 const LEG_START = {
     titan: 40, spark: 19, hades: 40, jack: 42, kaze: 40, kenji: 40, craque: 40, akane: 38,
-    fenris: 40, zarek: 40, celestia: 30, flora: 23, nyx: 50, mamba: 46, gear: 41, roxy: 41, weaver: 37, aegis: 37, rhino: 39, anchor: 37, sina: 46, coleone: 47, bershow: 47, aspas: 50, cangeras: 47,
+    fenris: 40, zarek: 40, celestia: 30, flora: 23, nyx: 50, mamba: 46, gear: 41, roxy: 41, weaver: 37, aegis: 37, rhino: 39, anchor: 37, sina: 46, coleone: 47, bershow: 47, aspas: 50, cangeras: 47, kairo: 42,
 };
 for (const [type, row] of Object.entries(LEG_START)) pixelCharacters[type].legStart = row;
 for (const [type, area] of Object.entries(SPECIAL_POSE)) {

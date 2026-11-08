@@ -216,9 +216,10 @@ function renderSelectionChips() {
 }
 
 // Classe, estilo e ultimate de cada lutador (painel de destaque da seleção)
-const CLASS_NAMES = { melee: 'Corpo a corpo', shooter: 'Atirador', healer: 'Healer', tank: 'Tanque', random: 'Sorte' };
+const CLASS_NAMES = { melee: 'Corpo a corpo', shooter: 'Atirador', healer: 'Healer', tank: 'Tanque', cyber: 'Cibernético', random: 'Sorte' };
 const ROSTER_INFO = {
     titan: { cls: 'melee', style: 'Ex-soldado com braço robótico', ult: 'Soco-foguete com onda de choque' },
+    kairo: { cls: 'cyber', style: 'Netrunner de rua: cada golpe infecta com Corrupção; com 5, o implante do inimigo entra em Pane (3 s sem especial e sem defesa). Segurando o golpe, quickhack à distância', ult: 'Rompendo a Muralha: flutua, a área em volta queima, puxa e corrompe, e fantasmas de dados caçam os inimigos' },
     spark: { cls: 'melee', style: 'Robô de segurança abandonado, de soco elétrico', ult: 'Corrente elétrica: o dano dobra a cada segundo e o alvo fica lento; só golpe forte arrebenta' },
     hades: { cls: 'melee', style: 'Punhos de fogo, queima quem acerta', ult: 'Círculo de fogo que explode no chão' },
     jack: { cls: 'melee', style: 'Amaldiçoado no Halloween, rouba vida', ult: 'Abóbora amaldiçoada' },

@@ -82,6 +82,8 @@ function updateStatusIcons(fighter) {
     if (fighter.burnDuration > 0) html += `<span class="status-icon">🌋</span>`;
     if (fighter.curseStacks > 0) html += `<span class="status-icon">💀<span class="stack-count">${fighter.curseStacks}</span></span>`;
     if (fighter.poisonStacks > 0) html += `<span class="status-icon">🧪<span class="stack-count">${fighter.poisonStacks}</span></span>`;
+    if (fighter.corruption > 0) html += `<span class="status-icon">👾<span class="stack-count">${fighter.corruption}</span></span>`;
+    if (fighter.paneTimer > 0) html += `<span class="status-icon">⛔</span>`;
     if (fighter.adrenaline > 0) html += `<span class="status-icon">💗<span class="stack-count">x${(1 + 0.5 * fighter.adrenaline).toFixed(1)}</span></span>`;
     if (fighter.frenzyTimer > 0) html += `<span class="status-icon">🔥</span>`;
     if (fighter.slowTimer > 0) html += `<span class="status-icon">🕸️</span>`;

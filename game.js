@@ -102,6 +102,7 @@ function step() {
     particles = particles.filter(p => p.life > 0);
 
     updateProjectiles();
+    updateKairo();
     updateWalls();
     updateHazards();
     updateSinaBoats();
@@ -214,6 +215,7 @@ function draw() {
     lifeOrbs.forEach(orb => orb.draw());
 
     projectiles.forEach(p => p.draw());
+    drawKairo();
     if (window.pixelFx) pixelFx.draw(ctx); // efeitos de pixel art (pixelfx)
     coleoneBalls.forEach(drawColeoneBall);
     drawBershowSlashes();
@@ -399,6 +401,8 @@ function stopMatch() {
     sinaBoats = [];
     coleoneBalls = [];
     bershowSlashes = [];
+    kairoLinks = [];
+    dataGhosts = [];
     shadowSoldiers = [];
     walls = [];
     lifeOrbs = [];

@@ -149,6 +149,14 @@ class Fighter {
         this.shadowBonus = 0;        // Aspas: soldados a mais no exército (+1 por inimigo derrotado)
         this.sentenceTimer = 0;      // condenado pelo tribunal do Cangeras: sem ultimate e sem energia
 
+        // Kairo (Cibernético): Corrupção e Pane em quem ele acerta; quickhack e a fenda da ultimate (kairo.js)
+        this.corruption = 0;         // 0 a 5; com 5 o implante entra em pane
+        this.corruptionTimer = 0;
+        this.paneTimer = 0;          // em pane: sem especial e sem defesa
+        this.hackCooldown = 0;
+        this.breachTimer = 0;        // Rompendo a Muralha: flutuando, sem ser empurrado
+        this.breachTick = 0;
+
         // Weaver / teia
         this.slowTimer = 0;          // grudado na teia: anda na metade da velocidade
         this.spiderSenseCooldown = 0;
@@ -713,6 +721,7 @@ class Fighter {
     push(direction, force) {
         if (this.characterType === 'anchor') return; // Anchor: plantado no chão
         if (this.furyTimer > 0 || this.armorClose > 0) return; // Bershow com a armadura fechada
+        if (this.breachTimer > 0) return; // Kairo flutuando na fenda
         this.kbx += direction.x * force;
         this.kby += direction.y * force;
     }
@@ -731,7 +740,7 @@ class Fighter {
             return true;
         }
 
-        if (this.isDefending && !effect.unblockable) {
+        if (this.isDefending && !effect.unblockable && !(this.paneTimer > 0)) {
             const effectiveDamage = (this.characterType === 'spark' || this.characterType === 'titan') ? damage * 0.5 : damage;
             this.defenseHealth -= effectiveDamage;
             if (attacker) this.push(directionTo(attacker, this), 3);
@@ -780,6 +789,7 @@ class Fighter {
 
     attack(type) {
         if (this.attackCooldown > 0 || this.isParalyzed || this.isDefending || this.isDashing || this.isBladeDancing || this.isInsideOpponent || this.isDead) return;
+        if (type === 'special' && this.paneTimer > 0) return; // implante em pane (Corrupção do Kairo)
         if (courtSession) return; // tribunal aberto: a luta está congelada
 
         this.isAttacking = true;
@@ -824,6 +834,11 @@ class Fighter {
                 spawnMeleeFx(this, 'punch');
                 break;
             case 'strong_punch':
+                // Kairo: com o quickhack pronto e alguém no alcance, o golpe forte é o hack à distância
+                if (this.characterType === 'kairo' && this.hackCooldown <= 0 && this.startQuickhack()) {
+                    this.attackCooldown = 24;
+                    break;
+                }
                 if (this.characterType === 'weaver') {
                     // Weaver: o "soco forte" é uma bolinha de teia que deixa o alvo lento
                     this.attackCooldown = 40;
@@ -913,6 +928,10 @@ class Fighter {
                 }
                 if (this.characterType === 'cangeras') {
                     this.openCourt();
+                    return;
+                }
+                if (this.characterType === 'kairo') {
+                    this.startBreach();
                     return;
                 }
                 const energyCost = specialCost(this.characterType);
@@ -1012,7 +1031,7 @@ function tryMelee(attacker) {
     if (isBladeUser(attacker)) effect.sound = 'blade_hit';
     switch (attacker.attackType) {
         case 'punch':
-            damage = (attacker.characterType === 'akane') ? 14 : (attacker.characterType === 'nyx') ? NYX_PUNCH_DAMAGE : (attacker.characterType === 'kaze') ? KAZE_PUNCH_DAMAGE : (attacker.characterType === 'weaver') ? WEAVER_PUNCH_DAMAGE : (attacker.characterType === 'kenji') ? KENJI_PUNCH_DAMAGE : (attacker.characterType === 'aegis') ? AEGIS_PUNCH_DAMAGE : (attacker.characterType === 'rhino') ? RHINO_PUNCH_DAMAGE : (attacker.characterType === 'anchor') ? ANCHOR_PUNCH_DAMAGE : (attacker.characterType === 'sina') ? SINA_KNIFE_DAMAGE : (attacker.characterType === 'coleone') ? COLEONE_PUNCH_DAMAGE : (attacker.characterType === 'bershow') ? BERSHOW_SWORD_DAMAGE : (attacker.characterType === 'aspas') ? ASPAS_DAGGER_DAMAGE : (attacker.characterType === 'cangeras') ? CANGERAS_GAVEL_DAMAGE : (attacker.characterType === 'spark') ? SPARK_PUNCH_DAMAGE : 10;
+            damage = (attacker.characterType === 'akane') ? 14 : (attacker.characterType === 'nyx') ? NYX_PUNCH_DAMAGE : (attacker.characterType === 'kaze') ? KAZE_PUNCH_DAMAGE : (attacker.characterType === 'weaver') ? WEAVER_PUNCH_DAMAGE : (attacker.characterType === 'kenji') ? KENJI_PUNCH_DAMAGE : (attacker.characterType === 'aegis') ? AEGIS_PUNCH_DAMAGE : (attacker.characterType === 'rhino') ? RHINO_PUNCH_DAMAGE : (attacker.characterType === 'anchor') ? ANCHOR_PUNCH_DAMAGE : (attacker.characterType === 'sina') ? SINA_KNIFE_DAMAGE : (attacker.characterType === 'coleone') ? COLEONE_PUNCH_DAMAGE : (attacker.characterType === 'bershow') ? BERSHOW_SWORD_DAMAGE : (attacker.characterType === 'aspas') ? ASPAS_DAGGER_DAMAGE : (attacker.characterType === 'cangeras') ? CANGERAS_GAVEL_DAMAGE : (attacker.characterType === 'spark') ? SPARK_PUNCH_DAMAGE : (attacker.characterType === 'kairo') ? KAIRO_PUNCH_DAMAGE : 10;
             if (attacker.zarekForm === 'red') damage = 12;
             if (attacker.zarekForm === 'blue') damage = ZAREK_BLUE_PUNCH;
             if (attacker.characterType === 'akane') {
@@ -1078,6 +1097,8 @@ function tryMelee(attacker) {
                 : attacker.characterType === 'cangeras' && attacker.attackType === 'strong_punch' ? CANGERAS_ORDER_PUSH
                 : attacker.attackType === 'strong_punch' ? 4 : 1.5;
             target.push(attacker.aim, pushForce);
+            // Kairo: cada golpe infecta o alvo com Corrupção (o forte, com 2)
+            if (attacker.characterType === 'kairo') addCorruption(target, attacker.attackType === 'strong_punch' ? 2 : 1, attacker);
             // Nyx: cada acerto rouba vida e manda um orbe para o aliado mais ferido
             if (attacker.characterType === 'nyx') {
                 lifeOrbs.push(new LifeOrb(target, attacker, attacker.attackType === 'strong_punch' ? NYX_STRONG_HEAL : NYX_PUNCH_HEAL));
@@ -1097,6 +1118,7 @@ function specialCost(characterType) {
         mamba: MAMBA_CLOUD_COST, gear: GEAR_TURRET_COST, roxy: ROXY_FRENZY_COST, weaver: WEAVER_PULL_COST,
         aegis: AEGIS_WALL_COST, rhino: RHINO_CHARGE_COST, anchor: ANCHOR_HOOK_COST, sina: SINA_ULT_COST,
         coleone: COLEONE_DUNK_COST, bershow: BERSHOW_ARMOR_COST, aspas: ASPAS_ARMY_COST, cangeras: CANGERAS_COURT_COST,
+        kairo: KAIRO_BREACH_COST,
     }[characterType] || 45;
 }
 

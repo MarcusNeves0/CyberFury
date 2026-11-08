@@ -145,6 +145,10 @@ const sfx = (() => {
         // Locutor: tranco grave com um brilho subindo (chamada comum) e um impacto maior (abates em sequência, K.O.)
         announce: t => { thump(t, 'C2', -6, 0.25); zap(t, 400, 1600, 0.25, -18, 'square'); },
         announce_big: t => { thump(t, 'A0', -2, 0.6); clang(t, 220, -10, 0.3); zap(t, 200, 1800, 0.45, -14, 'sawtooth'); whoosh(t, 300, 5000, 0.5, -12, 0.8); },
+        // Kairo: o quickhack travando (bipes de dados), o choque de pane e a fenda abrindo (grave rasgando + chiado)
+        kairo_hack: t => { for (let i = 0; i < 4; i++) zap(t + i * 0.045, 1800 + i * 400, 1200 + i * 300, 0.04, -22, 'square'); zap(t + 0.2, 300, 1600, 0.25, -18, 'sawtooth'); },
+        kairo_pane: t => { zap(t, 2200, 120, 0.18, -14, 'sawtooth'); whoosh(t, 9000, 2000, 0.12, -14, 3); thump(t, 'E1', -6, 0.2); },
+        kairo_special: t => { zap(t, 40, 160, 1.2, -8, 'sawtooth'); thump(t, 'A0', -2, 1.2); whoosh(t, 100, 6000, 1.0, -8, 1.2); for (let i = 0; i < 6; i++) zap(t + 0.3 + i * 0.09, 400 + Math.random() * 2000, 90, 0.07, -18, 'square'); },
         zarek_transform: t => { thump(t, 'A0', -2, 1); zap(t, 100, 900, 0.8, -12, 'sawtooth'); whoosh(t, 300, 6000, 0.9, -8, 0.8); },
     };
 
@@ -203,6 +207,9 @@ const sfx = (() => {
         aspas_army: { layers: [S('lowboom', 0.5)], synth: true },
         gavel: [S('wood', 0.8)],
         announce: { layers: [S('punch_heavy', 0.35)], synth: true },
+        kairo_hack: { layers: [S('laser_small', 0.25)], synth: true },
+        kairo_pane: { layers: [S('blaster', 0.35), S('punch', 0.4)], synth: true },
+        kairo_special: { layers: [S('field', 0.55), S('lowboom', 0.6), S('laser', 0.3, 0.25)], synth: true },
         announce_big: { layers: [S('lowboom', 0.5)], synth: true },
     };
 

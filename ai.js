@@ -83,7 +83,7 @@ class AI {
         const d = distance(me, opponent);
         const meleeRange = (isBladeUser(me) ? BLADE_REACH : PUNCH_REACH) + me.radius + opponent.radius - 6;
         // Só tenta o especial se tiver a energia de verdade (antes tentava com 45 e perdia a vez)
-        const canUseSpecial = !['zarek', 'celestia', 'flora', 'spark', 'nyx', 'mamba', 'gear', 'roxy', 'weaver', 'aegis', 'rhino', 'anchor', 'sina', 'coleone', 'bershow', 'aspas', 'cangeras'].includes(me.characterType) &&
+        const canUseSpecial = !['zarek', 'celestia', 'flora', 'spark', 'nyx', 'mamba', 'gear', 'roxy', 'weaver', 'aegis', 'rhino', 'anchor', 'sina', 'coleone', 'bershow', 'aspas', 'cangeras', 'kairo'].includes(me.characterType) &&
             me.energy >= specialCost(me.characterType) && me.specialCooldown <= 0;
         if (Math.random() < 0.1) this.strafeSign *= -1;
 
@@ -398,6 +398,21 @@ class AI {
             const ball = groundBalls.slice().sort((a, b) => distance(me, a) - distance(me, b))[0];
             if (me.ballCount === 0 && ball) {
                 this.moveToward(ball); // vai buscar bola no chão
+                return;
+            }
+        }
+
+        // Kairo: abre a fenda com inimigos por perto (dois ou mais, ou o alvo colado); de média distância,
+        // trava o quickhack; de perto, bate (cada toque infecta)
+        if (me.characterType === 'kairo') {
+            const near = enemiesOf(me).filter(e => !e.isInsideOpponent && distance(me, e) < KAIRO_BREACH_RADIUS * 0.8).length;
+            if (me.energy >= KAIRO_BREACH_COST && me.specialCooldown <= 0 && me.breachTimer <= 0 && (near >= 2 || (near >= 1 && d < 110))) {
+                me.attack('special');
+                return;
+            }
+            if (me.hackCooldown <= 0 && d < KAIRO_HACK_RANGE * 0.9 && d > meleeRange * 0.8) {
+                me.attack('strong_punch');
+                this.moveToward(opponent);
                 return;
             }
         }
