@@ -72,6 +72,22 @@ function endCronodrive() {
     owner.spriteForm = null;
     sfx.play('vex_drive_end');
     screenShake = Math.max(screenShake, 4);
+    // O tempo volta: todo o dano guardado cai de uma vez em cada inimigo
+    let released = false;
+    for (const f of fighters) {
+        const pending = Math.round(f.cronoPending || 0);
+        f.cronoPending = 0;
+        if (pending <= 0 || f.isDead) continue;
+        released = true;
+        f.releasingCrono = true;
+        f.loseHealth(pending, owner);
+        f.releasingCrono = false;
+        f.hitFlash = 12;
+        floatingTexts.push(new FloatingText(f.x, f.y - f.z - f.height - 24, `-${pending}`, '#ff3b6b'));
+        if (window.pixelFx) pixelFx.spawn('crit-hit', { x: f.x, y: f.y - f.z, flip: owner.x > f.x, height: Math.round((f.y - f.chestY) / 2), palette: 'neon', seed: Math.floor(Math.random() * 1000) });
+        for (let i = 0; i < 12; i++) particles.push(new Particle(f.x + (Math.random() - 0.5) * 30, f.chestY + (Math.random() - 0.5) * 30, VEX_TRAIL_COLORS[i % 4], 0));
+    }
+    if (released) { sfx.play('hit_heavy'); hitStop = HIT_STOP + 2; screenShake = Math.max(screenShake, 9); }
 }
 
 // Começo de cada passo: o relógio do Cronodrive e as recargas da Vex
@@ -170,5 +186,18 @@ function drawCronodrive() {
     ctx.textAlign = 'center';
     ctx.fillStyle = '#b6ff2a';
     ctx.fillText(`${(cronoDrive.timer / 60).toFixed(1)}s`, o.x, o.y - o.z - o.height - 26);
+    // Dano guardado em cada inimigo: número congelado em cima da cabeça, crescendo a cada golpe, tremendo de leve
+    for (const f of fighters) {
+        if (!(f.cronoPending > 0) || f.isDead) continue;
+        const size = Math.min(26, 13 + f.cronoPending / 12);
+        const x = f.x + (Math.random() - 0.5) * 2, y = f.y - f.z - f.height - 22;
+        ctx.globalAlpha = 1;
+        ctx.font = `bold ${Math.round(size)}px monospace`;
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#0a0614';
+        ctx.strokeText(`${Math.round(f.cronoPending)}`, x, y);
+        ctx.fillStyle = cronoDrive.tick % 8 < 4 ? '#b6ff2a' : '#00f0ff';
+        ctx.fillText(`${Math.round(f.cronoPending)}`, x, y);
+    }
     ctx.restore();
 }

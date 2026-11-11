@@ -638,6 +638,11 @@ class Fighter {
 
     // Tira vida e anota nas estatísticas (dano causado de quem bateu, dano sofrido de quem levou)
     loseHealth(amount, attacker) {
+        // Cronodrive da Vex: o dano dela fica guardado (número congelado no ar) e cai inteiro quando o tempo volta
+        if (cronoDrive && attacker === cronoDrive.owner && attacker.team !== this.team && !this.releasingCrono) {
+            this.cronoPending = (this.cronoPending || 0) + amount;
+            return;
+        }
         if (TANKS.includes(this.characterType)) amount *= 1 - TANK_ARMOR; // armadura de tanque
         const lost = Math.max(0, Math.min(amount, this.health));
         this.health -= amount;
