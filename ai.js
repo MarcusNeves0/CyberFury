@@ -83,7 +83,7 @@ class AI {
         const d = distance(me, opponent);
         const meleeRange = (isBladeUser(me) ? BLADE_REACH : PUNCH_REACH) + me.radius + opponent.radius - 6;
         // Só tenta o especial se tiver a energia de verdade (antes tentava com 45 e perdia a vez)
-        const canUseSpecial = !['zarek', 'celestia', 'flora', 'spark', 'nyx', 'mamba', 'gear', 'roxy', 'weaver', 'aegis', 'rhino', 'anchor', 'sina', 'coleone', 'bershow', 'aspas', 'cangeras', 'kairo'].includes(me.characterType) &&
+        const canUseSpecial = !['zarek', 'celestia', 'flora', 'spark', 'nyx', 'mamba', 'gear', 'roxy', 'weaver', 'aegis', 'rhino', 'anchor', 'sina', 'coleone', 'bershow', 'aspas', 'cangeras', 'kairo', 'vex'].includes(me.characterType) &&
             me.energy >= specialCost(me.characterType) && me.specialCooldown <= 0;
         if (Math.random() < 0.1) this.strafeSign *= -1;
 
@@ -398,6 +398,20 @@ class AI {
             const ball = groundBalls.slice().sort((a, b) => distance(me, a) - distance(me, b))[0];
             if (me.ballCount === 0 && ball) {
                 this.moveToward(ball); // vai buscar bola no chão
+                return;
+            }
+        }
+
+        // Vex: liga o Cronodrive com o alvo perto (para bater sem resposta) ou para escapar quando está quase caindo;
+        // de média distância, o passo fantasma fecha a distância cortando
+        if (me.characterType === 'vex') {
+            const lowHealth = me.health < me.maxHealth * 0.3;
+            if (!cronoDrive && me.energy >= VEX_DRIVE_COST && me.specialCooldown <= 0 && (d < 140 || (lowHealth && d < 220))) {
+                me.attack('special');
+                return;
+            }
+            if (me.phaseCooldown <= 0 && !me.phaseStep && d < VEX_STEP_RANGE * 0.95 && d > meleeRange * 0.9) {
+                me.attack('strong_punch');
                 return;
             }
         }

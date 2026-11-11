@@ -63,15 +63,17 @@ function step() {
         updatePhones();
         return;
     }
-    aiControllers.forEach(ai => ai.tick());
+    updateVex(); // relógio do Cronodrive (os inimigos da Vex só agem 1 a cada 4 passos enquanto ele dura)
+    aiControllers.forEach(ai => { if (!timeFrozen(ai.fighter)) ai.tick(); });
     // Humanos sempre miram no inimigo mais próximo; a IA escolhe o alvo, mas troca se ele cair
     for (const f of fighters) {
         if (!alive(f)) continue;
         if (f.isPlayer || !alive(f.target)) f.target = nearestEnemy(f);
     }
     for (const f of fighters) {
-        if (alive(f)) f.update();
+        if (alive(f) && !timeFrozen(f)) f.update();
     }
+    updateVexAfterMove();
 
     resolveCollisions();
 
@@ -82,23 +84,24 @@ function step() {
     healingFlowers.forEach(flower => flower.update());
     healingFlowers = healingFlowers.filter(flower => !flower.done);
     for (const f of fighters) {
+        if (timeFrozen(f)) continue;
         if (alive(f) && f.characterType === 'nyx') f.updateNyxLink();
         if (alive(f) && f.characterType === 'mamba') f.updateMambaCloud();
         if (alive(f) && f.characterType === 'roxy') f.updateRoxy();
         if (alive(f) && f.characterType === 'weaver') { f.updateWeaverPull(); f.updateWeaverKick(); }
         if (alive(f) && f.characterType === 'sina') f.updateSina();
     }
-    turrets.forEach(t => t.update());
+    turrets.forEach(t => { if (!timeFrozen(t)) t.update(); });
     turrets = turrets.filter(t => !t.done);
-    shadowSoldiers.forEach(s => s.update());
+    shadowSoldiers.forEach(s => { if (!timeFrozen(s.owner || s)) s.update(); });
     shadowSoldiers = shadowSoldiers.filter(s => !s.done);
     lifeOrbs.forEach(orb => orb.update());
     lifeOrbs = lifeOrbs.filter(orb => !orb.done);
     updatePhones();
-    floatingTexts.forEach(t => t.update());
+    if (!effectsFrozen()) floatingTexts.forEach(t => t.update()); // no Cronodrive os números ficam no ar
     floatingTexts = floatingTexts.filter(t => t.life > 0);
 
-    particles.forEach(p => p.update());
+    if (!effectsFrozen()) particles.forEach(p => p.update());
     particles = particles.filter(p => p.life > 0);
 
     updateProjectiles();
@@ -202,6 +205,7 @@ function draw() {
         ...turrets.map(t => ({ y: t.y, draw: () => t.draw() })),
         ...shadowSoldiers.map(s => ({ y: s.y, draw: () => s.draw() })),
     ].sort((a, b) => a.y - b.y);
+    drawVexTrail(); // cópias coloridas da Vex, atrás de todo mundo
     drawables.forEach(d => d.draw());
 
     for (const f of fighters) {
@@ -226,6 +230,7 @@ function draw() {
     fighters.forEach(f => { if (alive(f) && f.sentenceTimer > 0) drawSentenceMark(f); });
     floatingTexts.forEach(t => t.draw());
     drawMapOverlay();
+    drawCronodrive();
     announcer.draw();
     if (courtSession) drawCourt(courtSession);
 }
@@ -403,6 +408,8 @@ function stopMatch() {
     bershowSlashes = [];
     kairoLinks = [];
     dataGhosts = [];
+    cronoDrive = null;
+    vexTrail = [];
     shadowSoldiers = [];
     walls = [];
     lifeOrbs = [];

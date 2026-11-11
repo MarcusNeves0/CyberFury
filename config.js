@@ -71,6 +71,7 @@ const CHARACTERS = [
     { id: 'aspas', name: 'Aspas the Darkness' },
     { id: 'cangeras', name: 'Cangeras' },
     { id: 'kairo', name: 'Kairo' },
+    { id: 'vex', name: 'Vex' },
 ];
 
 // Teclas (cada ação aceita uma lista). Sozinho no teclado o jogador pode andar com WASD ou setas;
@@ -284,6 +285,8 @@ const MELEE_FX = {
     cangeras: { punch: { id: 'blunt-hit', on: 'hit', palette: 'gold', warm: '#ffe066' }, strong_punch: { id: 'hammer-smash', palette: 'gold', advance: 0.07 } },
     // Kairo: a mão envolta em código vermelho dá um choque de dados no impacto
     kairo: { punch: { id: 'zap-hit', on: 'hit', palette: 'blood', scale: 1 }, strong_punch: { id: 'zap-hit', on: 'hit', palette: 'blood', scale: 1.5 } },
+    // Vex: lâminas térmicas, cortes rápidos em brasa laranja
+    vex: { punch: { id: 'sword-slash', palette: 'ember', scale: 1.6 }, strong_punch: { id: 'double-slash', palette: 'ember' } },
     jack: { punch: { id: 'sword-slash', palette: 'ember' }, strong_punch: { id: 'double-slash', palette: 'ember' } },
     fenris: { punch: { id: 'claw-swipe', palette: 'arcane' }, strong_punch: { id: 'claw-swipe', palette: 'shadow', scale: 2.6 } },
     weaver: { punch: { id: 'hit-spark', on: 'hit', palette: 'cyber' } },
@@ -412,7 +415,7 @@ const GAZE_STUN = 45;
 // Vida máxima de cada personagem (tanques aguentam mais, quem ataca de longe aguenta menos)
 const HEALTH_BY_CHARACTER = {
     titan: 1200, zarek: 1200, fenris: 1150, bershow: 1150, spark: 1100,
-    hades: 1000, jack: 1000, kenji: 1000, akane: 950, kaze: 950, aspas: 950, cangeras: 1050, kairo: 1000, craque: 950, weaver: 950, sina: 950,
+    hades: 1000, jack: 1000, kenji: 1000, akane: 950, kaze: 950, aspas: 950, cangeras: 1050, kairo: 1000, vex: 900, craque: 950, weaver: 950, sina: 950,
     aegis: 1600, rhino: 1450, anchor: 1450, coleone: 1450,
     mamba: 900, gear: 750, roxy: 850, celestia: 950, nyx: 950, flora: 900,
 };

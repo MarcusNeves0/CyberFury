@@ -3039,6 +3039,118 @@ pixelCharacters.kairo = {
     },
 };
 
+// --- Vex: ex-entregadora de rua com o Cronodrive na coluna (o mundo fica em câmera lenta para todos, menos ela) ---
+// Jaqueta curta de corrida, viseira, lâminas térmicas nos antebraços. Forma 'drive': o implante e o limão acendem.
+pixelCharacters.vex = {
+    size: 64,
+    palette: {
+        K: OUTLINE, S: '#e6b89a', s: '#b8876a', H: '#141420', h: '#3a3a4e', G: '#b6ff2a', J: '#1a1a22', j: '#2c2c38', L: '#b6ff2a',
+        T: '#2a2236', P: '#202028', p: '#15151b', B: '#121216', O: '#ff8a2a', o: '#fff1c0', Q: '#b8400c', M: '#9aa4b8', m: '#56607a', V: '#7affd0', v: '#3ab88e', r: '#a8506a',
+    },
+    forms: {
+        normal: {},
+        drive: { G: '#eaffb0', L: '#eaffb0', V: '#ffffff', v: '#b6ff2a', O: '#ffc060', o: '#ffffff', Q: '#ff7a1a', M: '#d8ffa0' },
+    },
+    idle: [
+        '..............................KK..K',
+        '...........................KKKHHKKHKKK',
+        '..........................KHHKKHKKKGGHKK',
+        '..........................KKHHHHHHGGHHHHK',
+        '.........................KHHHHHHHGGHHHHHHK',
+        '........................KKHHHHHHGhHHHHHHHK',
+        '....................KKKKhhhHHhHGGHHHHHHHHK',
+        '...................KHHHHHhhHHHGGHHHHHHHHHK',
+        '...................KHHHHHhhHHGGHHHHHHHHHHK',
+        '..................KHHHHHHhhSSSSSSHHHHHHHHHK',
+        '..................KHHHHHHhhssSSSSSSSSSSSHHK',
+        '...................KHKKKhhhssSSSSSSSSSSSSSK',
+        '....................K..KhhhssSssSvvVVVVVVVVK',
+        '.......................KhhhssSssSvvVVVVVVVVK',
+        '........................KMMssSssSSSSSSSSSSSK',
+        '........................KGMssSSSSSSSSSSSSSSK',
+        '........................KMMssSSSSSSSSSSSSSK',
+        '........................KGMssSSSSSSSSSrrrSK',
+        '.......................KJMMsssssssssssSSSSK',
+        '......................KKJGMsssssssssssSSSSK',
+        '................KKKKKKjjJMMmJJJJJJJJJJJJJJKKKKKK',
+        '...............KjjJJJJjjJJJJJJJJjjJJJJJJJJjjJJJJK',
+        '...............KjjJJJJjjJJJJJJJJMjJJJJJJJJjjJJJJK',
+        '...........KKKKMMjJJJJjjJJJJJJJJjjJJJJJJJJKjJJMMKKKK',
+        '..........KoOOQmMjJJJJjjJJJJJJJJjjLLJJJJJJKjJJMmQOOoK',
+        '..........KoOOQMMjJJJJjjJJJJJJJJjjJLLJJJJJKjJJMMQOOoK',
+        '..........KoOOQMMjJJJJjjJJJJJJJJMjJJLLJJJJKjJJMMQOOoK',
+        '..........KoOOQKLLLLLLjjJJJJJJJJjjJJJLLJJJKLLLLLQOOoK',
+        '..........KoOOQKjjJJJJjjJJJJJJJJjjJJJJLLJJKjJJJJQOOoK',
+        '..........KoOOQKjjJJJJjjJJJJJJJJjjJJJJJLLJKjJJJJQOOoK',
+        '..........KoOQKKjjJJJJjjJJJJJJJJMjJJJJJJJJKjJJJJKQOoK',
+        '..........KoOQKKjjJJJJLLLLLLLLLLjjJJJJJJJJKjJJJJKQOoK',
+        '..........KoOQKKjjJJJJjjJJJJJJJJjjJJJJJJJJKjJJJJKQOoK',
+        '..........KoOQKKjjJJJJjjJJJJJJJJjjJJJJJJJJKjJJJJKQOoK',
+        '..........KoOQKKjjJJJJKTTTTTTTTTTTTTTTTTTKKjJJJJKQOoK',
+        '..........KoOQK.KsSSSKKTTTTTTTTTTTTTTTTTTKKsSSSKKQOoK',
+        '..........KoOK..KsSSSKKTTTTTTTTTTTTTTTTTTKKsSSSK.KOoK',
+        '..........KoOK..KsSSSKKTTTTTTTTTTTTTTTTTTKKsSSSK.KOoK',
+        '..........KoOK...KKKK.KjjjjjjjjMMjjjjjjjjK.KKKK..KOoK',
+        '..........KoOK........KjjjjjjjjMMjjjjjjjjK.......KOoK',
+        '..........KoOK........KTTTTTTTTTTTTTTTTTTK.......KOoK',
+        '..........KoOK........KppPPPPPPPPPPppPPPPK.......KOoK',
+        '..........KOK.........KppPPPPPPPPPPppPPPPK........KOK',
+        '..........KOK.........KppPPPPKKKKKKppPPPPK........KOK',
+        '..........KOK.........KppPPPPK....KppPPPPK........KOK',
+        '..........KOK.........KppPPPPK....KppPPPPK........KOK',
+        '..........KOK.........KppPPPPK....KppPPPPK........KOK',
+        '..........KoK.........KppPPPPK....KppPPPPK........KoK',
+        '...........K..........KppPPPPK....KppPPPPK.........K',
+        '......................KppPPPPK....KppPPPPK',
+        '......................KppPPPPK....KppPPPPK',
+        '......................KppPPPPK....KppPPPPK',
+        '......................KppPPPPK....KppPPPPK',
+        '......................KppPPPPK....KppPPPPKK',
+        '.....................KBBBBBBBBK..KBBBBBBBBBK',
+        '.....................KBBBBBBBBK..KBBBBBBBBBK',
+        '.....................KLLLLLLLBK..KLLLLLLLLBK',
+        '.....................KBBBBBBBBK..KBBBBBBBBBK',
+        '.....................KBBBBBBBBK..KBBBBBBBBBK',
+        '.....................KBBBBBBBBK..KBBBBBBBBBK',
+        '.....................KBBBBBBBBK..KBBBBBBBBBK',
+        '.....................KBBBBBBBBK..KBBBBBBBBBK',
+        '.....................KppppppppK..KpppppppppK',
+        '......................KKKKKKKK....KKKKKKKKK',
+    ],
+    attack: {
+        19: '......................KKJGMsssssssssssSSSSK................KKKKK',
+        20: '................KKKKKKjjJMMmJJJJJJJJJJJJJJK.....KKKKKKKKKKKooOOo',
+        21: '...............KjjJJJJjjJJJJJJJJjjJJJJJJJJK....KMMoooooooooOOKKK',
+        22: '...............KjjJJJJjjJJJJJJJJMjJJJJJJJJKKKKKKMmOOOOOOOOOKK',
+        23: '...........KKKKMMjJJJJjjJJJJJJJJjjJJJJJJJJKJJJJJMMOOOOQQQQK',
+        24: '..........KoOOQmMjJJJJjjJJJJJJJJjjLLJJJJJJKJJJJJMMQQQQSSKK',
+        25: '..........KoOOQMMjJJJJjjJJJJJJJJjjJLLJJJJJKLLLLLLLLLLSSSK',
+        26: '..........KoOOQMMjJJJJjjJJJJJJJJMjJJLLJJJJKJJJJJJJJJJSSSK',
+        27: '..........KoOOQKLLLLLLjjJJJJJJJJjjJJJLLJJJKjjjjjjjjjjsssK',
+        28: '..........KoOOQKjjJJJJjjJJJJJJJJjjJJJJLLJJKjjjjjjjjjjsssK',
+        29: '..........KoOOQKjjJJJJjjJJJJJJJJjjJJJJJLLJKKKKKKKKKKKKKK',
+        30: '..........KoOQKKjjJJJJjjJJJJJJJJMjJJJJJJJJK',
+        31: '..........KoOQKKjjJJJJLLLLLLLLLLjjJJJJJJJJK',
+        32: '..........KoOQKKjjJJJJjjJJJJJJJJjjJJJJJJJJK',
+        33: '..........KoOQKKjjJJJJjjJJJJJJJJjjJJJJJJJJK',
+        34: '..........KoOQKKjjJJJJKTTTTTTTTTTTTTTTTTTK',
+        35: '..........KoOQK.KsSSSKKTTTTTTTTTTTTTTTTTTK',
+        36: '..........KoOK..KsSSSKKTTTTTTTTTTTTTTTTTTK',
+        37: '..........KoOK..KsSSSKKTTTTTTTTTTTTTTTTTTK',
+        38: '..........KoOK...KKKK.KjjjjjjjjMMjjjjjjjjK',
+        39: '..........KoOK........KjjjjjjjjMMjjjjjjjjK',
+        40: '..........KoOK........KTTTTTTTTTTTTTTTTTTK',
+        41: '..........KoOK........KppPPPPPPPPPPppPPPPK',
+        42: '..........KOK.........KppPPPPPPPPPPppPPPPK',
+        43: '..........KOK.........KppPPPPKKKKKKppPPPPK',
+        44: '..........KOK.........KppPPPPK....KppPPPPK',
+        45: '..........KOK.........KppPPPPK....KppPPPPK',
+        46: '..........KOK.........KppPPPPK....KppPPPPK',
+        47: '..........KoK.........KppPPPPK....KppPPPPK',
+        48: '...........K..........KppPPPPK....KppPPPPK',
+    },
+};
+
 // --- Pose de especial ---
 // Gerada a partir do sprite parado: recorta o braço da frente (e a arma, se estiver nele)
 // e cola mais para cima, como se o personagem erguesse o braço para soltar o poder.
@@ -3078,12 +3190,13 @@ const SPECIAL_POSE = {
     coleone: { x0: 42, x1: 57, y0: 24, y1: 48, lift: 16 }, // grade 64x64
     bershow: { x0: 42, x1: 53, y0: 22, y1: 42, lift: 10 }, // grade 64x64
     kairo: { x0: 43, x1: 54, y0: 20, y1: 42, lift: 12 }, // grade 64x64
+    vex: { x0: 42, x1: 51, y0: 20, y1: 42, lift: 12 }, // grade 64x64
 };
 
 // Linha onde as pernas se separam em cada sprite (abaixo do short, da saia ou do casaco)
 const LEG_START = {
     titan: 40, spark: 19, hades: 40, jack: 42, kaze: 40, kenji: 40, craque: 40, akane: 38,
-    fenris: 40, zarek: 40, celestia: 30, flora: 23, nyx: 50, mamba: 46, gear: 41, roxy: 41, weaver: 37, aegis: 37, rhino: 39, anchor: 37, sina: 46, coleone: 47, bershow: 47, aspas: 50, cangeras: 47, kairo: 42,
+    fenris: 40, zarek: 40, celestia: 30, flora: 23, nyx: 50, mamba: 46, gear: 41, roxy: 41, weaver: 37, aegis: 37, rhino: 39, anchor: 37, sina: 46, coleone: 47, bershow: 47, aspas: 50, cangeras: 47, kairo: 42, vex: 41,
 };
 for (const [type, row] of Object.entries(LEG_START)) pixelCharacters[type].legStart = row;
 for (const [type, area] of Object.entries(SPECIAL_POSE)) {

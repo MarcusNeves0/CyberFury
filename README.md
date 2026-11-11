@@ -94,6 +94,7 @@ Hackeiam os inimigos: os golpes infectam com **Corrupção** e, com 5, o implant
 
 | | Lutador | Estilo | Ultimate |
 |---|---|---|---|
+| ⏱️ | **Vex** | Ex-entregadora de rua com lâminas térmicas nos antebraços: cortes muito rápidos; segurando o golpe, o *Passo fantasma* atravessa o inimigo cortando e para atrás dele | *Cronodrive*: o implante na coluna acende e, por 4 s, os inimigos e os tiros deles ficam a 25% da velocidade — ela não, e deixa um rastro de cópias coloridas |
 | 👾 | **Kairo "Glitch"** | Netrunner de rua de jaqueta bomber amarela e olho cibernético; cada toque corrompe, e segurando o golpe ele trava um *quickhack* à distância que atravessa a defesa | *Rompendo a Muralha*: flutua enquanto uma IA vermelha vaza pela fenda — a área em volta queima, puxa e corrompe, e fantasmas de dados caçam os inimigos |
 
 > Passe o mouse sobre cada lutador na tela de seleção para ler a história dele.

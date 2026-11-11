@@ -317,6 +317,7 @@ class Particle {
 
 function updateProjectiles() {
     for (const projectile of projectiles) {
+        if (timeFrozen(projectile.shooter)) continue; // tiro inimigo no Cronodrive da Vex: quase parado
         projectile.update();
         if (projectile.done || projectile.isReturning) continue;
         if (blockedByShield(projectile)) {

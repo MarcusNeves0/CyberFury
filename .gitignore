@@ -4,3 +4,6 @@
 # Arquivos que o Windows cria sozinho nas pastas
 Thumbs.db
 desktop.ini
+
+# Grafo de conhecimento gerado pelo graphify (/graphify)
+graphify-out/
