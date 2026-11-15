@@ -1229,3 +1229,9 @@ body {
 }
 .boss-head-fill { height: 100%; width: 100%; background: var(--head-color); transition: width 0.15s; }
 #win-text { white-space: pre-line; }
+
+/* Matriarca: barra única e o estado do escudo */
+.matri-hud { border-color: #ff2aff; box-shadow: 0 0 12px rgba(255, 42, 255, 0.35); }
+.matri-hud .boss-name { color: #ff2aff; text-shadow: 0 0 8px rgba(255, 42, 255, 0.8); }
+.matri-bar { --head-color: #ff2aff; height: 12px; }
+.matri-shield { margin-top: 4px; font-size: 0.75rem; color: #3ff6ff; }

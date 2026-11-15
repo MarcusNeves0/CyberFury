@@ -35,8 +35,14 @@ class AI {
         const nearest = nearestEnemy(me) || enemiesOf(me).sort((a, b) => distance(me, a) - distance(me, b))[0];
         if (!nearest) return null;
         const nearestDistance = distance(me, nearest);
-        const finisher = enemiesOf(me).find(e => e.health < 250 && distance(me, e) < nearestDistance + 150);
-        return finisher || nearest;
+        const finisher = enemiesOf(me).find(e => e.health < 250 && distance(me, e) < nearestDistance + 150 && !e.isPylon);
+        const pick = finisher || nearest;
+        // Matriarca com escudo: primeiro derruba as torres (a mais perto)
+        if (pick.shielded || (pick.isBoss && bossIntro)) {
+            const pylon = enemiesOf(me).filter(e => e.isPylon).sort((a, b) => distance(me, a) - distance(me, b))[0];
+            if (pylon) return pylon;
+        }
+        return pick;
     }
 
     // Anda numa direção desviando de obstáculos e sem empilhar nos aliados

@@ -838,6 +838,7 @@
     // ---- shapes. Colors (c) and alphas (a) can be numbers or functions of the shape's own coordinates.
     /** 1 px line. c and a may be functions of u (0 at the start, 1 at the end). */
     line(x0, y0, x1, y1, c, a = 1) {
+      if (!(Number.isFinite(x0) && Number.isFinite(y0) && Number.isFinite(x1) && Number.isFinite(y1))) return; // NaN aqui travava o laço para sempre
       let sx = this.cellX(x0, y0), sy = this.cellY(x0, y0);
       const ex = this.cellX(x1, y1), ey = this.cellY(x1, y1);
       const dx = Math.abs(ex - sx), dy = -Math.abs(ey - sy), stepx = sx < ex ? 1 : -1, stepy = sy < ey ? 1 : -1;
@@ -4733,7 +4734,7 @@
     const pts = [], n = Math.ceil(T.L / 0.5);
     for (let i = 0; i <= n; i++) {
       const s = i * 0.5, u = s / T.L;
-      pts.push({ x, y, th, w: T.W * Math.pow(1 - u, 0.75) + 0.45, u, s });
+      pts.push({ x, y, th, w: T.W * Math.pow(Math.max(0, 1 - u), 0.75) + 0.45, u, s }); // a ponta passa um pouco de u = 1: sem o max vira NaN e trava o line()
       th += 0.5 * (writhe * Math.sin(s / T.lam * TAU - T.om * t + T.ph) + T.curl * hook * smooth(0.58, 1, u));
       x += Math.cos(th) * 0.5;
       y += Math.sin(th) * 0.5;

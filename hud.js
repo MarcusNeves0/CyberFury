@@ -23,7 +23,8 @@ function buildHUD() {
     for (const team of [0, 1]) {
         const column = makeEl('div', `team-hud team-${team}`, hud);
         for (const f of fighters.filter(f => f.team === team)) {
-            if (f.isBoss) { buildBossHud(f, column); continue; } // chefe: barra própria, uma por cabeça
+            if (f.isBoss) { buildBossHud(f, column); continue; } // chefe: barra própria (o Cérbero tem uma por cabeça)
+            if (f.isPylon) continue; // torres da Matriarca: barrinha em cima delas
             const card = makeEl('div', 'player-hud', column);
             const title = makeEl('h3', '', card);
             const name = makeEl('span', '', title);
@@ -86,6 +87,8 @@ function updateStatusIcons(fighter) {
     if (fighter.poisonStacks > 0) html += `<span class="status-icon">🧪<span class="stack-count">${fighter.poisonStacks}</span></span>`;
     if (fighter.corruption > 0) html += `<span class="status-icon">👾<span class="stack-count">${fighter.corruption}</span></span>`;
     if (fighter.paneTimer > 0) html += `<span class="status-icon">⛔</span>`;
+    if (fighter.glitchTimer > 0) html += `<span class="status-icon">🌀</span>`;
+    if (fighter.hackTimer > 0) html += `<span class="status-icon">🧿</span>`;
     if (fighter.adrenaline > 0) html += `<span class="status-icon">💗<span class="stack-count">x${(1 + 0.5 * fighter.adrenaline).toFixed(1)}</span></span>`;
     if (fighter.frenzyTimer > 0) html += `<span class="status-icon">🔥</span>`;
     if (fighter.slowTimer > 0) html += `<span class="status-icon">🕸️</span>`;
@@ -106,7 +109,7 @@ function knockOut(fighter) {
     fighter.isDead = true;
     fighter.deathTimer = DEATH_DURATION;
     const killer = fighter.lastAttacker;
-    if (killer && killer.team !== fighter.team) killer.stats.kos++;
+    if (killer && killer.team !== fighter.team && !fighter.isPylon) killer.stats.kos++;
     announcer.onKO(fighter, killer);
     fighter.health = 0;
     fighter.stopChanneling();
@@ -134,7 +137,8 @@ function knockOut(fighter) {
 }
 
 function checkGameOver() {
-    const aliveTeams = new Set(fighters.filter(alive).map(f => f.team));
+    // Hackeado pela Matriarca ainda conta como do time de origem
+    const aliveTeams = new Set(fighters.filter(alive).map(f => f.hackHome !== undefined ? f.hackHome : f.team));
     if (aliveTeams.size > 1) return;
 
     gameState = 'GAMEOVER';

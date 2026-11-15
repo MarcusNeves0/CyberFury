@@ -98,7 +98,7 @@ function onPhoneMessage(conn, msg) {
     if (msg.t === 'ping') { if (seat) conn.send({ t: 'pong' }); return; }
     if (!seat) return;
     if (gameState !== 'FIGHT') { phoneMenuInput(seat, msg); return; }
-    const f = fighters.find(f => f.controller === seat.player && alive(f));
+    const f = fighters.find(f => f.controller === seat.player && alive(f) && !(f.hackTimer > 0));
     if (!f) return;
     const actions = ['punch', 'special', 'defend'];
     if (msg.t === 'move') {

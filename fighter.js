@@ -160,6 +160,9 @@ class Fighter {
         this.phaseStep = null;
         this.phaseCooldown = 0;
         this.trailIndex = 0;
+        // Matriarca (chefe): glitch inverte os controles; hackeado luta pelo outro time por um tempo (matriarca.js)
+        this.glitchTimer = 0;
+        this.hackTimer = 0;
 
         // Weaver / teia
         this.slowTimer = 0;          // grudado na teia: anda na metade da velocidade
@@ -455,6 +458,7 @@ class Fighter {
         if (this.specialCooldown > 0) this.specialCooldown--;
         if (this.specialPoseTimer > 0) this.specialPoseTimer--;
         if (this.slowTimer > 0) this.slowTimer--;
+        if (this.glitchTimer > 0) this.glitchTimer--;
         if (this.spiderSenseCooldown > 0) this.spiderSenseCooldown--;
         if (this.dunkHoop && --this.dunkHoop.life <= 0) this.dunkHoop = null;
         if (this.furyTimer > 0 && --this.furyTimer === 0) this.spriteForm = null; // a armadura volta a abrir
@@ -545,6 +549,7 @@ class Fighter {
         } else {
             move = this.aiMove;
         }
+        if (this.glitchTimer > 0) move = { x: -move.x, y: -move.y }; // glitch da Matriarca: controles invertidos
         const baseSpeed = MOVE_SPEED * (this.characterType === 'roxy' ? ROXY_SPEED
             : this.zarekForm === 'blue' ? ZAREK_BLUE_SPEED
             : this.characterType === 'aegis' ? AEGIS_SPEED

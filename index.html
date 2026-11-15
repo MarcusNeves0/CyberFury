@@ -36,11 +36,29 @@
                     </button>
                     <button class="hub-option boss-option" data-mode="chefao">
                         <span class="hub-option-title">👹 Chefão</span>
-                        <span class="hub-option-desc">Até 4 jogadores contra o Cérbero-X</span>
+                        <span class="hub-option-desc">Até 4 jogadores contra um chefe</span>
                     </button>
                     <button class="hub-option" data-mode="treino">
                         <span class="hub-option-title">🎯 Treino</span>
                         <span class="hub-option-desc">Teste o lutador num boneco, energia infinita</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Só aparece no modo Chefão -->
+            <div class="hub-section hidden" id="boss-section">
+                <h3>Chefe</h3>
+                <div class="hub-options" id="boss-options">
+                    <button class="hub-option boss-option selected" data-boss="cerbero">
+                        <span class="hub-option-title">🐕 Cérbero-X</span>
+                        <span class="hub-option-desc">Cão-robô de três cabeças: fogo, gelo e raio</span>
+                    </button>
+                    <button class="hub-option boss-option" data-boss="matriarca">
+                        <span class="hub-option-title">🕸️ Matriarca</span>
+                        <span class="hub-option-desc">IA com torres de escudo, drones e hack</span>
+                    </button>
+                    <button class="hub-option boss-option" data-boss="random">
+                        <span class="hub-option-title">🎲 Sorteio</span>
+                        <span class="hub-option-desc">Um chefe diferente a cada luta</span>
                     </button>
                 </div>
             </div>
@@ -292,6 +310,7 @@
     <script src="kairo.js"></script>
     <script src="vex.js"></script>
     <script src="boss.js"></script>
+    <script src="matriarca.js"></script>
     <script src="ai.js"></script>
     <script src="hud.js"></script>
     <script src="announcer.js"></script>

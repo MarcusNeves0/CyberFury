@@ -99,7 +99,7 @@ Object.assign(Fighter.prototype, {
         if (d > stopDistance && this.pullTimer > 0) {
             const dir = directionTo(target, this);
             const step = Math.min(WEAVER_PULL_SPEED, d - stopDistance);
-            if (target.isBoss) { this.x -= dir.x * step; this.y -= dir.y * step; } // o chefe é pesado demais: o Weaver é que voa até ele
+            if (target.isBoss || target.isPylon) { this.x -= dir.x * step; this.y -= dir.y * step; } // o chefe é pesado demais: o Weaver é que voa até ele
             else { target.x += dir.x * step; target.y += dir.y * step; }
             target.isParalyzed = true;
             target.paralysisTimer = Math.max(target.paralysisTimer, 2);
@@ -329,7 +329,7 @@ Object.assign(Fighter.prototype, {
             }
             if (d > stopDistance + 20) { this.dropDunk(); return; } // não chegou (bateu em algo no caminho)
             // Chefe: pesado demais para levantar; vira uma pancada que não dá para bloquear
-            if (target.isBoss) {
+            if (target.isBoss || target.isPylon) {
                 target.takeDamage(COLEONE_DUNK_DAMAGE, { unblockable: true, sound: 'hit_heavy' }, this);
                 shockwaves.push({ x: target.x, y: target.y, life: 20, radius: COLEONE_SLAM_RADIUS });
                 screenShake = Math.max(screenShake, 8);

@@ -162,6 +162,15 @@ const sfx = (() => {
         boss_slam: t => { thump(t, 'A0', 0, 0.8); whoosh(t, 1500, 100, 0.8, -6, 0.4); },
         boss_fire: t => { whoosh(t, 500, 2500, 0.9, -6, 0.4); whoosh(t + 0.2, 2500, 600, 0.8, -10, 0.5); },
         boss_ice: t => { clang(t, 2600, -12, 0.3); clang(t + 0.05, 3400, -14, 0.3); whoosh(t, 8000, 2000, 0.3, -12, 2); thump(t, 'C2', -8, 0.2); },
+        // Matriarca: glitch digital, carga do laser, laser, drones, escudo subindo, feixe do céu, núcleo ligando, hack
+        matri_glitch: t => { for (let i = 0; i < 6; i++) zap(t + i * 0.035, 300 + Math.random() * 3000, 100 + Math.random() * 600, 0.04, -16, 'square'); whoosh(t, 9000, 3000, 0.25, -16, 3); },
+        matri_charge: t => { zap(t, 200, 1400, 0.6, -16, 'sawtooth'); zap(t + 0.05, 400, 2000, 0.55, -20, 'square'); },
+        matri_laser: t => { zap(t, 1600, 900, 0.5, -10, 'sawtooth'); whoosh(t, 6000, 2000, 0.5, -10, 1.5); thump(t, 'C2', -8, 0.2); },
+        matri_drone: t => { for (let i = 0; i < 3; i++) zap(t + i * 0.09, 900 + i * 300, 1500 + i * 300, 0.07, -18, 'square'); },
+        matri_shield: t => { zap(t, 200, 900, 0.6, -12, 'triangle'); zap(t + 0.1, 600, 1800, 0.5, -16, 'sine'); whoosh(t, 1000, 6000, 0.6, -14, 1); },
+        matri_beam: t => { zap(t, 80, 600, 2.2, -10, 'sawtooth'); whoosh(t, 200, 5000, 2.2, -10, 0.6); },
+        matri_boot: t => { for (let i = 0; i < 5; i++) zap(t + i * 0.12, 300 + i * 220, 320 + i * 220, 0.1, -16, 'square'); },
+        matri_hack: t => { for (let i = 0; i < 8; i++) zap(t + i * 0.05, 2400 - i * 200, 1800 - i * 150, 0.04, -18, 'square'); zap(t + 0.4, 120, 60, 0.5, -12, 'sawtooth'); },
         boss_volt: t => { zap(t, 2400, 120, 0.25, -8, 'sawtooth'); whoosh(t, 9000, 1500, 0.2, -10, 2); thump(t, 'E1', -6, 0.3); },
         zarek_transform: t => { thump(t, 'A0', -2, 1); zap(t, 100, 900, 0.8, -12, 'sawtooth'); whoosh(t, 300, 6000, 0.9, -8, 0.8); },
     };
@@ -236,6 +245,11 @@ const sfx = (() => {
         boss_fire: { layers: [S('boom', 0.35)], synth: true },
         boss_ice: { layers: [S('glass', 0.6)], synth: true },
         boss_volt: { layers: [S('blaster', 0.4), S('lowboom', 0.3)], synth: true },
+        matri_glitch: { layers: [S('laser_small', 0.3)], synth: true },
+        matri_laser: { layers: [S('laser', 0.5), S('field', 0.3)], synth: true },
+        matri_shield: { layers: [S('field', 0.5)], synth: true },
+        matri_beam: { layers: [S('field', 0.6), S('lowboom', 0.4, 0.3)], synth: true },
+        matri_hack: { layers: [S('blaster', 0.3)], synth: true },
     };
 
     // Cada arquivo ganha até 4 cópias (criadas só quando o mesmo som se sobrepõe), tocando em rodízio

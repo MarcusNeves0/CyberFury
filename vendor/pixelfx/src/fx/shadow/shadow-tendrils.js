@@ -32,7 +32,7 @@ function spine(T, t) {
   const pts = [], n = Math.ceil(T.L / 0.5);
   for (let i = 0; i <= n; i++) {
     const s = i * 0.5, u = s / T.L;
-    pts.push({ x, y, th, w: T.W * Math.pow(1 - u, 0.75) + 0.45, u, s });
+    pts.push({ x, y, th, w: T.W * Math.pow(Math.max(0, 1 - u), 0.75) + 0.45, u, s }); // a ponta passa um pouco de u = 1: sem o max vira NaN e trava o line()
     th += 0.5 * (writhe * Math.sin((s / T.lam) * TAU - T.om * t + T.ph) + T.curl * hook * smooth(0.58, 1, u));
     x += Math.cos(th) * 0.5;
     y += Math.sin(th) * 0.5;

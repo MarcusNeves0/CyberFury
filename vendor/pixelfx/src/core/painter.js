@@ -137,6 +137,7 @@ export class Painter {
   // ---- shapes. Colors (c) and alphas (a) can be numbers or functions of the shape's own coordinates.
   /** 1 px line. c and a may be functions of u (0 at the start, 1 at the end). */
   line(x0, y0, x1, y1, c, a = 1) {
+    if (!(Number.isFinite(x0) && Number.isFinite(y0) && Number.isFinite(x1) && Number.isFinite(y1))) return; // NaN aqui travava o laço para sempre
     let sx = this.cellX(x0, y0), sy = this.cellY(x0, y0);
     const ex = this.cellX(x1, y1), ey = this.cellY(x1, y1);
     const dx = Math.abs(ex - sx), dy = -Math.abs(ey - sy), stepx = sx < ex ? 1 : -1, stepy = sy < ey ? 1 : -1;

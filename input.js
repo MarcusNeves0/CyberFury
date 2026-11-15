@@ -2,7 +2,7 @@
 // Teclado, controle (gamepad) e navegação dos menus pelo controle.
 
 // --- Controles de Eventos ---
-const humanFighters = () => fighters.filter(f => f.keymap && alive(f));
+const humanFighters = () => fighters.filter(f => f.keymap && alive(f) && !(f.hackTimer > 0)); // hackeado: a IA da Matriarca controla
 const actionFor = (keymap, key) => Object.keys(keymap).find(action => keymap[action].includes(key));
 
 function handleKeyDown(f, action) {
@@ -76,7 +76,7 @@ function padName(id) {
 function pollGamepads() {
     const pads = getGamepads();
     for (const f of fighters) {
-        if (f.gamepadIndex === null || !alive(f)) continue;
+        if (f.gamepadIndex === null || !alive(f) || f.hackTimer > 0) continue;
         const gp = pads.find(p => p.index === f.gamepadIndex);
         if (!gp) continue;
         const pressed = i => gp.buttons[i] && gp.buttons[i].pressed;

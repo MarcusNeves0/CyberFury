@@ -24,7 +24,9 @@ Neo-Cidade está tomada por neon, chuva e gente disposta a brigar por qualquer m
 
 - 🥊 **1v1, 2v2 ou 3v3:** de 1 a **6 jogadores** no mesmo computador, cada um escolhe o time (uns contra os outros ou todos juntos contra a IA); a IA completa as vagas que sobrarem
 - 🎯 **Treino:** escolha um lutador e teste os golpes e a ultimate num boneco parado, com energia infinita; a barra embaixo mostra o dano causado e ninguém morre
-- 👹 **Chefão:** até 4 jogadores (e aliados da IA) no mesmo time contra o **Cérbero-X**, um cão-robô de três cabeças que sai rachando o chão. A cabeça da frente leva o dano; cada uma que cai deixa as outras mais fortes (blindado, depois fúria). Todo golpe dele avisa no chão antes: fogo em cone, círculos de gelo, raio que pula entre quem está junto, mordida, pisão e investida
+- 👹 **Chefão:** até 4 jogadores (e aliados da IA) no mesmo time contra um chefe, cada um com a própria abertura e 3 fases. Todo golpe deles avisa no chão antes:
+  - 🐕 **Cérbero-X:** cão-robô de três cabeças que sai rachando o chão. A cabeça da frente leva o dano; cada uma que cai deixa as outras mais fortes. Fogo em cone, círculos de gelo, raio que pula entre quem está junto, mordida, pisão e investida
+  - 🕸️ **Matriarca:** IA que desce num feixe de luz e se monta no ar. Enquanto as torres de escudo estão de pé ela não sente nada: derrube as torres e ela fica exposta por 8 s. Feixes de laser, drones que explodem, pulso de glitch (controles invertidos) e, na fúria, o hack: quem ficar no círculo luta pelo lado dela por 5 s
 - 🎮 **Teclado ou controle:** suporte a controle de PS5/Xbox, inclusive para navegar nos menus
 - 📱 **Celular como controle:** abra `controle.html` no celular e digite o código que aparece no menu do jogo. O celular vira analógico + botões, vibra ao levar dano e também navega nos menus (sem instalar nada)
 - 💚 **Healer obrigatório:** no 2v2 e no 3v3, todo time tem pelo menos um curandeiro

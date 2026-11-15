@@ -1,4 +1,8 @@
-// --- Modo Chefão: CÉRBERO-X ---
+// --- Modo Chefão ---
+// Partes comuns aos chefes (avisos no chão, efeitos, placar, montagem da partida) e o CÉRBERO-X.
+// A MATRIARCA fica em matriarca.js e usa estas mesmas partes.
+//
+// CÉRBERO-X:
 // Até 4 jogadores (e aliados da IA) no mesmo time contra um cão-robô de segurança de três cabeças.
 // Cada cabeça tem a própria vida e o próprio elemento. A cabeça "acesa" (na frente) é a que leva o dano, até cair;
 // os ataques especiais revezam entre os elementos das cabeças de pé. Quando uma cabeça cai, o chefe ruge e as
@@ -281,7 +285,7 @@ function bossDangerFor(f) {
         if (w.owner.team === f.team || !inBossShape(w, f, 14)) continue;
         if (w.shape === 'circle') {
             // Raio marcado no próprio lutador: se espalha (longe dos aliados), senão sai do círculo
-            if (w.follow === f) {
+            if (w.spread && w.follow === f) {
                 const ally = fighters.filter(a => alive(a) && a !== f && a.team === f.team).sort((a, b) => distance(f, a) - distance(f, b))[0];
                 if (ally && distance(f, ally) < CERB_VOLT.jump + 20) return directionTo(ally, f);
             }
@@ -525,7 +529,7 @@ class Cerbero extends Fighter {
             for (const e of enemiesOf(this).slice(0, 3)) this.warn({ shape: 'circle', x: e.x, y: e.y, r: CERB_ICE.r, color: '#5fe8ff' });
             sfx.play('boss_roar');
         } else if (kind === 'volt') {
-            this.warn({ shape: 'circle', x: t.x, y: t.y, r: CERB_VOLT.r, color: '#ffe600', follow: t });
+            this.warn({ shape: 'circle', x: t.x, y: t.y, r: CERB_VOLT.r, color: '#ffe600', follow: t, spread: true });
             sfx.play('boss_growl');
         }
     }
@@ -807,8 +811,12 @@ function createBossFighters() {
         attachInput(f, m.controller);
         fighters.push(f);
     });
-    fighters.push(new Cerbero(arena.left + w * 0.62, (arena.top + arena.bottom) / 2, team.length));
+    const id = match.bossId === 'random' ? BOSS_IDS[Math.floor(Math.random() * BOSS_IDS.length)] : match.bossId;
+    const Boss = id === 'matriarca' ? Matriarca : Cerbero;
+    fighters.push(new Boss(arena.left + w * 0.62, (arena.top + arena.bottom) / 2, team.length));
 }
+const BOSS_IDS = ['cerbero', 'matriarca'];
+const BOSS_NAMES = { cerbero: 'Cérbero-X', matriarca: 'Matriarca', random: 'chefe sorteado' };
 
 function bossOf() { return fighters.find(f => f.isBoss); }
 
@@ -818,6 +826,8 @@ function resetBossMode() {
     bossFx = { flames: [], bolts: [], spikes: [], rings: [] };
     bossCrater = null;
     bossFightSteps = 0;
+    matriDrones = [];
+    matriFx = { beams: [], glitch: 0 };
     if (typeof hud !== 'undefined') hud.style.visibility = '';
 }
 
@@ -834,6 +844,7 @@ function updateBossWorld() {
     for (const r of bossFx.rings) r.life--;
     bossFx.rings = bossFx.rings.filter(r => r.life > 0);
     if (bossCrater && bossCrater.glow > 0.25) bossCrater.glow -= 0.002;
+    updateMatriWorld();
 }
 
 // --- Abertura: o chão treme, racha, os olhos acendem no buraco e ele salta para fora ---
@@ -842,6 +853,7 @@ const INTRO = { cracks: 48, hole: 96, eyes: [104, 114, 124], rise: 136, jump: 16
 function startBossIntro() {
     const boss = bossOf();
     if (!boss) { announcer.onStart(); return; }
+    if (boss.isMatriarca) { startMatriIntro(boss); return; }
     const hole = { x: boss.x + 60, y: boss.y - 4 };
     bossCrater = { x: hole.x, y: hole.y, rx: 0, ry: 0, crack: 0, glow: 1, cracks: [] };
     for (let i = 0; i < 9; i++) {
@@ -862,6 +874,7 @@ function startBossIntro() {
 }
 
 function updateBossIntro() {
+    if (bossIntro.kind === 'matriarca') { updateMatriIntro(); return; }
     const I = bossIntro, b = I.boss, t = ++I.t, C = bossCrater;
     // Pular: qualquer tecla (ou botão do controle, depois de soltar o da seleção)
     const pads = getGamepads();
@@ -942,6 +955,7 @@ function updateBossIntro() {
 }
 
 function finishBossIntro() {
+    if (bossIntro.kind === 'matriarca') { finishMatriIntro(); return; }
     const I = bossIntro, b = I.boss;
     b.x = I.land.x; b.y = I.land.y; b.z = 0; b.vz = 0; b.sink = 0; b.introHidden = false; b.introRoar = 0;
     b.facing = -1;
@@ -1044,8 +1058,8 @@ function drawBossWarnings() {
             ctx.textAlign = 'center';
             ctx.lineWidth = 4;
             ctx.strokeStyle = '#0a0614';
-            ctx.strokeText('⚡!', w.follow.x, w.follow.y - w.follow.height - 26);
-            ctx.fillText('⚡!', w.follow.x, w.follow.y - w.follow.height - 26);
+            ctx.strokeText(w.label || '⚡!', w.follow.x, w.follow.y - w.follow.height - 26);
+            ctx.fillText(w.label || '⚡!', w.follow.x, w.follow.y - w.follow.height - 26);
         }
         ctx.restore();
     }
@@ -1053,6 +1067,7 @@ function drawBossWarnings() {
 
 // Por cima dos lutadores: fogo, raios, espinhos de gelo e anéis de impacto
 function drawBossEffects() {
+    drawMatriEffects();
     if (!bossFx.flames.length && !bossFx.bolts.length && !bossFx.spikes.length && !bossFx.rings.length) return;
     ctx.save();
     for (const s of bossFx.spikes) {
@@ -1098,7 +1113,8 @@ function drawBossEffects() {
 // Por cima de tudo durante a abertura: nome do chefe e a dica para pular
 function drawBossIntroOverlay() {
     const I = bossIntro;
-    if (!I) return;
+    if (!I) { drawMatriGlitch(matriFx.glitch); return; }
+    if (I.kind === 'matriarca') { drawMatriIntroOverlay(); drawMatriGlitch(matriFx.glitch); return; }
     const cx = (arena.left + arena.right) / 2;
     ctx.save();
     ctx.textAlign = 'center';
@@ -1139,6 +1155,7 @@ function drawBossIntroOverlay() {
 
 // --- Placar do chefe: uma barra por cabeça, no lugar do time rosa ---
 function buildBossHud(boss, column) {
+    if (boss.isMatriarca) { buildMatriHud(boss, column); return; }
     const card = makeEl('div', 'boss-hud', column);
     const title = makeEl('div', 'boss-title', card);
     makeEl('span', 'boss-name', title).innerText = 'CÉRBERO-X';
@@ -1157,6 +1174,7 @@ function buildBossHud(boss, column) {
 function updateBossHud() {
     const boss = bossOf();
     if (!boss || !boss.bossHud) return;
+    if (boss.isMatriarca) { updateMatriHud(boss); return; }
     const H = boss.bossHud;
     const text = boss.isDead ? 'DERROTADO' : ['FASE 1', 'FASE 2 · BLINDADO', 'FASE 3 · FÚRIA'][boss.phase];
     setIfChanged(H.phase, 'innerText', text);

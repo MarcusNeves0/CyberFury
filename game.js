@@ -14,7 +14,7 @@ function resolveCollisions() {
             if (overlap > 0) {
                 const dir = d > 0 ? { x: (a.x - b.x) / d, y: (a.y - b.y) / d } : { x: 1, y: 0 };
                 // O chefe não sai do lugar: quem encosta nele é que é empurrado
-                const share = a.isBoss ? 0 : b.isBoss ? 1 : 0.5;
+                const share = a.isBoss || a.isPylon ? 0 : b.isBoss || b.isPylon ? 1 : 0.5;
                 a.x += dir.x * overlap * share; a.y += dir.y * overlap * share;
                 b.x -= dir.x * overlap * (1 - share); b.y -= dir.y * overlap * (1 - share);
             }

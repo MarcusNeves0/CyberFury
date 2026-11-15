@@ -23,6 +23,7 @@ function setupHub() {
         match.mode = match.training ? '1v1' : match.boss ? '3v3' : value;
         renderInputStatus();
     });
+    bindGroup('boss-options', 'boss', value => { match.bossId = value; renderInputStatus(); });
     bindGroup('humans-options', 'humans', value => { match.humans = Number(value); renderInputStatus(); });
     bindGroup('map-options', 'map', value => { match.map = value; });
 
@@ -122,6 +123,7 @@ function detectGamepads() {
 function renderInputStatus() {
     // Modo menor: não cabem tantos humanos (ex.: no 1v1 são no máximo 2)
     match.humans = Math.min(match.humans, maxHumans());
+    document.getElementById('boss-section').classList.toggle('hidden', !match.boss);
     document.querySelectorAll('#humans-options .hub-option').forEach(button => {
         const n = Number(button.dataset.humans);
         button.disabled = n > maxHumans();
@@ -167,7 +169,7 @@ function openSelection() {
     const humans = match.humans;
     const step = match.picks.length + 1;
     selectionTitle.innerText = match.training ? 'TREINO — escolha quem testar'
-        : match.boss ? (humans === 1 ? 'CHEFÃO — quem enfrenta o Cérbero-X?' : `CHEFÃO — vez do JOGADOR ${step}`)
+        : match.boss ? (humans === 1 ? `CHEFÃO — quem enfrenta ${match.bossId === 'matriarca' ? 'a' : 'o'} ${BOSS_NAMES[match.bossId]}?` : `CHEFÃO — vez do JOGADOR ${step}`)
         : humans === 1 ? `${match.mode.toUpperCase()} contra a IA`
         : `${match.mode.toUpperCase()} — vez do JOGADOR ${step}`;
     selectionTitle.style.color = humans === 1 ? '' : TEAM_COLORS[teamOf(activePlayers()[step - 1])];

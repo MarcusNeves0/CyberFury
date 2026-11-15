@@ -112,7 +112,7 @@ const announcer = {
     },
 
     onKO(fighter, killer) {
-        if (match.training) return;
+        if (match.training || fighter.isPylon) return; // torre da Matriarca caindo não é abate
         const enemy = killer && killer.team !== fighter.team ? killer : null;
         if (!this.firstBlood) {
             this.firstBlood = true;

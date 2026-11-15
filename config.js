@@ -34,6 +34,7 @@ const MAX_KEYBOARD_PLAYERS = 2; // um de cada lado do teclado
 const match = {
     mode: '1v1', humans: 1, map: 'random', picks: [], training: false,
     boss: false, // modo Chefão (boss.js): por dentro usa a arena grande, todos os humanos no time ciano
+    bossId: 'cerbero', // 'cerbero', 'matriarca' ou 'random'
     // Padrão: P1 e P2 no teclado, os outros no controle; times alternados (P1 ciano, P2 rosa, P3 ciano...)
     inputs: Object.fromEntries(PLAYER_IDS.map((p, i) => [p, { type: i < MAX_KEYBOARD_PLAYERS ? 'keyboard' : 'gamepad', index: null, name: '', team: i % 2 }])),
 };
