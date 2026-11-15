@@ -116,6 +116,13 @@ class AI {
             return;
         }
 
+        // Chefão: sai da área marcada no chão antes do golpe cair (quase sempre percebe)
+        const danger = bossDangerFor(me);
+        if (danger && Math.random() < 0.8) {
+            this.steer(danger);
+            return;
+        }
+
         // Masmorra Dupla: sai da faixa da estátua que ergueu a maça e para quando o colosso vai olhar
         if (mapId === 'dungeon') {
             const statue = obstacles.find(o => o.kind === 'statue' && o.warn > 0 && o.warn < STATUE_WARN - 12 && inLane(me, statueLane(o), me.radius));

@@ -1183,3 +1183,49 @@ body {
 @media (max-width: 900px) {
     .hub-options-maps { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* --- Modo Chefão: barra do Cérbero-X (uma por cabeça) no lugar do time rosa --- */
+.boss-option { --class-color: #ff3b3b; border-color: rgba(255, 59, 59, 0.5); }
+.boss-hud {
+    background: rgba(10, 0, 8, 0.65);
+    border: 1px solid #ff3b3b;
+    border-radius: 5px;
+    padding: 6px 10px;
+    box-shadow: 0 0 12px rgba(255, 40, 40, 0.35);
+}
+.boss-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+}
+.boss-name {
+    font-family: Orbitron, sans-serif;
+    font-weight: bold;
+    color: #ff3b3b;
+    letter-spacing: 2px;
+    text-shadow: 0 0 8px rgba(255, 40, 40, 0.8);
+}
+.boss-phase { font-size: 0.75rem; color: #ffd23f; }
+.boss-heads { display: flex; gap: 6px; }
+.boss-head { flex: 1; min-width: 0; opacity: 0.75; transition: opacity 0.2s; }
+.boss-head.active { opacity: 1; }
+.boss-head.active .boss-head-bar { box-shadow: 0 0 8px var(--head-color); }
+.boss-head.dead { opacity: 0.3; filter: grayscale(1); }
+.boss-head-name {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--head-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.boss-head-bar {
+    height: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--head-color);
+    border-radius: 3px;
+    overflow: hidden;
+}
+.boss-head-fill { height: 100%; width: 100%; background: var(--head-color); transition: width 0.15s; }
+#win-text { white-space: pre-line; }

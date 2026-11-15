@@ -153,6 +153,16 @@ const sfx = (() => {
         kairo_hack: t => { for (let i = 0; i < 4; i++) zap(t + i * 0.045, 1800 + i * 400, 1200 + i * 300, 0.04, -22, 'square'); zap(t + 0.2, 300, 1600, 0.25, -18, 'sawtooth'); },
         kairo_pane: t => { zap(t, 2200, 120, 0.18, -14, 'sawtooth'); whoosh(t, 9000, 2000, 0.12, -14, 3); thump(t, 'E1', -6, 0.2); },
         kairo_special: t => { zap(t, 40, 160, 1.2, -8, 'sawtooth'); thump(t, 'A0', -2, 1.2); whoosh(t, 100, 6000, 1.0, -8, 1.2); for (let i = 0; i < 6; i++) zap(t + 0.3 + i * 0.09, 400 + Math.random() * 2000, 90, 0.07, -18, 'square'); },
+        // Chefão (Cérbero-X): tremor do chão, rachando, rosnado, rugido, mordida, pisão e os três elementos
+        boss_rumble: t => { thump(t, 'A0', -2, 1.6); whoosh(t, 300, 60, 1.8, -8, 0.3); },
+        boss_crack: t => { for (let i = 0; i < 5; i++) clang(t + i * 0.06, 120 + Math.random() * 80, -14, 0.12); whoosh(t, 2000, 200, 0.5, -10, 0.5); },
+        boss_growl: t => { zap(t, 70, 55, 0.7, -10, 'sawtooth'); zap(t + 0.03, 95, 70, 0.6, -14, 'sawtooth'); whoosh(t, 400, 150, 0.6, -16, 0.5); },
+        boss_roar: t => { zap(t, 90, 60, 1.3, -6, 'sawtooth'); zap(t, 135, 80, 1.2, -10, 'sawtooth'); whoosh(t, 600, 120, 1.4, -6, 0.4); thump(t, 'A0', -2, 1); },
+        boss_bite: t => { thump(t, 'D2', -4, 0.15); clang(t, 420, -12, 0.08); whoosh(t, 3000, 500, 0.12, -10, 1); },
+        boss_slam: t => { thump(t, 'A0', 0, 0.8); whoosh(t, 1500, 100, 0.8, -6, 0.4); },
+        boss_fire: t => { whoosh(t, 500, 2500, 0.9, -6, 0.4); whoosh(t + 0.2, 2500, 600, 0.8, -10, 0.5); },
+        boss_ice: t => { clang(t, 2600, -12, 0.3); clang(t + 0.05, 3400, -14, 0.3); whoosh(t, 8000, 2000, 0.3, -12, 2); thump(t, 'C2', -8, 0.2); },
+        boss_volt: t => { zap(t, 2400, 120, 0.25, -8, 'sawtooth'); whoosh(t, 9000, 1500, 0.2, -10, 2); thump(t, 'E1', -6, 0.3); },
         zarek_transform: t => { thump(t, 'A0', -2, 1); zap(t, 100, 900, 0.8, -12, 'sawtooth'); whoosh(t, 300, 6000, 0.9, -8, 0.8); },
     };
 
@@ -218,6 +228,14 @@ const sfx = (() => {
         kairo_pane: { layers: [S('blaster', 0.35), S('punch', 0.4)], synth: true },
         kairo_special: { layers: [S('field', 0.55), S('lowboom', 0.6), S('laser', 0.3, 0.25)], synth: true },
         announce_big: { layers: [S('lowboom', 0.5)], synth: true },
+        boss_rumble: { layers: [S('lowboom', 0.8), S('rock', 0.5, 0.3)], synth: true },
+        boss_crack: { layers: [S('rock', 0.7), S('rock', 0.5, 0.15)], synth: true },
+        boss_roar: { layers: [S('lowboom', 0.6)], synth: true },
+        boss_bite: { layers: [S('punch_heavy', 0.6), S('metal', 0.3)], synth: true },
+        boss_slam: [S('lowboom', 0.8), S('rock', 0.7), S('thud_heavy', 0.6)],
+        boss_fire: { layers: [S('boom', 0.35)], synth: true },
+        boss_ice: { layers: [S('glass', 0.6)], synth: true },
+        boss_volt: { layers: [S('blaster', 0.4), S('lowboom', 0.3)], synth: true },
     };
 
     // Cada arquivo ganha até 4 cópias (criadas só quando o mesmo som se sobrepõe), tocando em rodízio

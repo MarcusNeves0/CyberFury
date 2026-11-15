@@ -19,7 +19,8 @@ function setupHub() {
     bindGroup('mode-options', 'mode', value => {
         // Treino: por dentro é um 1v1 (arena de duelo) contra um boneco
         match.training = value === 'treino';
-        match.mode = match.training ? '1v1' : value;
+        match.boss = value === 'chefao'; // Chefão: todos contra o Cérbero-X, na arena grande
+        match.mode = match.training ? '1v1' : match.boss ? '3v3' : value;
         renderInputStatus();
     });
     bindGroup('humans-options', 'humans', value => { match.humans = Number(value); renderInputStatus(); });
@@ -73,16 +74,16 @@ function setupHub() {
 
 // Jogadores humanos desta partida (P1, P2... até o número escolhido no HUB)
 const activePlayers = () => PLAYER_IDS.slice(0, match.humans);
-const maxHumans = () => (match.training ? 1 : teamSizeOf(match.mode) * 2); // no treino só você joga
+const maxHumans = () => (match.training ? 1 : match.boss ? BOSS_MAX_HUMANS : teamSizeOf(match.mode) * 2); // no treino só você joga
 // Sozinho, o jogador fica sempre no time ciano; com mais gente, cada um escolhe o time
-const teamOf = player => match.humans === 1 ? 0 : match.inputs[player].team;
+const teamOf = player => match.humans === 1 || match.boss ? 0 : match.inputs[player].team;
 const waitingForGamepad = () => activePlayers().some(p => match.inputs[p].type === 'gamepad' && match.inputs[p].index === null);
 const waitingForPhone = () => activePlayers().some(p => match.inputs[p].type === 'phone' && match.inputs[p].index === null);
 
 // O que impede de começar (time com mais humanos que vagas, teclado lotado, controle sem conectar)
 function hubProblem() {
     const players = activePlayers();
-    for (const team of [0, 1]) {
+    for (const team of match.boss ? [] : [0, 1]) {
         if (players.filter(p => teamOf(p) === team).length > teamSizeOf(match.mode)) return `${TEAM_NAMES[team]} LOTADO`;
     }
     if (players.filter(p => match.inputs[p].type === 'keyboard').length > MAX_KEYBOARD_PLAYERS) return 'NO MÁXIMO 2 NO TECLADO';
@@ -133,7 +134,7 @@ function renderInputStatus() {
         const color = TEAM_COLORS[teamOf(player)];
         row.querySelector('.input-label').style.color = color;
         const toggle = row.querySelector('.team-toggle');
-        toggle.classList.toggle('hidden', match.humans === 1);
+        toggle.classList.toggle('hidden', match.humans === 1 || match.boss);
         toggle.innerText = teamOf(player) === 0 ? 'Time Ciano' : 'Time Rosa';
         toggle.style.setProperty('--team-color', color);
         row.querySelectorAll('.input-option').forEach(b => b.classList.toggle('selected', b.dataset.input === input.type));
@@ -156,7 +157,7 @@ function renderInputStatus() {
     const startButton = document.getElementById('hub-start');
     const problem = hubProblem();
     startButton.disabled = !!problem;
-    startButton.innerText = problem || (match.training ? 'ESCOLHER LUTADOR PARA TREINAR ▶' : 'ESCOLHER LUTADORES ▶');
+    startButton.innerText = problem || (match.training ? 'ESCOLHER LUTADOR PARA TREINAR ▶' : match.boss ? 'ESCOLHER QUEM ENFRENTA O CHEFÃO ▶' : 'ESCOLHER LUTADORES ▶');
 }
 
 // --- Lógica da Tela de Seleção ---
@@ -166,6 +167,7 @@ function openSelection() {
     const humans = match.humans;
     const step = match.picks.length + 1;
     selectionTitle.innerText = match.training ? 'TREINO — escolha quem testar'
+        : match.boss ? (humans === 1 ? 'CHEFÃO — quem enfrenta o Cérbero-X?' : `CHEFÃO — vez do JOGADOR ${step}`)
         : humans === 1 ? `${match.mode.toUpperCase()} contra a IA`
         : `${match.mode.toUpperCase()} — vez do JOGADOR ${step}`;
     selectionTitle.style.color = humans === 1 ? '' : TEAM_COLORS[teamOf(activePlayers()[step - 1])];

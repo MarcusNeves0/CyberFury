@@ -13,8 +13,10 @@ function resolveCollisions() {
             const overlap = a.radius + b.radius - d;
             if (overlap > 0) {
                 const dir = d > 0 ? { x: (a.x - b.x) / d, y: (a.y - b.y) / d } : { x: 1, y: 0 };
-                a.x += dir.x * overlap / 2; a.y += dir.y * overlap / 2;
-                b.x -= dir.x * overlap / 2; b.y -= dir.y * overlap / 2;
+                // O chefe não sai do lugar: quem encosta nele é que é empurrado
+                const share = a.isBoss ? 0 : b.isBoss ? 1 : 0.5;
+                a.x += dir.x * overlap * share; a.y += dir.y * overlap * share;
+                b.x -= dir.x * overlap * (1 - share); b.y -= dir.y * overlap * (1 - share);
             }
         }
     }
@@ -54,6 +56,12 @@ function step() {
     // Tribunal do Cangeras: a luta inteira fica congelada enquanto o julgamento acontece
     if (courtSession) {
         updateCourt();
+        updatePhones();
+        return;
+    }
+    // Chefão: a abertura (o Cérbero saindo do buraco) segura a luta até acabar
+    if (bossIntro) {
+        updateBossIntro();
         updatePhones();
         return;
     }
@@ -106,6 +114,7 @@ function step() {
 
     updateProjectiles();
     updateKairo();
+    updateBossWorld();
     updateWalls();
     updateHazards();
     updateSinaBoats();
@@ -180,10 +189,12 @@ function draw() {
     ctx.imageSmoothingEnabled = false;
     drawArenaFloor();
     drawMapGround();
+    drawBossGround(); // buraco e rachaduras do Cérbero
 
     // Áreas de cura, avisos de explosão e bolas no chão ficam por baixo de tudo
     fighters.forEach(f => { if (alive(f) && f.characterType === 'celestia') drawCelestiaAura(f); });
     drawHazards();
+    drawBossWarnings(); // áreas que o chefe vai acertar
     drawSinaBoatShadows();
     drawShockwaves();
     drawWalls();
@@ -224,6 +235,7 @@ function draw() {
     coleoneBalls.forEach(drawColeoneBall);
     drawBershowSlashes();
     particles.forEach(p => p.draw());
+    drawBossEffects();
     drawSinaBoatShips();
     fighters.forEach(f => { if (alive(f) && f.characterType === 'sina') drawSinaRoulette(f); });
     healingFlowers.forEach(flower => flower.draw());
@@ -233,6 +245,7 @@ function draw() {
     drawCronodrive();
     announcer.draw();
     if (courtSession) drawCourt(courtSession);
+    drawBossIntroOverlay();
 }
 
 function drawLightningChain(attacker, defender) {
@@ -253,6 +266,7 @@ function drawLightningChain(attacker, defender) {
 // Monta os dois times: cada humano com o personagem escolhido, o resto sorteado sem repetir
 function createFighters() {
     if (match.training) { createTrainingFighters(); return; }
+    if (match.boss) { createBossFighters(); return; }
     const teamSize = teamSizeOf(match.mode);
     const pool = CHARACTERS.filter(c => !match.picks.includes(c.id)).sort(() => Math.random() - 0.5);
     const byId = id => CHARACTERS.find(c => c.id === id);
@@ -280,20 +294,24 @@ function createFighters() {
             const x = team === 0 ? arena.left + 60 : arena.right - 60;
             const y = arena.top + h * (i + 1) / (members.length + 1);
             const f = new Fighter(x, y, member.char.name, member.char.id, team, member.controller);
-            if (member.controller !== 'ai') {
-                const input = match.inputs[member.controller];
-                if (input.type === 'gamepad' && input.index !== null) {
-                    f.gamepadIndex = input.index;
-                } else if (input.type === 'phone') {
-                    f.onPhone = true; // os comandos chegam pelo phone.js
-                } else {
-                    // Dois jogadores no teclado dividem as teclas; sozinho no teclado usa o esquema completo
-                    f.keymap = keymapFor(member.controller);
-                }
-            }
+            attachInput(f, member.controller);
             fighters.push(f);
         });
     });
+}
+
+// Liga o lutador de um humano ao teclado, controle ou celular que ele escolheu no HUB
+function attachInput(f, controller) {
+    if (controller === 'ai') return;
+    const input = match.inputs[controller];
+    if (input.type === 'gamepad' && input.index !== null) {
+        f.gamepadIndex = input.index;
+    } else if (input.type === 'phone') {
+        f.onPhone = true; // os comandos chegam pelo phone.js
+    } else {
+        // Dois jogadores no teclado dividem as teclas; sozinho no teclado usa o esquema completo
+        f.keymap = keymapFor(controller);
+    }
 }
 
 // --- Treino ---
@@ -379,11 +397,12 @@ async function startGame() {
         buildHUD();
         if (match.training) buildTrainingBar();
 
-        aiControllers = fighters.filter(f => !f.isPlayer && !f.isDummy).map(f => new AI(f));
+        aiControllers = fighters.filter(f => !f.isPlayer && !f.isDummy && !f.isBoss).map(f => new AI(f)); // o chefe pensa sozinho (boss.js)
         aiControllers.forEach(ai => ai.start());
 
         gameState = 'FIGHT';
-        announcer.onStart();
+        if (match.boss) startBossIntro(); // o locutor chama a luta quando a abertura acaba
+        else announcer.onStart();
         rigWarm(fighters); // monta os quadros de passada e golpe aos poucos (rig.js)
         lastFrameTime = null;
         timeAccumulator = 0;
@@ -410,6 +429,7 @@ function stopMatch() {
     dataGhosts = [];
     cronoDrive = null;
     vexTrail = [];
+    resetBossMode();
     shadowSoldiers = [];
     walls = [];
     lifeOrbs = [];

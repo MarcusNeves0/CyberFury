@@ -23,6 +23,7 @@ function buildHUD() {
     for (const team of [0, 1]) {
         const column = makeEl('div', `team-hud team-${team}`, hud);
         for (const f of fighters.filter(f => f.team === team)) {
+            if (f.isBoss) { buildBossHud(f, column); continue; } // chefe: barra própria, uma por cabeça
             const card = makeEl('div', 'player-hud', column);
             const title = makeEl('h3', '', card);
             const name = makeEl('span', '', title);
@@ -62,6 +63,7 @@ function updateHUD() {
         if (f.hud.transform) updateTransformBar(f);
         updateStatusIcons(f);
     }
+    if (match.boss) updateBossHud();
 }
 
 // Barra de transformação: só existe para o Zarek
@@ -146,6 +148,15 @@ function checkGameOver() {
     const survivors = fighters.filter(f => alive(f) && f.team === winningTeam);
     if (winningTeam === undefined) {
         winText.innerText = 'EMPATE!';
+        return;
+    }
+    if (match.boss) {
+        const s = Math.floor(bossFightSteps / 60);
+        const time = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+        winText.innerText = winningTeam === 0 ? `CÉRBERO-X DERROTADO!\n⏱ ${time}` : `O CÉRBERO-X VENCEU...\n⏱ ${time}`;
+        winText.style.color = winningTeam === 0 ? '#ffd23f' : '#ff3b3b';
+        survivors.forEach(f => { f.isCelebrating = true; f.isAttacking = false; f.moveX = 0; f.moveY = 0; });
+        startWinnerZoom(survivors.find(f => f.isPlayer) || survivors[0]);
         return;
     }
     winText.innerText = (shout === 'VITÓRIA PERFEITA!' ? '⭐ PERFEITO! ' : '') + (match.mode === '1v1'

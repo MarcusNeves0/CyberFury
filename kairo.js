@@ -152,7 +152,7 @@ function updateBreach(f) {
     for (const e of inside) {
         // puxão constante para dentro da fenda
         const dir = directionTo(e, f);
-        if (e.characterType !== 'anchor' && !(e.breachTimer > 0)) { e.x += dir.x * KAIRO_BREACH_PULL; e.y += dir.y * KAIRO_BREACH_PULL; }
+        if (e.characterType !== 'anchor' && !e.isBoss && !(e.breachTimer > 0)) { e.x += dir.x * KAIRO_BREACH_PULL; e.y += dir.y * KAIRO_BREACH_PULL; }
     }
     if (++f.breachTick >= KAIRO_BREACH_TICK) {
         f.breachTick = 0;
