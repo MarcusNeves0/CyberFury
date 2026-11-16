@@ -121,7 +121,9 @@ class MatriPylon extends Fighter {
             this.rise--;
             if (this.rise % 4 === 0) particles.push(new Particle(this.x + (Math.random() - 0.5) * 30, this.y, '#6b6f80', 0, { x: (Math.random() - 0.5) * 2, y: -1 - Math.random() * 2 }));
         }
-        this.handleStatusEffects();
+        // Máquina: fogo, veneno, maldição e sangramento não pegam na torre
+        this.burnDuration = 0; this.poisonStacks = 0; this.poisonDuration = 0;
+        this.curseStacks = 0; this.curseDuration = 0; this.bleedStacks = 0; this.bleedDuration = 0;
         this.isParalyzed = false; this.paralysisTimer = 0; this.slowTimer = 0; this.heldBy = null;
         this.kbx = 0; this.kby = 0;
         this.moveX = 0; this.moveY = 0;
@@ -300,7 +302,7 @@ class Matriarca extends Fighter {
             this.cancelAction();
             this.exposed = MATRI_EXPOSED;
             this.setFace('hurt', MATRI_EXPOSED);
-            sfx.play('defense_break');
+            sfx.play('matri_break');
             screenShake = Math.max(screenShake, 6);
             announcer.call('ESCUDO CAIU!', { color: '#3ff6ff', priority: 2, sub: 'ATAQUEM A MATRIARCA!' });
         }
@@ -755,20 +757,25 @@ function drawMatriEffects() {
     }
 }
 
-// Por cima de tudo: tela "quebrando" em faixas (glitch)
+// Por cima de tudo: tela "quebrando" em faixas (glitch). Só pinta faixas por cima: copiar a própria tela
+// (como era antes) obriga o navegador a esperar a placa de vídeo e dava trancos na troca de fase.
 function drawMatriGlitch(amount) {
-    const w = canvas.width, h = canvas.height;
-    if (amount <= 0 || !w || !h) return; // tela sem tamanho (janela minimizada): nada para copiar
+    if (amount <= 0) return;
     ctx.save();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    for (let i = 0; i < Math.min(10, 3 + amount / 3); i++) {
-        const y = Math.random() * h, hh = 4 + Math.random() * 26;
-        ctx.drawImage(canvas, 0, y, w, hh, (Math.random() - 0.5) * 50, y, w, hh);
+    const n = Math.min(10, 3 + amount / 3);
+    for (let i = 0; i < n; i++) {
+        const y = Math.random() * WORLD_H, hh = 3 + Math.random() * 22, dx = (Math.random() - 0.5) * 60;
+        ctx.globalAlpha = 0.35;
+        ctx.fillStyle = '#05000f';
+        ctx.fillRect(dx, y, WORLD_W, hh);                       // faixa "deslocada" escura
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = i % 2 ? '#ff2aff' : '#3ff6ff';
+        ctx.fillRect(dx + (i % 2 ? 4 : -4), y, WORLD_W, 2);     // borda colorida (aberração de cor)
     }
-    ctx.globalAlpha = 0.18;
-    for (let i = 0; i < 4; i++) {
-        ctx.fillStyle = ['#ff2aff', '#3ff6ff', '#ffffff'][i % 3];
-        ctx.fillRect(0, Math.random() * h, w, 2 + Math.random() * 8);
+    ctx.globalAlpha = 0.12;
+    for (let i = 0; i < 3; i++) {
+        ctx.fillStyle = ['#ff2aff', '#3ff6ff', '#ffffff'][i];
+        ctx.fillRect(0, Math.random() * WORLD_H, WORLD_W, 2 + Math.random() * 8);
     }
     ctx.restore();
 }

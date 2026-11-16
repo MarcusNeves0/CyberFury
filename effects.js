@@ -797,6 +797,18 @@ function spawnMuzzleFx(shooter, dir) {
     pixelFx.spawn('muzzle-pistol', { ...fx, x: shooter.x + Math.sign(dir.x || 1) * 14, y: shooter.y - shooter.z, height: Math.round((shooter.y - shooter.chestY) / scale), flip: dir.x < 0, angle: tilt, seed: Math.floor(Math.random() * 1000) });
 }
 
+// Silhueta para os efeitos que envolvem o corpo (fogo, veneno, maldição, choque). Os efeitos crescem junto com o
+// corpo, e nos chefes (bem mais altos e "cheios") ficavam enormes e pesados: até 5 ms por quadro cada, e com três ao
+// mesmo tempo o jogo engasgava. Acima de FX_ACTOR_MAX usa a silhueta no tamanho de um lutador, no meio do corpo.
+const FX_ACTOR_MAX = 64;
+function fxActor(f) {
+    return pixelFx.actorOf(f.height > FX_ACTOR_MAX ? { characterType: f.characterType, height: FX_ACTOR_MAX } : f);
+}
+// Onde fica o "pé" desse efeito: no lutador, o pé dele; no chefe, abaixo do peito (a silhueta menor fica no meio do corpo)
+function fxFeetY(f) {
+    return f.height > FX_ACTOR_MAX ? f.chestY + FX_ACTOR_MAX / 2 : f.y - f.z;
+}
+
 // Efeito que segue um lutador (o pé dele) enquanto dura
 function followFighter(fighter) {
     return e => { e.x = fighter.x; e.y = fighter.y - fighter.z; e.flip = fighter.facing < 0; };
@@ -811,11 +823,13 @@ const STATUS_FX = [
 function syncStatusFx(fighter) {
     if (!window.pixelFx) return;
     for (const status of STATUS_FX) {
-        const active = alive(fighter) && status.on(fighter);
+        // Chefes e torres: o dano do status continua, mas sem o efeito em volta do corpo (criar e desenhar vários
+        // ao mesmo tempo engasgava o jogo; as partículas de cada tique de dano já mostram o status)
+        const active = alive(fighter) && status.on(fighter) && !fighter.isBoss && !fighter.isPylon;
         if (active && !fighter[status.key]) {
             fighter[status.key] = pixelFx.spawn(status.id, {
-                x: fighter.x, y: fighter.y, scale: 1, actor: pixelFx.actorOf(fighter), seed: Math.floor(Math.random() * 1000),
-                follow: e => { e.x = fighter.x; e.y = fighter.y - fighter.z; e.flip = fighter.facing < 0; },
+                x: fighter.x, y: fighter.y, scale: 1, actor: fxActor(fighter), seed: Math.floor(Math.random() * 1000),
+                follow: e => { e.x = fighter.x; e.y = fxFeetY(fighter); e.flip = fighter.facing < 0; },
             });
         } else if (!active && fighter[status.key]) {
             fighter[status.key].stop();

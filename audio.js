@@ -163,7 +163,9 @@ const sfx = (() => {
         boss_fire: t => { whoosh(t, 500, 2500, 0.9, -6, 0.4); whoosh(t + 0.2, 2500, 600, 0.8, -10, 0.5); },
         boss_ice: t => { clang(t, 2600, -12, 0.3); clang(t + 0.05, 3400, -14, 0.3); whoosh(t, 8000, 2000, 0.3, -12, 2); thump(t, 'C2', -8, 0.2); },
         // Matriarca: glitch digital, carga do laser, laser, drones, escudo subindo, feixe do céu, núcleo ligando, hack
-        matri_glitch: t => { for (let i = 0; i < 6; i++) zap(t + i * 0.035, 300 + Math.random() * 3000, 100 + Math.random() * 600, 0.04, -16, 'square'); whoosh(t, 9000, 3000, 0.25, -16, 3); },
+        matri_glitch: t => { for (let i = 0; i < 3; i++) zap(t + i * 0.05, 300 + Math.random() * 3000, 100 + Math.random() * 600, 0.05, -16, 'square'); whoosh(t, 9000, 3000, 0.25, -16, 3); },
+        // Escudo da Matriarca quebrando: sem o "clang" metálico (sintetizar ele custava até 30 ms e dava um tranco)
+        matri_break: t => { whoosh(t, 8000, 1500, 0.4, -10, 1.5); thump(t, 'C1', -4, 0.4); },
         matri_charge: t => { zap(t, 200, 1400, 0.6, -16, 'sawtooth'); zap(t + 0.05, 400, 2000, 0.55, -20, 'square'); },
         matri_laser: t => { zap(t, 1600, 900, 0.5, -10, 'sawtooth'); whoosh(t, 6000, 2000, 0.5, -10, 1.5); thump(t, 'C2', -8, 0.2); },
         matri_drone: t => { for (let i = 0; i < 3; i++) zap(t + i * 0.09, 900 + i * 300, 1500 + i * 300, 0.07, -18, 'square'); },
@@ -246,6 +248,7 @@ const sfx = (() => {
         boss_ice: { layers: [S('glass', 0.6)], synth: true },
         boss_volt: { layers: [S('blaster', 0.4), S('lowboom', 0.3)], synth: true },
         matri_glitch: { layers: [S('laser_small', 0.3)], synth: true },
+        matri_break: [S('glass', 0.7), S('plate', 0.5), S('lowboom', 0.45)],
         matri_laser: { layers: [S('laser', 0.5), S('field', 0.3)], synth: true },
         matri_shield: { layers: [S('field', 0.5)], synth: true },
         matri_beam: { layers: [S('field', 0.6), S('lowboom', 0.4, 0.3)], synth: true },

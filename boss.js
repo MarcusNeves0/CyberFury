@@ -813,7 +813,10 @@ function createBossFighters() {
     });
     const id = match.bossId === 'random' ? BOSS_IDS[Math.floor(Math.random() * BOSS_IDS.length)] : match.bossId;
     const Boss = id === 'matriarca' ? Matriarca : Cerbero;
-    fighters.push(new Boss(arena.left + w * 0.62, (arena.top + arena.bottom) / 2, team.length));
+    const boss = new Boss(arena.left + w * 0.62, (arena.top + arena.bottom) / 2, team.length);
+    fighters.push(boss);
+    // Silhuetas dos efeitos de corpo já prontas antes da luta (calcular no meio dela dava um tranco)
+    if (window.pixelFx) { fxActor(boss); if (boss.isMatriarca) fxActor({ characterType: 'pylon', height: 74 }); } // a torre (74) também cai no tamanho de lutador
 }
 const BOSS_IDS = ['cerbero', 'matriarca'];
 const BOSS_NAMES = { cerbero: 'Cérbero-X', matriarca: 'Matriarca', random: 'chefe sorteado' };

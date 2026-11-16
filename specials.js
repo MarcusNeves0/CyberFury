@@ -522,8 +522,11 @@ Object.assign(Fighter.prototype, {
         for (let i = 0; i < count; i++) {
             const angle = (i / count) * Math.PI * 2 + Math.random() * 0.4;
             shadowSoldiers.push(new ShadowSoldier(this, this.x + Math.cos(angle) * 55, this.y + Math.sin(angle) * 38));
-            // Tentáculos de sombra saindo do chão onde cada soldado se levanta (pixelfx)
-            if (window.pixelFx) pixelFx.spawn('shadow-tendrils', { x: this.x + Math.cos(angle) * 55, y: this.y + Math.sin(angle) * 38, scale: 1, seed: Math.floor(Math.random() * 1000) });
+            // Tentáculos de sombra saindo do chão (pixelfx). Cada um custa uns 3,5 ms por quadro: no máximo 2 (em lados
+            // opostos); os outros soldados saem de uma fumaça de sombra
+            const sx = this.x + Math.cos(angle) * 55, sy = this.y + Math.sin(angle) * 38;
+            if (window.pixelFx && (i === 0 || i === Math.floor(count / 2))) pixelFx.spawn('shadow-tendrils', { x: sx, y: sy, scale: 1, seed: Math.floor(Math.random() * 1000) });
+            else for (let k = 0; k < 10; k++) particles.push(new Particle(sx + (Math.random() - 0.5) * 30, sy, k % 2 ? '#7a4dff' : '#1a1030', 0, { x: (Math.random() - 0.5) * 2, y: -1 - Math.random() * 3 }));
         }
         floatingTexts.push(new FloatingText(this.x, this.y - this.height - 18, `SOMBRAS x${count}`, '#b28cff'));
         this.poseSpecial();
@@ -796,8 +799,8 @@ Object.assign(Fighter.prototype, {
             if (this.sparkFx.body) this.sparkFx.body.stop();
             this.sparkFx.victim = opponent;
             this.sparkFx.body = pixelFx.spawn('electrified', {
-                x: opponent.x, y: opponent.y, scale: 1, actor: pixelFx.actorOf(opponent), seed: Math.floor(Math.random() * 1000),
-                follow: e => { e.x = opponent.x; e.y = opponent.y - opponent.z; e.flip = opponent.facing < 0; },
+                x: opponent.x, y: opponent.y, scale: 1, actor: fxActor(opponent), seed: Math.floor(Math.random() * 1000),
+                follow: e => { e.x = opponent.x; e.y = fxFeetY(opponent); e.flip = opponent.facing < 0; },
             });
         }
     },
@@ -969,7 +972,7 @@ Object.assign(Fighter.prototype, {
         this.poseSpecial();
         sfx.play('nyx_special');
         // O aliado que vai receber a vida brilha (pixelfx)
-        if (window.pixelFx && this.nyxLinkAlly) pixelFx.spawn('heal', { x: this.nyxLinkAlly.x, y: this.nyxLinkAlly.y, scale: 1, actor: pixelFx.actorOf(this.nyxLinkAlly), palette: 'blood', follow: followFighter(this.nyxLinkAlly) });
+        if (window.pixelFx && this.nyxLinkAlly) pixelFx.spawn('heal', { x: this.nyxLinkAlly.x, y: this.nyxLinkAlly.y, scale: 1, actor: fxActor(this.nyxLinkAlly), palette: 'blood', follow: followFighter(this.nyxLinkAlly) });
     },
 
     updateNyxLink() {

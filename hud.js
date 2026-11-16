@@ -130,8 +130,8 @@ function knockOut(fighter) {
             particles.push(new Particle(fighter.x, fighter.chestY, i % 2 ? '#7a4dff' : '#1a1030', 0, { x: dx / 40 + (Math.random() - 0.5) * 2, y: dy / 40 + (Math.random() - 0.5) * 2 }));
         }
     }
-    sfx.play('ko');
-    for (let i = 0; i < 25; i++) {
+    sfx.play(fighter.isPylon ? 'glass' : 'ko'); // torre da Matriarca: vidro quebrando (mais leve que o K.O.)
+    for (let i = 0; i < (fighter.isPylon ? 10 : 25); i++) {
         particles.push(new Particle(fighter.x, fighter.chestY, TEAM_COLORS[fighter.team], 0, { x: (Math.random() - 0.5) * 7, y: (Math.random() - 0.5) * 7 }));
     }
 }
