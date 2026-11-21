@@ -6,7 +6,7 @@
 
 <img width="900" alt="Cybernetic Fury: quatro estilos, um só objetivo" src="assets/capa.png" />
 
-### 🎮 [JOGAR AGORA NO NAVEGADOR](https://marcusneves0.github.io/CyberFury/) 🎮
+### 🎮 [JOGAR AGORA NO NAVEGADOR](https://cyberfury.pages.dev/) 🎮
 
 <img height="34" src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/html5/html5-original.svg" />
 <img height="34" src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/css3/css3-original.svg" />
