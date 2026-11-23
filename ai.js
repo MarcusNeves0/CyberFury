@@ -89,7 +89,7 @@ class AI {
         const d = distance(me, opponent);
         const meleeRange = (isBladeUser(me) ? BLADE_REACH : PUNCH_REACH) + me.radius + opponent.radius - 6;
         // Só tenta o especial se tiver a energia de verdade (antes tentava com 45 e perdia a vez)
-        const canUseSpecial = !['zarek', 'celestia', 'flora', 'spark', 'nyx', 'mamba', 'gear', 'roxy', 'weaver', 'aegis', 'rhino', 'anchor', 'sina', 'coleone', 'bershow', 'aspas', 'cangeras', 'kairo', 'vex'].includes(me.characterType) &&
+        const canUseSpecial = !['zarek', 'celestia', 'flora', 'spark', 'nyx', 'mamba', 'gear', 'roxy', 'weaver', 'aegis', 'rhino', 'anchor', 'sina', 'coleone', 'bershow', 'aspas', 'cangeras', 'kairo', 'vex', 'tessa'].includes(me.characterType) &&
             me.energy >= specialCost(me.characterType) && me.specialCooldown <= 0;
         if (Math.random() < 0.1) this.strafeSign *= -1;
 
@@ -424,6 +424,23 @@ class AI {
                 return;
             }
             if (me.phaseCooldown <= 0 && !me.phaseStep && d < VEX_STEP_RANGE * 0.95 && d > meleeRange * 0.9) {
+                me.attack('strong_punch');
+                return;
+            }
+        }
+
+        // Tessa: Ziguezague com 2+ inimigos no alcance, ou com o alvo já costurado (2+ fios), fraco ou colado.
+        // Com 3+ fios no alvo e ele no alcance, a Tesourada em X puxa a linha.
+        if (me.characterType === 'tessa') {
+            if (me.zigzag) return;
+            const near = enemiesOf(me).filter(e => !e.isInsideOpponent && distance(me, e) < TESSA_ZIG_RANGE * 0.9).length;
+            const threads = tessaThreadsOn(opponent, me);
+            if (me.energy >= TESSA_ZIG_COST && me.specialCooldown <= 0 && near >= 1 &&
+                (near >= 2 || threads >= 2 || opponent.health < opponent.maxHealth * 0.35 || d < 90 || isRangedFighter(opponent))) {
+                me.attack('special');
+                return;
+            }
+            if (threads >= TESSA_PULL_MIN && d < meleeRange + 8) {
                 me.attack('strong_punch');
                 return;
             }

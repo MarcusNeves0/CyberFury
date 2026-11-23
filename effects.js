@@ -335,6 +335,7 @@ function updateProjectiles() {
         if (projectile.type === 'mamba_shot') {
             const defended = target.takeDamage(projectile.damage, {}, attacker);
             if (!defended) spawnProjectileHitFx(projectile, target);
+            else tessaCatchShot(target, attacker); // Bastidor da Tessa: o tiro fica preso no tecido
             // 20% de chance de envenenar
             if (!defended && Math.random() < MAMBA_POISON_CHANCE) target.applyPoison(1);
             projectile.done = true;
@@ -360,6 +361,7 @@ function updateProjectiles() {
 
         const defended = target.takeDamage(projectile.damage, {}, attacker);
         if (!defended) spawnProjectileHitFx(projectile, target);
+        else tessaCatchShot(target, attacker); // Bastidor da Tessa: o tiro fica preso no tecido
         // Teia do Weaver: gruda e deixa o alvo lento
         if (projectile.type === 'web' && !defended) target.slowTimer = WEB_SLOW_DURATION;
         // Roxy: cada acerto aumenta a adrenalina (atira mais rápido)

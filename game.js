@@ -82,6 +82,7 @@ function step() {
         if (alive(f) && !timeFrozen(f)) f.update();
     }
     updateVexAfterMove();
+    updateTessa(); // avanços do Ziguezague e o tempo dos fios da Tessa
 
     resolveCollisions();
 
@@ -231,6 +232,7 @@ function draw() {
 
     projectiles.forEach(p => p.draw());
     drawKairo();
+    drawTessa(); // fios presos, mira da Tesourada em X e o rastro do Ziguezague
     if (window.pixelFx) pixelFx.draw(ctx); // efeitos de pixel art (pixelfx)
     coleoneBalls.forEach(drawColeoneBall);
     drawBershowSlashes();
@@ -429,6 +431,7 @@ function stopMatch() {
     dataGhosts = [];
     cronoDrive = null;
     vexTrail = [];
+    tessaSeams = [];
     resetBossMode();
     shadowSoldiers = [];
     walls = [];

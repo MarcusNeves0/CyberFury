@@ -138,7 +138,7 @@
                 </div>
             </div>
             <div class="selection-grid">
-                <div class="roster-label melee" style="grid-column: 1 / span 14">Corpo a corpo</div>
+                <div class="roster-label melee" style="grid-column: 1 / span 15">Corpo a corpo</div>
                 <div class="character-card melee" id="select-titan" data-lore="Titan foi um grande combatente da guerra que lutou bravamente pelo seu país e acabou perdendo muitos amigos. Sendo assim, acabou saindo, pois não estava mais gostando de ter tantas perdas. Hoje em dia, ele luta contra bandidos para proteger sua cidade.">
                     <canvas id="titan-thumbnail" class="thumbnail-canvas"></canvas>
                     <h2>TITAN</h2>
@@ -195,11 +195,15 @@
                     <canvas id="cangeras-thumbnail" class="thumbnail-canvas"></canvas>
                     <h2>CANGERAS</h2>
                 </div>
+                <div class="character-card melee" id="select-tessa" data-lore="Tessa Ponto remendava gente num beco de Neo-Cidade: costurava pele sintética em quem acabava de instalar cromo do mercado negro, sem perguntas. Quando uma gangue quis cobrar proteção do ateliê, ela respondeu com a tesoura de alfaiate gigante que herdou da avó. Hoje briga com a mesma calma com que costura: prende uma linha em cada inimigo, risca o molde e, quando puxa o fio, a costura inteira se fecha de uma vez.">
+                    <canvas id="tessa-thumbnail" class="thumbnail-canvas"></canvas>
+                    <h2>TESSA</h2>
+                </div>
                 <div class="roster-label shooter" style="grid-column: 1 / span 4">Atiradores</div>
                 <div class="roster-label healer" style="grid-column: 5 / span 3">Healers</div>
                 <div class="roster-label tank" style="grid-column: 8 / span 4">Tanques</div>
                 <div class="roster-label cyber" style="grid-column: 12 / span 2">Cibernéticos</div>
-                <div class="roster-label random" style="grid-column: 14 / span 1">Sorte</div>
+                <div class="roster-label random" style="grid-column: 14 / span 2">Sorte</div>
                 <div class="character-card shooter" id="select-mamba" data-lore="Ex-atiradora de elite de uma corporação de armas químicas, Mamba fugiu levando o protótipo de um rifle que dispara toxinas. Escondida atrás da máscara de gás, ela espera pacientemente o momento certo: quando a linha vermelha aparece, o alvo já está condenado.">
                     <canvas id="mamba-thumbnail" class="thumbnail-canvas"></canvas>
                     <h2>MAMBA</h2>
@@ -252,7 +256,7 @@
                     <canvas id="vex-thumbnail" class="thumbnail-canvas"></canvas>
                     <h2>VEX</h2>
                 </div>
-                <div class="character-card random" id="select-random" style="grid-column: 14" data-lore="Não sabe quem escolher? Deixa a sorte decidir: um lutador livre é sorteado na hora.">
+                <div class="character-card random" id="select-random" style="grid-column: 14 / span 2" data-lore="Não sabe quem escolher? Deixa a sorte decidir: um lutador livre é sorteado na hora.">
                     <div class="random-icon">?</div>
                     <h2>ALEATÓRIO</h2>
                 </div>
@@ -309,6 +313,7 @@
     <script src="specials.js"></script>
     <script src="kairo.js"></script>
     <script src="vex.js"></script>
+    <script src="tessa.js"></script>
     <script src="boss.js"></script>
     <script src="matriarca.js"></script>
     <script src="ai.js"></script>

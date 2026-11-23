@@ -233,7 +233,11 @@ function rigPoseKey(pose) {
 
 // Escolhe a pose do lutador agora. Devolve null para usar os sprites de sempre (especial, investidas...).
 function rigPoseFor(rig, f) {
-    if (!f || f.spriteFrame === 'special' || f.isCelebrating) return null;
+    if (!f) return null;
+    // Pose própria do lutador (a Tessa abrindo a tesoura ao carregar o golpe forte e no Ziguezague)
+    const custom = rig.custom && rig.custom(f);
+    if (custom) return custom;
+    if (f.spriteFrame === 'special' || f.isCelebrating) return null;
     const A = rig.anims;
     const walking = f.walkFrame !== null && f.walkFrame !== undefined &&
         (f.moveX === undefined || Math.hypot(f.moveX, f.moveY) > 0.3);

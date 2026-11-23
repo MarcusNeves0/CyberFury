@@ -152,6 +152,11 @@ const sfx = (() => {
         vex_step: t => { whoosh(t, 8000, 1500, 0.12, -10, 2); zap(t, 2400, 600, 0.08, -22, 'square'); },
         kairo_hack: t => { for (let i = 0; i < 4; i++) zap(t + i * 0.045, 1800 + i * 400, 1200 + i * 300, 0.04, -22, 'square'); zap(t + 0.2, 300, 1600, 0.25, -18, 'sawtooth'); },
         kairo_pane: t => { zap(t, 2200, 120, 0.18, -14, 'sawtooth'); whoosh(t, 9000, 2000, 0.12, -14, 3); thump(t, 'E1', -6, 0.2); },
+        // Tessa: lâminas abrindo (zunido subindo), cada avanço (corte de tecido) e a costura explodindo
+        tessa_special: t => { zap(t, 600, 2400, 0.25, -14, 'sawtooth'); clang(t + 0.2, 2600, -16, 0.12); whoosh(t, 400, 6000, 0.35, -12, 1.2); },
+        tessa_dash: t => { whoosh(t, 9000, 1800, 0.14, -10, 2.5); clang(t + 0.07, 3200, -22, 0.05); },
+        tessa_pull: t => { zap(t, 300, 1800, 0.22, -14, 'triangle'); whoosh(t, 1200, 7000, 0.2, -14, 1.5); },
+        tessa_blast: t => { thump(t, 'C1', -2, 0.5); whoosh(t, 7000, 300, 0.6, -8, 0.8); clang(t, 2200, -14, 0.2); clang(t + 0.04, 3100, -16, 0.2); },
         kairo_special: t => { zap(t, 40, 160, 1.2, -8, 'sawtooth'); thump(t, 'A0', -2, 1.2); whoosh(t, 100, 6000, 1.0, -8, 1.2); for (let i = 0; i < 6; i++) zap(t + 0.3 + i * 0.09, 400 + Math.random() * 2000, 90, 0.07, -18, 'square'); },
         // Chefão (Cérbero-X): tremor do chão, rachando, rosnado, rugido, mordida, pisão e os três elementos
         boss_rumble: t => { thump(t, 'A0', -2, 1.6); whoosh(t, 300, 60, 1.8, -8, 0.3); },
@@ -237,6 +242,10 @@ const sfx = (() => {
         vex_step: { layers: [S('swish', 0.45)], synth: true },
         kairo_hack: { layers: [S('laser_small', 0.25)], synth: true },
         kairo_pane: { layers: [S('blaster', 0.35), S('punch', 0.4)], synth: true },
+        tessa_special: { layers: [S('swish', 0.4), S('metal', 0.3, 0.15)], synth: true },
+        tessa_dash: { layers: [S('swish', 0.45)], synth: true },
+        tessa_pull: { layers: [S('swish', 0.3)], synth: true },
+        tessa_blast: { layers: [S('boom', 0.5), S('slice', 0.5)], synth: true },
         kairo_special: { layers: [S('field', 0.55), S('lowboom', 0.6), S('laser', 0.3, 0.25)], synth: true },
         announce_big: { layers: [S('lowboom', 0.5)], synth: true },
         boss_rumble: { layers: [S('lowboom', 0.8), S('rock', 0.5, 0.3)], synth: true },

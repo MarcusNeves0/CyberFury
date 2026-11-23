@@ -3151,6 +3151,124 @@ pixelCharacters.vex = {
     },
 };
 
+// --- Tessa "Ponto": costureira clandestina de implantes, briga com uma tesoura de alfaiate gigante ---
+// Coque preso com agulhas, lupa de alfaiate no olho, fita métrica no pescoço e um carretel de linha ciano nas costas.
+// Forma 'zigue': na ultimate a linha e as lâminas acendem.
+pixelCharacters.tessa = {
+    size: 64,
+    palette: {
+        K: OUTLINE, S: '#f0c4a8', s: '#c48e78', H: '#2a1a2e', h: '#5a3a62', N: '#d8e0ea', C: '#4ff2ff', c: '#1f9fb8',
+        R: '#e0a6a2', r: '#a87072', B: '#1c1620', b: '#3a2e40', T: '#f2cf5a', t: '#8a6a1a', l: '#c0506a',
+        M: '#cfd6e2', m: '#7c8598', W: '#ffffff', P: '#ff5fa8', p: '#b0306e', L: '#2a2230', O: '#4a2a3a', o: '#120c14',
+        w: '#a8774a', v: '#6e4a2c',
+        X: '#cfd6e2', x: '#7c8598', Y: '#ffffff', Q: '#ff5fa8',
+        E: '#1c1620', F: '#f0c4a8', G: '#120e16', J: '#e8b898', U: '#e0a6a2', u: '#a87072', Z: '#a87072',
+    },
+    forms: {
+        normal: {},
+        zigue: { C: '#ffffff', c: '#4ff2ff', M: '#eaffff', m: '#9fe8ff', P: '#ff9fd0', X: '#eaffff', x: '#9fe8ff', Q: '#ff9fd0' },
+    },
+    idle: [
+        '..................KK..........K',
+        '.................KCCK..KKKKK.KCK',
+        '..................KNNKKHHHHHKNCK',
+        '...................KKNHHHhHHNKK',
+        '....................KHNNhHHNHHK',
+        '....................KHHhNHNHHHK',
+        '....................KHHHNNHHHHKKKKKKKK',
+        '....................KHHNHHHHHHHHHHHHHHKKKK',
+        '....................KHHHHHHHHHHHHHHHHHHHHHK',
+        '....................KNHHHHHhhhhhhhhHHHHHHHK',
+        '...................KNKHHHHHHHHHHHHHHHHHHHHK',
+        '..................KNKKHHhHHHHHHHHHHHHHHHHHK',
+        '...................K.KHHhHHHHHHssHSSHHSSHHK',
+        '.....................KHHhHHHHHHssSSSSSSSSSK',
+        '.....................KHHHhHHHHHssSSSSCCCSSK',
+        '.....................KHHHhHHHHHssSSScCKCSSK',
+        '.....................KHHHhHHHHHssSSSSCCCSSK',
+        '.....................KHHHHHHHHHssSSSSSSSSSK',
+        '.....................KHHHHHHHHHssSSSSSSllSK',
+        '.....................KHHHHHHHHHssSSSSSSSSSK',
+        '.....................KHHHHHHHHHssSSSSSSSSSK',
+        '..........KKKKKKKKKK..KKKKKKHhsssssKKKKKKKK',
+        '.........KwwwwwwwwwwKKZZZBBTTTTTTTTTTTTBUUUK',
+        '.........KvvvvvvvvvvKZZZZZbtTtTtTtTtTtTUUUUUK..............KKK',
+        '..........KKccCCcCKKKZZZZZbbbTTbbbbbTTbUUUUUK............KKmMMK',
+        '...........KccCWCCK.KZZZZZGGBtTBBBBBTtBuUUUUK.........KKKmMMWK',
+        '...........KccCWcCK.KZZZZZGGGGGBBBBBTTBuUUUUK.......KKmmmMMWK',
+        '...........KccCCCCK.KZZZZZGGGGGGGQCRTtCUUUUUK.....KKmmmMMWKK',
+        '...........KccCCcCK..KZZZrGGGGGGGGGGTTRRUUUK....KKmmmmMWWK',
+        '...........KccCCCCK..KBBrrrRRGGGGGGJJJRREEEK..KKmmmmMMWWKKKKK',
+        '..........KCccCCcCK..KBBrrrRRTTQGGGJJJJQEEEK.KmmmmMMWWWYYYYYYKKK',
+        '..........KCccCCCCK..KBBrrrRRRRQQQGJJJJQEEExKmmmmMMWWWYYYXXXXXXX',
+        '.........KCKccCCcCKK.KBBrrrRRRRRRRRRJJQQEEExxCcMMWWWWXXXXxxxxKKK',
+        '.........KCwwwwwwwwwKKBBrrrRRRRRRCRRTtRREEExxcCWWWWxxxxxxxKKK',
+        '.........KCvvvvvvvvvKKBBrrrRRRRRRRRRTTREEEEKmmWWWWxxxxxKKK',
+        '........KCKKKKKKKKKK.KBBrrrNRRRRRCRRRRREEEEKmmxWxxxKKKK',
+        '........KCK..........KBBrPNPRRRRRRRRRRREEEEmmmKKKKK',
+        '.......KCK...........KBbbPPPbbbbbbbbbbbEEEEmmK',
+        '.......KCK...........KBbbPPPbbbbbbbbbbbEEEEmK',
+        '.......KCK...........KBBBBBBbBBBBBBbBBBEEEEmK',
+        '.......KCK...........KBBBBBBbBBBBBBbBBBEFFEPK',
+        '.......KCK...........KBBBBBBbBBBBBBbBBBFFFFK',
+        '........KCK.........KBBBBBBbBBBBBBBbBBPFFFFK',
+        '........KCK.........KBBBBBBbBBBBBBBbBPPPFFK',
+        '........KCK.........KBBBBBBbBBBBBBBbPPKPPBK',
+        '.........K.........KBCBCBCBCBCBCBCBCPKKKPCK',
+        '...................KRRRRRRRRRRRRRRRRPPPPPRK',
+        '....................KKKLLLLLLKKKLLLLLLPKKK',
+        '......................KLLLLLLK.KLLLLLLK',
+        '......................KLLLLbLK.KLLLLbLK',
+        '......................KLLLLLLK.KLLLLLLK',
+        '......................KLLLLLLK.KLLLLLLK',
+        '......................KLLLLLLK.KLLLLLLK',
+        '......................KLLLLLLK.KLLLLLLK',
+        '......................KLLLLLLK.KLLLLLLK',
+        '......................KLLLLLLK.KLLLLLLK',
+        '......................KPPPPPPPKKPPPPPPPK',
+        '......................KOOOOOOOKKOOOOOOOK',
+        '......................KOOOOOvvKKOOOOOvvK',
+        '......................KOOOOOvvKKOOOOOvvK',
+        '......................KOOOOOvvKKOOOOOvvK',
+        '......................KOOOOOvvKKOOOOOvvK',
+        '.....................KooooooooKoooooooooK',
+        '......................KKKKKKKK.KKKKKKKKK',
+    ],
+    attack: {
+        19: '.....................KHHHHHHHHHssSSSSSSSSSK..............K',
+        20: '.....................KHHHHHHHHHssSSSSSSSSSK.............KMK',
+        21: '..........KKKKKKKKKK..KKKKKKHhsssssKKKKKKKK............KMMK',
+        22: '.........KwwwwwwwwwwKKZZZBBTTTTTTTTTTTTBUUUK.........KKMMK',
+        23: '.........KvvvvvvvvvvKZZZZZbtTtTtTtQtTtTUUUUUK.......KmmMWK',
+        24: '..........KKccCCcCKKKZZZZZGGbTTbbQQQQTbUUUUUK......KmmMWK',
+        25: '...........KccCWCCK.KZZZZZGGGGGGGQKKQtBuUUUUK.....KmmMWK',
+        26: '...........KccCWcCK.KZZZZZGGGGGGGGGGGJJuUUUUK...KKmmMWWK',
+        27: '...........KccCCCCK.KZZZZZGGGGGGGGGGJJJUUUUUK..KmmmMWWK',
+        28: '...........KccCCcCK..KZZZrrRRTTGGGGGJJJJUUUEK.KmmmMMWWK',
+        29: '...........KccCCCCK..KBBrrrRRtTRRCRRTJJQEEEEK.KmmMMWWK',
+        30: '..........KCccCCcCK..KBBrrrRRTTRRRRRTTRQEEEEKKmmMMWWK',
+        31: '..........KCccCCCCK..KBBrrrRRRRRRCRRTtRREEEExmmmMWWWKK',
+        32: '.........KCKccCCcCKK.KBBrrrRRRRRRRRRTTRRREEEmCcMWWWYYYKKK',
+        33: '.........KCwwwwwwwwwKKBBrrrRRRRRRCRRTtRRREEExcCWWWYYYYYYYKKK',
+        34: '.........KCvvvvvvvvvKKBBrrrRRRRRRRRRTTRRREEEKmWWWxXXXXXXYYYYKKK',
+        35: '........KCKKKKKKKKKK.KBBrrrNRRRRRCRRRRRRREEEKmmWxxxxxxxxXXXXXXYK',
+        36: '........KCK..........KBBrPNPRRRRRRRRRRRRREEEEmmKKxxxxxxxxxxxxxXX',
+        37: '.......KCK...........KBbbPPPbbbbbbbbbbbbbEEEEmK..KKKKKKKKKKKKKKK',
+        38: '.......KCK...........KBbbPPPbbbbbbbbbbbbbEEEEmK',
+        39: '.......KCK...........KBBBBBBbBBBBBBbBBBBBEEEEmK',
+        40: '.......KCK...........KBBBBBBbBBBBBBbBBBBBBEEEPK',
+        41: '.......KCK...........KBBBBBBbBBBBBBbBBBBBBFFFPK',
+        42: '........KCK.........KBBBBBBbBBBBBBBbBBBBBBFFFK',
+        43: '........KCK.........KBBBBBBbBBBBBBBbBBBBBBFFFK',
+        44: '........KCK.........KBBBBBBbBBBBBBBbBBBBBPFFFK',
+        45: '.........K.........KBCBCBCBCBCBCBCBCBCBCBPPPPK',
+        46: '...................KRRRRRRRRRRRRRRRRRRRRPKKPPK',
+        47: '....................KKKLLLLLLKKKLLLLLLKKPKKPPK',
+        48: '......................KLLLLLLK.KLLLLLLKKPPPPK',
+        49: '......................KLLLLbLK.KLLLLbLK.KKKK',
+    },
+};
+
 // --- Pose de especial ---
 // Gerada a partir do sprite parado: recorta o braço da frente (e a arma, se estiver nele)
 // e cola mais para cima, como se o personagem erguesse o braço para soltar o poder.
@@ -3191,12 +3309,13 @@ const SPECIAL_POSE = {
     bershow: { x0: 42, x1: 53, y0: 22, y1: 42, lift: 10 }, // grade 64x64
     kairo: { x0: 43, x1: 54, y0: 20, y1: 42, lift: 12 }, // grade 64x64
     vex: { x0: 42, x1: 51, y0: 20, y1: 42, lift: 12 }, // grade 64x64
+    tessa: { x0: 50, x1: 64, y0: 14, y1: 34, lift: 4 }, // grade 64x64 (só a ponta da tesoura sobe)
 };
 
 // Linha onde as pernas se separam em cada sprite (abaixo do short, da saia ou do casaco)
 const LEG_START = {
     titan: 40, spark: 19, hades: 40, jack: 42, kaze: 40, kenji: 40, craque: 40, akane: 38,
-    fenris: 40, zarek: 40, celestia: 30, flora: 23, nyx: 50, mamba: 46, gear: 41, roxy: 41, weaver: 37, aegis: 37, rhino: 39, anchor: 37, sina: 46, coleone: 47, bershow: 47, aspas: 50, cangeras: 47, kairo: 42, vex: 41,
+    fenris: 40, zarek: 40, celestia: 30, flora: 23, nyx: 50, mamba: 46, gear: 41, roxy: 41, weaver: 37, aegis: 37, rhino: 39, anchor: 37, sina: 46, coleone: 47, bershow: 47, aspas: 50, cangeras: 47, kairo: 42, vex: 41, tessa: 47,
 };
 for (const [type, row] of Object.entries(LEG_START)) pixelCharacters[type].legStart = row;
 for (const [type, area] of Object.entries(SPECIAL_POSE)) {

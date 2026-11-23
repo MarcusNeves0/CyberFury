@@ -2,7 +2,7 @@
 
 # ⚡ CYBERNETIC FURY ⚡
 
-**Briga de rua cyberpunk vista de cima, com 25 lutadores, 5 arenas cheias de perigo e partidas de 1v1 até 3v3.**
+**Briga de rua cyberpunk vista de cima, com 28 lutadores, 5 arenas cheias de perigo e partidas de 1v1 até 3v3.**
 
 <img width="900" alt="Cybernetic Fury: quatro estilos, um só objetivo" src="assets/capa.png" />
 
@@ -61,6 +61,7 @@ Neo-Cidade está tomada por neon, chuva e gente disposta a brigar por qualquer m
 | ⚔️ | **Bershow** | Cavaleiro negro de espadão que acerta todos na frente; quanto menos vida, mais forte | *Armadura da Fúria*: o visor fecha, solta o Corte Devastador e fica 5 s sem sentir dor |
 | 🌑 | **Aspas the Darkness** | Caçador das sombras de duas adagas; some e reaparece atrás do inimigo | *Exército das Sombras*: 3 soldados de sombra caçam os inimigos, +1 a cada inimigo derrotado |
 | ⚖️ | **Cangeras** | Advogado de terno que briga com o martelo de juiz; o soco forte ("ORDEM!") manda o inimigo para longe | *Tribunal*: a luta congela por 3 s, o martelo bate 3 vezes e quem mais causou dano é condenado por **Agressão**: fica 8 s sem ultimate e perde a energia |
+| ✂️ | **Tessa** | Costureira de tesoura gigante: cada corte prende um fio no inimigo; segurando o golpe, a *Tesourada em X* dá mais dano no cruzamento das lâminas e, com 3 fios, puxa a linha e arrasta o inimigo; defendendo, os tiros ficam presos no tecido | *Ziguezague*: 3 avanços de inimigo em inimigo cortando; no fim ela puxa a linha e a costura inteira explode (cada fio aumenta o dano) |
 | ⚡ | **Spark** | Robô de segurança abandonado, de soco elétrico | Corrente elétrica: o dano dobra a cada segundo (até 96), o alvo fica lento e só um golpe forte arrebenta |
 
 ### Atiradores

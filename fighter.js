@@ -160,6 +160,9 @@ class Fighter {
         this.phaseStep = null;
         this.phaseCooldown = 0;
         this.trailIndex = 0;
+        // Tessa: Ziguezague (ultimate) e fios presos nela por outra Tessa (tessa.js)
+        this.zigzag = null;
+        this.tessaThreads = null;
         // Matriarca (chefe): glitch inverte os controles; hackeado luta pelo outro time por um tempo (matriarca.js)
         this.glitchTimer = 0;
         this.hackTimer = 0;
@@ -386,7 +389,7 @@ class Fighter {
         // Golpe: arco na direção da mira (só depois da preparação)
         // (golpe com efeito da pixelfx saindo do corpo mostra o efeito no lugar do arco; socos com estalo no impacto mantêm o arco)
         const swingFx = this.attackType !== 'special' && meleeFxFor(this, this.attackType);
-        if (this.attackTimer > 0 && this.attackWindup === 0 && this.attackType !== 'special' && !(swingFx && swingFx.on !== 'hit')) {
+        if (this.attackTimer > 0 && this.attackWindup === 0 && this.attackType !== 'special' && !(swingFx && swingFx.on !== 'hit') && this.characterType !== 'tessa') {
             const reach = (isBladeUser(this) ? BLADE_REACH : PUNCH_REACH) + this.radius;
             const angle = Math.atan2(this.aim.y, this.aim.x);
             ctx.save();
@@ -737,6 +740,7 @@ class Fighter {
         if (this.furyTimer > 0 || this.armorClose > 0) return; // Bershow com a armadura fechada
         if (this.breachTimer > 0) return; // Kairo flutuando na fenda
         if (this.phaseStep) return; // Vex no meio do passo fantasma
+        if (this.zigzag) return; // Tessa no meio do Ziguezague
         this.kbx += direction.x * force;
         this.kby += direction.y * force;
     }
@@ -803,7 +807,7 @@ class Fighter {
     }
 
     attack(type) {
-        if (this.attackCooldown > 0 || this.isParalyzed || this.isDefending || this.isDashing || this.isBladeDancing || this.isInsideOpponent || this.isDead) return;
+        if (this.attackCooldown > 0 || this.isParalyzed || this.isDefending || this.isDashing || this.isBladeDancing || this.isInsideOpponent || this.isDead || this.zigzag) return;
         if (type === 'special' && this.paneTimer > 0) return; // implante em pane (Corrupção do Kairo)
         if (courtSession) return; // tribunal aberto: a luta está congelada
 
@@ -841,9 +845,9 @@ class Fighter {
                     sfx.play('blade_swing');
                 } else {
                     this.attackCooldown = (this.characterType === 'weaver' ? WEAVER_PUNCH_COOLDOWN : this.characterType === 'sina' ? SINA_KNIFE_COOLDOWN
-                        : this.characterType === 'aspas' ? ASPAS_DAGGER_COOLDOWN : this.characterType === 'cangeras' ? CANGERAS_GAVEL_COOLDOWN : this.characterType === 'vex' ? VEX_BLADE_COOLDOWN : 20) / this.attackSpeedMultiplier;
+                        : this.characterType === 'aspas' ? ASPAS_DAGGER_COOLDOWN : this.characterType === 'cangeras' ? CANGERAS_GAVEL_COOLDOWN : this.characterType === 'vex' ? VEX_BLADE_COOLDOWN : this.characterType === 'tessa' ? TESSA_SNIP_COOLDOWN : 20) / this.attackSpeedMultiplier;
                     this.attackTimer = 6;
-                    sfx.play(['kaze', 'sina', 'aspas', 'vex'].includes(this.characterType) ? 'blade_swing' : 'swing');
+                    sfx.play(['kaze', 'sina', 'aspas', 'vex', 'tessa'].includes(this.characterType) ? 'blade_swing' : 'swing');
                 }
                 this.attackWindup = 2; // puxa o braço por um instante antes de acertar
                 spawnMeleeFx(this, 'punch');
@@ -958,6 +962,10 @@ class Fighter {
                     this.startCronodrive();
                     return;
                 }
+                if (this.characterType === 'tessa') {
+                    this.startZigzag();
+                    return;
+                }
                 const energyCost = specialCost(this.characterType);
                 if (this.energy < energyCost || this.specialCooldown > 0) { this.isAttacking = false; return; }
                 // A explosão do Hades precisa de um alvo por perto (senão não gasta energia)
@@ -1055,7 +1063,7 @@ function tryMelee(attacker) {
     if (isBladeUser(attacker)) effect.sound = 'blade_hit';
     switch (attacker.attackType) {
         case 'punch':
-            damage = (attacker.characterType === 'akane') ? 14 : (attacker.characterType === 'nyx') ? NYX_PUNCH_DAMAGE : (attacker.characterType === 'kaze') ? KAZE_PUNCH_DAMAGE : (attacker.characterType === 'weaver') ? WEAVER_PUNCH_DAMAGE : (attacker.characterType === 'kenji') ? KENJI_PUNCH_DAMAGE : (attacker.characterType === 'aegis') ? AEGIS_PUNCH_DAMAGE : (attacker.characterType === 'rhino') ? RHINO_PUNCH_DAMAGE : (attacker.characterType === 'anchor') ? ANCHOR_PUNCH_DAMAGE : (attacker.characterType === 'sina') ? SINA_KNIFE_DAMAGE : (attacker.characterType === 'coleone') ? COLEONE_PUNCH_DAMAGE : (attacker.characterType === 'bershow') ? BERSHOW_SWORD_DAMAGE : (attacker.characterType === 'aspas') ? ASPAS_DAGGER_DAMAGE : (attacker.characterType === 'cangeras') ? CANGERAS_GAVEL_DAMAGE : (attacker.characterType === 'spark') ? SPARK_PUNCH_DAMAGE : (attacker.characterType === 'kairo') ? KAIRO_PUNCH_DAMAGE : (attacker.characterType === 'vex') ? VEX_PUNCH_DAMAGE : 10;
+            damage = (attacker.characterType === 'akane') ? 14 : (attacker.characterType === 'nyx') ? NYX_PUNCH_DAMAGE : (attacker.characterType === 'kaze') ? KAZE_PUNCH_DAMAGE : (attacker.characterType === 'weaver') ? WEAVER_PUNCH_DAMAGE : (attacker.characterType === 'kenji') ? KENJI_PUNCH_DAMAGE : (attacker.characterType === 'aegis') ? AEGIS_PUNCH_DAMAGE : (attacker.characterType === 'rhino') ? RHINO_PUNCH_DAMAGE : (attacker.characterType === 'anchor') ? ANCHOR_PUNCH_DAMAGE : (attacker.characterType === 'sina') ? SINA_KNIFE_DAMAGE : (attacker.characterType === 'coleone') ? COLEONE_PUNCH_DAMAGE : (attacker.characterType === 'bershow') ? BERSHOW_SWORD_DAMAGE : (attacker.characterType === 'aspas') ? ASPAS_DAGGER_DAMAGE : (attacker.characterType === 'cangeras') ? CANGERAS_GAVEL_DAMAGE : (attacker.characterType === 'spark') ? SPARK_PUNCH_DAMAGE : (attacker.characterType === 'kairo') ? KAIRO_PUNCH_DAMAGE : (attacker.characterType === 'vex') ? VEX_PUNCH_DAMAGE : (attacker.characterType === 'tessa') ? TESSA_PUNCH_DAMAGE : 10;
             if (attacker.zarekForm === 'red') damage = 12;
             if (attacker.zarekForm === 'blue') damage = ZAREK_BLUE_PUNCH;
             if (attacker.characterType === 'akane') {
@@ -1092,6 +1100,7 @@ function tryMelee(attacker) {
             if (attacker.characterType === 'bershow') damage = BERSHOW_STRONG_DAMAGE; // espadão com as duas mãos
             if (attacker.characterType === 'aspas') damage = ASPAS_STEP_DAMAGE; // corte pelas costas
             if (attacker.characterType === 'cangeras') damage = CANGERAS_ORDER_DAMAGE; // "ORDEM NO TRIBUNAL!"
+            if (attacker.characterType === 'tessa') damage = tessaStrongDamage(attacker, defender); // Tesourada em X
             if (attacker.characterType === 'hades') { effect.type = 'burn'; }
             if (attacker.characterType === 'jack') { defender.applyCurse(attacker); }
             break;
@@ -1121,6 +1130,8 @@ function tryMelee(attacker) {
                 : attacker.characterType === 'cangeras' && attacker.attackType === 'strong_punch' ? CANGERAS_ORDER_PUSH
                 : attacker.attackType === 'strong_punch' ? 4 : 1.5;
             target.push(attacker.aim, pushForce);
+            // Tessa: a tesourada prende um fio; a Tesourada em X pode puxar a linha
+            if (attacker.characterType === 'tessa') tessaOnHit(attacker, target);
             // Kairo: cada golpe infecta o alvo com Corrupção (o forte, com 2)
             if (attacker.characterType === 'kairo') addCorruption(target, attacker.attackType === 'strong_punch' ? 2 : 1, attacker);
             // Nyx: cada acerto rouba vida e manda um orbe para o aliado mais ferido
@@ -1142,7 +1153,7 @@ function specialCost(characterType) {
         mamba: MAMBA_CLOUD_COST, gear: GEAR_TURRET_COST, roxy: ROXY_FRENZY_COST, weaver: WEAVER_PULL_COST,
         aegis: AEGIS_WALL_COST, rhino: RHINO_CHARGE_COST, anchor: ANCHOR_HOOK_COST, sina: SINA_ULT_COST,
         coleone: COLEONE_DUNK_COST, bershow: BERSHOW_ARMOR_COST, aspas: ASPAS_ARMY_COST, cangeras: CANGERAS_COURT_COST,
-        kairo: KAIRO_BREACH_COST, vex: VEX_DRIVE_COST,
+        kairo: KAIRO_BREACH_COST, vex: VEX_DRIVE_COST, tessa: TESSA_ZIG_COST,
     }[characterType] || 45;
 }
 
@@ -1166,7 +1177,7 @@ function isRangedFighter(fighter) {
 }
 
 function isBladeUser(fighter) {
-    return ['jack', 'akane', 'fenris', 'kaze', 'zarek', 'sina', 'bershow', 'aspas', 'vex'].includes(fighter.characterType);
+    return ['jack', 'akane', 'fenris', 'kaze', 'zarek', 'sina', 'bershow', 'aspas', 'vex', 'tessa'].includes(fighter.characterType);
 }
 
 // Bershow: Fúria — quanto menos vida, mais dano (até +50% com a vida quase no fim)
