@@ -1,5 +1,5 @@
 // Locutor
-// Chamadas grandes na tela durante a luta ("LUTEM!", "PRIMEIRO SANGUE!", "COMBO x5!", "DUPLO ABATE!", "K.O.!"),
+// Chamadas grandes na tela durante a luta ("LUTEM!", "FIRST BLOOD!", "COMBO x5!", "DUPLO ABATE!", "K.O.!"),
 // com um som de impacto e a voz gravada de um locutor em inglês (sounds/locutor: Voiceover Pack Fighter, de
 // Kenney.nl, licença CC0). Uma chamada por vez: as outras esperam na fila; uma mais importante passa na frente.
 
@@ -116,7 +116,7 @@ const announcer = {
         const enemy = killer && killer.team !== fighter.team ? killer : null;
         if (!this.firstBlood) {
             this.firstBlood = true;
-            this.call('PRIMEIRO SANGUE!', { color: '#ff4d4d', priority: 2, sub: enemy ? enemy.name.toUpperCase() : '' });
+            this.call('FIRST BLOOD!', { color: '#ff4d4d', priority: 2, sub: enemy ? enemy.name.toUpperCase() : '' });
         }
         if (enemy) {
             const k = this.kills.get(enemy) || { count: 0, last: -Infinity };

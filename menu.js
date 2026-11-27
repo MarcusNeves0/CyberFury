@@ -275,9 +275,92 @@ function openSelection() {
     if (first) showPreview(first, true);
 }
 
+// --- Fotos das arenas ---
+// Cada mapa é montado vazio e desenhado no canvas do jogo (escondido atrás do menu); o recorte da arena vira a
+// foto do card. Guardadas por tamanho de arena: no 1v1 a arena é menor e tem outros obstáculos.
+const MAP_THUMB_W = 320;
+const mapThumbs = {};
+function mapThumb(id, size) {
+    const key = `${id}:${size}`;
+    if (mapThumbs[key]) return mapThumbs[key];
+    const saved = { map: match.map, mode: match.mode };
+    Object.assign(match, { map: id, mode: size === 'duel' ? '1v1' : '3v3' });
+    setupArena();
+    Object.assign(match, saved);
+    mapState.banner = 0; // sem o nome da arena por cima
+    try { for (let i = 0; i < 90; i++) updateMap(); } catch (e) { /* chuva, laser e afins só não andam */ }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    ctx.setTransform(viewScale, 0, 0, viewScale, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+    drawArenaFloor();
+    drawMapGround();
+    [
+        ...obstacles.map(o => ({ y: isRound(o) ? o.y : o.y + o.h, draw: () => drawObstacle(o) })),
+        ...bushes.map(b => ({ y: b.y + b.r * 0.4, draw: () => drawBush(b) })),
+    ].sort((a, b) => a.y - b.y).forEach(d => d.draw());
+    drawMapOverlay();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    // Recorte: a arena com uma beirada da mureta em volta
+    const m = 14;
+    const sx = (arena.left - m) * viewScale, sy = (arena.top - m) * viewScale;
+    const sw = (arena.right - arena.left + 2 * m) * viewScale, sh = (arena.bottom - arena.top + 2 * m) * viewScale;
+    const out = document.createElement('canvas');
+    out.width = MAP_THUMB_W;
+    out.height = Math.round(MAP_THUMB_W * sh / sw);
+    const g = out.getContext('2d');
+    g.imageSmoothingQuality = 'high';
+    g.drawImage(canvas, sx, sy, sw, sh, 0, 0, out.width, out.height);
+    return (mapThumbs[key] = out);
+}
+
+// Sorteio: as arenas em mosaico, escurecidas, com um "?" grande
+function randomMapThumb(size) {
+    const key = `random:${size}`;
+    if (mapThumbs[key]) return mapThumbs[key];
+    const tiles = ['plaza', 'rooftop', 'lab', 'garden', 'dungeon', 'plaza'].map(id => mapThumb(id, size));
+    const out = document.createElement('canvas');
+    out.width = MAP_THUMB_W;
+    out.height = tiles[0].height;
+    const g = out.getContext('2d');
+    const w = out.width / 3, h = out.height / 2;
+    tiles.forEach((t, i) => g.drawImage(t, t.width * 0.2, t.height * 0.2, t.width * 0.6, t.height * 0.6, (i % 3) * w, Math.floor(i / 3) * h, w, h));
+    g.fillStyle = 'rgba(8, 6, 20, 0.62)';
+    g.fillRect(0, 0, out.width, out.height);
+    g.font = `bold ${Math.round(out.height * 0.62)}px Orbitron, sans-serif`;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.shadowColor = '#ffd23f';
+    g.shadowBlur = 18;
+    g.fillStyle = '#ffd23f';
+    g.fillText('?', out.width / 2, out.height / 2 + 4);
+    return (mapThumbs[key] = out);
+}
+
+// Coloca a foto em cada card de arena (do tamanho de arena desta partida)
+function renderMapThumbs() {
+    const size = match.mode === '1v1' ? 'duel' : 'team';
+    for (const button of document.querySelectorAll('#map-options .hub-option')) {
+        const id = button.dataset.map;
+        let photo = button.querySelector('canvas.map-thumb');
+        if (!photo) {
+            photo = document.createElement('canvas');
+            photo.className = 'map-thumb';
+            button.prepend(photo);
+        }
+        const src = id === 'random' ? randomMapThumb(size) : mapThumb(id, size);
+        photo.width = src.width;
+        photo.height = src.height;
+        photo.getContext('2d').drawImage(src, 0, 0);
+    }
+    floorCache = null;
+    drawMenuBackground(); // o canvas volta a mostrar o fundo do menu
+}
+
 // Todos escolheram: arena (e, no Boss Battle, o chefe)
 function openStage() {
     gameState = 'STAGE';
+    renderMapThumbs();
     document.getElementById('boss-section').classList.toggle('hidden', !match.boss);
     document.getElementById('stage-title').innerText = match.boss ? 'ESCOLHA O CHEFE E A ARENA' : 'ESCOLHA A ARENA';
     document.querySelectorAll('#map-options .hub-option').forEach(b => b.classList.toggle('selected', b.dataset.map === match.map));

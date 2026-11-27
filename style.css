@@ -522,30 +522,66 @@ body {
 }
 
 /* --- Tela de arena (depois dos lutadores) --- */
+#stage-screen {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
+#stage-screen .hub-setup-header {
+    margin-bottom: 6px;
+}
+
 #stage-screen .hub-section {
     max-width: 860px;
+    margin-bottom: 8px;
+}
+
+#stage-screen .hub-start {
+    margin-top: 2px;
+    padding: 10px 32px;
 }
 
 #stage-screen .hub-options-maps {
     grid-template-columns: repeat(3, 1fr);
 }
 
+/* Card de arena: a foto em cima e o nome embaixo */
 #stage-screen .hub-options-maps .hub-option {
-    padding: 12px 10px;
+    padding: 0 0 8px;
+    gap: 0;
+    overflow: hidden;
+}
+
+#stage-screen .map-thumb {
+    display: block;
+    width: 100%;
+    aspect-ratio: 2 / 1;
+    object-fit: cover;
+    border-bottom: 2px solid rgba(0, 255, 255, 0.35);
+    margin-bottom: 4px;
+}
+
+#stage-screen .hub-option.selected .map-thumb {
+    border-bottom-color: var(--neon-pink);
 }
 
 #stage-screen .hub-options-maps .hub-option-title {
     font-size: 1.05rem;
+    padding: 0 8px;
 }
 
 #stage-screen .hub-options-maps .hub-option-desc {
-    font-size: 0.8rem;
+    display: none; /* a foto já mostra como é a arena: embaixo fica só o nome */
+}
+
+#stage-screen .hub-options-maps .hub-option-desc {
+    font-size: 0.75rem;
 }
 
 .stage-picks {
     justify-content: center;
     max-width: none;
-    margin-bottom: 14px;
+    margin-bottom: 6px;
 }
 
 .stage-picks .selection-chip {
