@@ -139,7 +139,7 @@ function phoneMenuInput(seat, msg) {
     } else if (msg.t === 'down' && (msg.a === 'punch' || msg.a === 'special')) {
         if (padFocus && menuFocusables().includes(padFocus)) padFocus.click();
     } else if (msg.t === 'down' && msg.a === 'defend') {
-        if (!selectionScreen.classList.contains('hidden') || !gameOverScreen.classList.contains('hidden')) goToMenu();
+        menuBack(); // volta um nível (arena -> lutadores -> submenu -> tela inicial)
     }
 }
 
@@ -193,7 +193,12 @@ function seatPhone(conn) {
     }
     const waiting = activePlayers().find(p => match.inputs[p].type === 'phone' && match.inputs[p].index === null);
     let player = waiting;
-    if (!player && gameState === 'MENU' && match.humans < maxHumans()) {
+    if (!player && !phonesCanJoin()) {
+        conn.send({ t: 'bye', reason: gameState === 'MENU' ? 'No jogo, entre em MULTIPLAYER para usar o celular' : 'Partida em andamento: espere voltar ao menu' });
+        setTimeout(() => conn.close(), 500);
+        return;
+    }
+    if (!player && match.humans < maxHumans()) {
         player = PLAYER_IDS[match.humans];
         match.humans++;
         Object.assign(match.inputs[player], { type: 'phone' });

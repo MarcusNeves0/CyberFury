@@ -1,11 +1,45 @@
 // Menus
-// HUB (modo, jogadores, arena, controles), tela de seleção e painel de controles.
+// Tela inicial (Solo, Multiplayer, Boss Battle), submenus, seleção de lutadores, arena e painel de controles.
 
-// --- HUB: escolha de modo ---
+// --- Telas ---
+// Caminho: tela inicial (Solo, Multiplayer ou Boss Battle) -> submenu do caminho -> lutadores -> arena (e chefe) -> luta
+const stageScreen = document.getElementById('stage-screen');
 function showScreen(screen) {
-    for (const s of [hubScreen, selectionScreen, loadingScreen, gameOverScreen]) {
+    for (const s of [hubScreen, selectionScreen, stageScreen, loadingScreen, gameOverScreen]) {
         s.classList.toggle('hidden', s !== screen);
     }
+}
+
+// Páginas do HUB: 'home' (os três caminhos) ou 'setup' (o submenu do caminho escolhido)
+let hubPage = 'home';
+function showHubPage(page) {
+    hubPage = page;
+    document.getElementById('hub-home').classList.toggle('hidden', page !== 'home');
+    document.getElementById('hub-setup').classList.toggle('hidden', page !== 'setup');
+    document.querySelector('#hub-screen > h1').classList.toggle('hidden', page !== 'home'); // o nome do jogo só na tela inicial
+    if (typeof setPadFocus === 'function') setPadFocus(null); // o controle começa do primeiro item da página nova
+}
+
+const CATEGORY_TITLES = { solo: '🥊 SOLO', multi: '🎮 MULTIPLAYER', boss: '👹 BOSS BATTLE' };
+const VERSUS_MODES = ['1v1', '2v2', '3v3'];
+
+// Entrou num caminho: arruma o modo e o número de jogadores para valerem nele
+function chooseCategory(category) {
+    match.category = category;
+    match.boss = category === 'boss';
+    if (match.boss) {
+        match.training = false;
+        match.mode = '3v3'; // por dentro o chefão usa a arena grande
+    } else {
+        if (!VERSUS_MODES.includes(match.mode)) match.mode = '1v1';
+        if (category === 'multi') match.training = false;
+    }
+    match.humans = Math.max(minHumans(), Math.min(match.humans, maxHumans()));
+    if (category === 'solo') match.humans = 1;
+    document.querySelectorAll('#mode-options .hub-option').forEach(b =>
+        b.classList.toggle('selected', b.dataset.mode === (match.training ? 'treino' : match.mode)));
+    showHubPage('setup');
+    renderInputStatus();
 }
 
 function setupHub() {
@@ -16,18 +50,22 @@ function setupHub() {
             apply(button.dataset[attr]);
         }));
     };
+    document.querySelectorAll('.home-option').forEach(button => button.addEventListener('click', () => {
+        sfx.play('menu_confirm');
+        chooseCategory(button.dataset.category);
+    }));
+    document.getElementById('hub-back').addEventListener('click', () => showHubPage('home'));
     bindGroup('mode-options', 'mode', value => {
         // Treino: por dentro é um 1v1 (arena de duelo) contra um boneco
         match.training = value === 'treino';
-        match.boss = value === 'chefao'; // Chefão: todos contra o Cérbero-X, na arena grande
-        match.mode = match.training ? '1v1' : match.boss ? '3v3' : value;
+        match.mode = match.training ? '1v1' : value;
         renderInputStatus();
     });
-    bindGroup('boss-options', 'boss', value => { match.bossId = value; renderInputStatus(); });
     bindGroup('humans-options', 'humans', value => { match.humans = Number(value); renderInputStatus(); });
+    bindGroup('boss-options', 'boss', value => { match.bossId = value; });
     bindGroup('map-options', 'map', value => { match.map = value; });
 
-    // Uma linha por jogador: time, teclado ou controle
+    // Uma linha por jogador: time, teclado, controle ou celular
     const rows = document.getElementById('input-rows');
     for (const player of PLAYER_IDS) {
         const row = document.createElement('div');
@@ -70,12 +108,44 @@ function setupHub() {
         match.picks = [];
         openSelection();
     });
-    document.getElementById('back-to-hub').addEventListener('click', goToMenu);
+    document.getElementById('back-to-hub').addEventListener('click', backToSetup);
+    document.getElementById('back-to-selection').addEventListener('click', () => { match.picks = []; openSelection(); });
+    document.getElementById('stage-start').addEventListener('click', () => {
+        sfx.play('menu_confirm');
+        startGame();
+    });
+}
+
+// Volta da escolha de lutadores para o submenu do caminho
+function backToSetup() {
+    gameState = 'MENU';
+    match.picks = [];
+    showScreen(hubScreen);
+    showHubPage('setup');
+    renderInputStatus();
+}
+
+// Botão de voltar (◯ no controle, DEFESA no celular): sobe um nível de cada vez
+function menuBack() {
+    if (!loadingScreen.classList.contains('hidden')) return;
+    if (!stageScreen.classList.contains('hidden')) { match.picks = []; openSelection(); return; }
+    if (!selectionScreen.classList.contains('hidden')) {
+        // Com vários jogadores, desfaz a escolha do anterior; sem ninguém escolhido, volta ao submenu
+        if (match.picks.length) { match.picks.pop(); openSelection(); } else backToSetup();
+        return;
+    }
+    if (!gameOverScreen.classList.contains('hidden')) { goToMenu(); return; }
+    if (!hubScreen.classList.contains('hidden') && hubPage === 'setup') showHubPage('home');
 }
 
 // Jogadores humanos desta partida (P1, P2... até o número escolhido no HUB)
 const activePlayers = () => PLAYER_IDS.slice(0, match.humans);
-const maxHumans = () => (match.training ? 1 : match.boss ? BOSS_MAX_HUMANS : teamSizeOf(match.mode) * 2); // no treino só você joga
+const minHumans = () => (match.category === 'multi' ? 2 : 1);
+const maxHumans = () => (match.category === 'solo' || match.training ? 1 : match.boss ? BOSS_MAX_HUMANS : teamSizeOf(match.mode) * 2);
+// Celular como controle: só no multiplayer (e no Boss Battle com mais de um jogador)
+const phonesInMenu = () => match.category === 'multi' || (match.boss && match.humans > 1);
+// Celular novo só entra com o submenu desse caminho aberto (o código da sala só aparece ali)
+const phonesCanJoin = () => gameState === 'MENU' && hubPage === 'setup' && phonesInMenu();
 // Sozinho, o jogador fica sempre no time ciano; com mais gente, cada um escolhe o time
 const teamOf = player => match.humans === 1 || match.boss ? 0 : match.inputs[player].team;
 const waitingForGamepad = () => activePlayers().some(p => match.inputs[p].type === 'gamepad' && match.inputs[p].index === null);
@@ -121,13 +191,32 @@ function detectGamepads() {
 }
 
 function renderInputStatus() {
-    // Modo menor: não cabem tantos humanos (ex.: no 1v1 são no máximo 2)
-    match.humans = Math.min(match.humans, maxHumans());
-    document.getElementById('boss-section').classList.toggle('hidden', !match.boss);
+    const category = match.category;
+    match.humans = Math.max(minHumans(), Math.min(match.humans, maxHumans()));
+    const phonesOk = phonesInMenu();
+    // Fora do multiplayer ninguém fica esperando celular: quem estava nele volta para o teclado
+    if (!phonesOk) {
+        for (const player of activePlayers()) {
+            const input = match.inputs[player];
+            if (input.type !== 'phone') continue;
+            if (input.index !== null) dropPhone(input.index);
+            Object.assign(input, { type: 'keyboard', index: null, name: '' });
+        }
+    }
+
+    // Só o que vale para o caminho escolhido
+    document.getElementById('hub-setup-title').innerText = CATEGORY_TITLES[category] || '';
+    document.getElementById('mode-section').classList.toggle('hidden', match.boss);
+    document.querySelector('#mode-options [data-mode="treino"]').classList.toggle('hidden', category !== 'solo');
+    document.getElementById('humans-section').classList.toggle('hidden', category === 'solo');
+    document.getElementById('inputs-title').innerText = category === 'solo' ? 'Controle' : match.boss ? 'Controles' : 'Controles e times';
+    document.getElementById('phone-room').classList.toggle('hidden', !phonesOk);
     document.querySelectorAll('#humans-options .hub-option').forEach(button => {
         const n = Number(button.dataset.humans);
-        button.disabled = n > maxHumans();
+        button.classList.toggle('hidden', n < minHumans() || n > maxHumans());
         button.classList.toggle('selected', n === match.humans);
+        const desc = button.querySelector('.hub-option-desc');
+        if (n === 1) desc.innerText = match.boss ? 'Você + IA' : 'jogador';
     });
     for (const player of PLAYER_IDS) {
         const input = match.inputs[player];
@@ -139,6 +228,7 @@ function renderInputStatus() {
         toggle.classList.toggle('hidden', match.humans === 1 || match.boss);
         toggle.innerText = teamOf(player) === 0 ? 'Time Ciano' : 'Time Rosa';
         toggle.style.setProperty('--team-color', color);
+        row.querySelector('[data-input="phone"]').classList.toggle('hidden', !phonesOk);
         row.querySelectorAll('.input-option').forEach(b => b.classList.toggle('selected', b.dataset.input === input.type));
         const status = row.querySelector('.gamepad-status');
         status.classList.remove('waiting', 'connected');
@@ -154,22 +244,23 @@ function renderInputStatus() {
             status.classList.add('connected');
         }
     }
+    document.getElementById('input-rows').classList.toggle('single', match.humans === 1);
     if (typeof syncPhoneTeams === 'function') syncPhoneTeams(); // a cor do time no celular acompanha
     renderControlsPanel();
     const startButton = document.getElementById('hub-start');
     const problem = hubProblem();
     startButton.disabled = !!problem;
-    startButton.innerText = problem || (match.training ? 'ESCOLHER LUTADOR PARA TREINAR ▶' : match.boss ? 'ESCOLHER QUEM ENFRENTA O CHEFÃO ▶' : 'ESCOLHER LUTADORES ▶');
+    startButton.innerText = problem || (match.training ? 'ESCOLHER LUTADOR PARA TREINAR ▶' : match.boss ? 'ESCOLHER QUEM ENFRENTA O CHEFÃO ▶' : match.humans === 1 ? 'ESCOLHER LUTADOR ▶' : 'ESCOLHER LUTADORES ▶');
 }
 
 // --- Lógica da Tela de Seleção ---
 function openSelection() {
-    if (gameState !== 'SELECT' && typeof announcer !== 'undefined') announcer.say('choose_your_character');
+    if (gameState !== 'SELECT' && gameState !== 'STAGE' && typeof announcer !== 'undefined') announcer.say('choose_your_character');
     gameState = 'SELECT';
     const humans = match.humans;
     const step = match.picks.length + 1;
     selectionTitle.innerText = match.training ? 'TREINO — escolha quem testar'
-        : match.boss ? (humans === 1 ? `CHEFÃO — quem enfrenta ${match.bossId === 'matriarca' ? 'a' : 'o'} ${BOSS_NAMES[match.bossId]}?` : `CHEFÃO — vez do JOGADOR ${step}`)
+        : match.boss ? (humans === 1 ? 'BOSS BATTLE — quem enfrenta o chefe?' : `BOSS BATTLE — vez do JOGADOR ${step}`)
         : humans === 1 ? `${match.mode.toUpperCase()} contra a IA`
         : `${match.mode.toUpperCase()} — vez do JOGADOR ${step}`;
     selectionTitle.style.color = humans === 1 ? '' : TEAM_COLORS[teamOf(activePlayers()[step - 1])];
@@ -184,24 +275,36 @@ function openSelection() {
     if (first) showPreview(first, true);
 }
 
-// Cabeçalho da seleção: arena escolhida no HUB e quem os jogadores anteriores já pegaram
-const MAP_CHIPS = {
-    random: { icon: '🎲', name: 'SORTEIO', color: '#ffd23f' },
-    plaza: { icon: '🌃', name: 'PRAÇA NEON', color: '#ff4dff' },
-    rooftop: { icon: '🌧️', name: 'TELHADO NEON', color: '#3ff6ff' },
-    lab: { icon: '🧪', name: 'LABORATÓRIO', color: '#6dff8a' },
-    garden: { icon: '🌸', name: 'JARDIM SUSPENSO', color: '#ff9ad5' },
-    dungeon: { icon: '🗿', name: 'MASMORRA DUPLA', color: '#6f9bff' },
-};
-function renderSelectionChips() {
-    const map = MAP_CHIPS[match.map] || MAP_CHIPS.random;
-    const mapChip = document.getElementById('selection-map');
-    mapChip.innerText = `${map.icon} ${map.name}`;
-    mapChip.style.setProperty('--chip-color', map.color);
+// Todos escolheram: arena (e, no Boss Battle, o chefe)
+function openStage() {
+    gameState = 'STAGE';
+    document.getElementById('boss-section').classList.toggle('hidden', !match.boss);
+    document.getElementById('stage-title').innerText = match.boss ? 'ESCOLHA O CHEFE E A ARENA' : 'ESCOLHA A ARENA';
+    document.querySelectorAll('#map-options .hub-option').forEach(b => b.classList.toggle('selected', b.dataset.map === match.map));
+    document.querySelectorAll('#boss-options .hub-option').forEach(b => b.classList.toggle('selected', b.dataset.boss === match.bossId));
+    fillPickChips(document.getElementById('stage-picks'));
+    showScreen(stageScreen);
+    if (typeof setPadFocus === 'function') setPadFocus(null);
+}
 
-    // Um selo por jogador que já escolheu, na cor do time dele
-    const picks = document.getElementById('selection-picks');
-    picks.innerHTML = '';
+// Cabeçalho da seleção: o caminho/modo da partida e quem os jogadores anteriores já pegaram
+function modeChip() {
+    if (match.boss) return { icon: '👹', name: 'BOSS BATTLE', color: '#ff3b3b' };
+    if (match.training) return { icon: '🎯', name: 'TREINO', color: '#ffd23f' };
+    const multi = match.category === 'multi';
+    return { icon: multi ? '🎮' : '🥊', name: `${multi ? 'MULTIPLAYER' : 'SOLO'} · ${match.mode.toUpperCase()}`, color: multi ? '#ff4dff' : '#3ff6ff' };
+}
+function renderSelectionChips() {
+    const mode = modeChip();
+    const chip = document.getElementById('selection-map');
+    chip.innerText = `${mode.icon} ${mode.name}`;
+    chip.style.setProperty('--chip-color', mode.color);
+    fillPickChips(document.getElementById('selection-picks'));
+}
+
+// Um selo por jogador que já escolheu, na cor do time dele
+function fillPickChips(container) {
+    container.innerHTML = '';
     match.picks.forEach((id, i) => {
         const character = CHARACTERS.find(c => c.id === id);
         const chip = document.createElement('span');
@@ -213,9 +316,9 @@ function renderSelectionChips() {
         g.imageSmoothingEnabled = false;
         if (characterArt[id]) characterArt[id](g, 4, 2, 40, 80, null);
         const name = document.createElement('span');
-        name.innerText = `P${i + 1}: ${character.name.toUpperCase()}`;
+        name.innerText = `${match.humans > 1 ? `P${i + 1}: ` : ''}${character.name.toUpperCase()}`;
         chip.append(portrait, name);
-        picks.appendChild(chip);
+        container.appendChild(chip);
     });
 }
 
@@ -376,7 +479,7 @@ function setupSelectionScreen() {
             if (match.picks.length < match.humans) {
                 openSelection(); // vez do próximo jogador
             } else {
-                startGame();
+                openStage(); // todos escolheram: agora a arena
             }
         });
         card.addEventListener('mouseenter', () => showPreview(card));

@@ -112,9 +112,9 @@ let padRepeatAt = 0;
 const padMenuPrevious = {};
 
 function menuFocusables() {
-    const screen = [hubScreen, selectionScreen, gameOverScreen].find(s => !s.classList.contains('hidden'));
+    const screen = [hubScreen, selectionScreen, stageScreen, gameOverScreen].find(s => !s.classList.contains('hidden'));
     if (!screen) return [];
-    return [...screen.querySelectorAll('.hub-option, .input-option, .hub-start, .character-card, .back-button, button')]
+    return [...screen.querySelectorAll('.home-option, .hub-option, .input-option, .hub-start, .character-card, .back-button, button')]
         .filter((el, i, all) => all.indexOf(el) === i && el.offsetParent !== null && !el.disabled && !el.classList.contains('taken'));
 }
 
@@ -185,10 +185,7 @@ function pollMenuGamepad() {
         if (confirm && !previous.confirm && padFocus && menuFocusables().includes(padFocus)) {
             padFocus.click();
         }
-        if (back && !previous.back) {
-            if (!selectionScreen.classList.contains('hidden')) goToMenu();
-            else if (!gameOverScreen.classList.contains('hidden')) goToMenu();
-        }
+        if (back && !previous.back) menuBack(); // volta um nível de cada vez
         padMenuPrevious[gp.index] = { direction, confirm, back };
     }
 }

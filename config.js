@@ -22,7 +22,7 @@ const hud = document.getElementById('hud');
 const WORLD_W = 1280, WORLD_H = 720;
 let canvasWidth, canvasHeight, viewScale = 1;
 let gameLoopId;
-let gameState = 'MENU'; // MENU, SELECT, FIGHT, GAMEOVER
+let gameState = 'MENU'; // MENU, SELECT (lutadores), STAGE (arena), FIGHT, GAMEOVER
 
 // --- Partida ---
 // mode: '1v1' | '2v2' | '3v3'; humans: quantos jogadores humanos (1 a 6, até lotar os dois times; o resto é IA)
@@ -32,6 +32,7 @@ const PLAYER_IDS = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'];
 const MAX_KEYBOARD_PLAYERS = 2; // um de cada lado do teclado
 // training: modo Treino (por dentro é um 1v1 contra um boneco parado; veja updateTraining no game.js)
 const match = {
+    category: 'solo', // caminho escolhido na tela inicial: 'solo', 'multi' ou 'boss'
     mode: '1v1', humans: 1, map: 'random', picks: [], training: false,
     boss: false, // modo Chefão (boss.js): por dentro usa a arena grande, todos os humanos no time ciano
     bossId: 'cerbero', // 'cerbero', 'matriarca' ou 'random'

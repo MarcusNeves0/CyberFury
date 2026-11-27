@@ -151,7 +151,7 @@ body {
     display: none !important;
 }
 
-/* --- HUB (escolha de modo) --- */
+/* --- HUB (tela inicial e submenus) --- */
 #hub-screen h1 {
     font-size: 3rem;
     color: var(--neon-pink);
@@ -423,6 +423,147 @@ body {
 
 .back-button:hover {
     background: rgba(0, 255, 255, 0.15);
+}
+
+/* --- Tela inicial: três caminhos (Solo, Multiplayer, Boss Battle) --- */
+.hub-page {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.home-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    width: 90%;
+    max-width: 860px;
+    margin-top: 18px;
+}
+
+.home-option {
+    --home-color: var(--neon-blue);
+    font-family: 'Orbitron', sans-serif;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--home-color) 10%, rgba(0, 0, 0, 0.5)), rgba(0, 0, 0, 0.55));
+    border: 2px solid color-mix(in srgb, var(--home-color) 55%, transparent);
+    border-radius: 14px;
+    color: var(--text-color);
+    padding: 28px 16px 24px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.home-option:nth-child(2) { --home-color: var(--neon-pink); }
+.home-option.home-boss { --home-color: #ff3b3b; }
+
+.home-option:hover {
+    transform: translateY(-4px) scale(1.03);
+    border-color: var(--home-color);
+    box-shadow: 0 0 22px color-mix(in srgb, var(--home-color) 60%, transparent);
+}
+
+.home-icon {
+    font-size: 3.2rem;
+    line-height: 1;
+    filter: drop-shadow(0 0 10px color-mix(in srgb, var(--home-color) 70%, transparent));
+}
+
+.home-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--home-color);
+    text-shadow: 0 0 8px var(--home-color);
+}
+
+.home-desc {
+    font-family: sans-serif;
+    font-size: 0.85rem;
+    line-height: 1.35;
+    color: #bbb;
+    text-align: center;
+}
+
+/* Cabeçalho dos submenus e da tela de arena: "◀ Voltar" à esquerda, nome do caminho no meio */
+.hub-setup-header {
+    position: relative;
+    width: 90%;
+    max-width: 760px;
+    text-align: center;
+    margin-bottom: 14px;
+    padding: 0 130px; /* espaço do botão de voltar: o título quebra a linha em vez de passar por cima */
+    box-sizing: border-box;
+}
+
+.hub-setup-header .back-button {
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+}
+
+.hub-setup-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: 0.15em;
+    color: var(--neon-blue);
+    text-shadow: 0 0 8px var(--neon-blue);
+    margin: 0;
+}
+
+/* Sozinho: só uma linha de controle, centralizada */
+#input-rows.single {
+    grid-template-columns: 1fr;
+    justify-items: center;
+}
+
+/* --- Tela de arena (depois dos lutadores) --- */
+#stage-screen .hub-section {
+    max-width: 860px;
+}
+
+#stage-screen .hub-options-maps {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+#stage-screen .hub-options-maps .hub-option {
+    padding: 12px 10px;
+}
+
+#stage-screen .hub-options-maps .hub-option-title {
+    font-size: 1.05rem;
+}
+
+#stage-screen .hub-options-maps .hub-option-desc {
+    font-size: 0.8rem;
+}
+
+.stage-picks {
+    justify-content: center;
+    max-width: none;
+    margin-bottom: 14px;
+}
+
+.stage-picks .selection-chip {
+    font-size: 0.85rem;
+    gap: 6px;
+    padding: 3px 12px 3px 4px;
+}
+
+.stage-picks canvas {
+    width: 28px !important;
+    height: 28px !important;
+}
+
+@media (max-width: 700px) {
+    .home-options { grid-template-columns: 1fr; }
+    .hub-setup-header { padding: 36px 0 0; }
+    .home-option { padding: 16px; }
+    #stage-screen .hub-options-maps { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* --- Seleção de personagem ---

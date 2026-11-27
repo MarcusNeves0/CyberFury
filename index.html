@@ -19,103 +19,79 @@
     <div id="game-container">
         <div id="hub-screen" class="overlay">
             <h1>CYBERNETIC FURY</h1>
-            <div class="hub-section">
-                <h3>Modo</h3>
-                <div class="hub-options" id="mode-options">
-                    <button class="hub-option selected" data-mode="1v1">
-                        <span class="hub-option-title">1 v 1</span>
-                        <span class="hub-option-desc">Duelo na arena menor</span>
+            <!-- Tela inicial: só os três caminhos -->
+            <div id="hub-home" class="hub-page">
+                <div class="home-options">
+                    <button class="home-option" data-category="solo">
+                        <span class="home-icon">🥊</span>
+                        <span class="home-title">SOLO</span>
+                        <span class="home-desc">Você contra a IA (1v1, 2v2 ou 3v3) ou treino no boneco</span>
                     </button>
-                    <button class="hub-option" data-mode="2v2">
-                        <span class="hub-option-title">2 v 2</span>
-                        <span class="hub-option-desc">Arena neon com obstáculos</span>
+                    <button class="home-option" data-category="multi">
+                        <span class="home-icon">🎮</span>
+                        <span class="home-title">MULTIPLAYER</span>
+                        <span class="home-desc">De 2 a 6 jogadores no mesmo computador: teclado, controle ou celular</span>
                     </button>
-                    <button class="hub-option" data-mode="3v3">
-                        <span class="hub-option-title">3 v 3</span>
-                        <span class="hub-option-desc">Arena neon com obstáculos</span>
-                    </button>
-                    <button class="hub-option boss-option" data-mode="chefao">
-                        <span class="hub-option-title">👹 Chefão</span>
-                        <span class="hub-option-desc">Até 4 jogadores contra um chefe</span>
-                    </button>
-                    <button class="hub-option" data-mode="treino">
-                        <span class="hub-option-title">🎯 Treino</span>
-                        <span class="hub-option-desc">Teste o lutador num boneco, energia infinita</span>
+                    <button class="home-option home-boss" data-category="boss">
+                        <span class="home-icon">👹</span>
+                        <span class="home-title">BOSS BATTLE</span>
+                        <span class="home-desc">Até 4 jogadores juntos contra um chefe gigante</span>
                     </button>
                 </div>
             </div>
-            <!-- Só aparece no modo Chefão -->
-            <div class="hub-section hidden" id="boss-section">
-                <h3>Chefe</h3>
-                <div class="hub-options" id="boss-options">
-                    <button class="hub-option boss-option selected" data-boss="cerbero">
-                        <span class="hub-option-title">🐕 Cérbero-X</span>
-                        <span class="hub-option-desc">Cão-robô de três cabeças: fogo, gelo e raio</span>
-                    </button>
-                    <button class="hub-option boss-option" data-boss="matriarca">
-                        <span class="hub-option-title">🕸️ Matriarca</span>
-                        <span class="hub-option-desc">IA com torres de escudo, drones e hack</span>
-                    </button>
-                    <button class="hub-option boss-option" data-boss="random">
-                        <span class="hub-option-title">🎲 Sorteio</span>
-                        <span class="hub-option-desc">Um chefe diferente a cada luta</span>
-                    </button>
+            <!-- Submenu do caminho escolhido (o menu.js mostra só o que vale para ele) -->
+            <div id="hub-setup" class="hub-page hidden">
+                <div class="hub-setup-header">
+                    <button id="hub-back" class="back-button">◀ Voltar</button>
+                    <h2 id="hub-setup-title" class="hub-setup-title"></h2>
                 </div>
-            </div>
-            <div class="hub-section">
-                <h3>Jogadores humanos</h3>
-                <!-- Quantos humanos jogam (o resto das vagas fica com a IA); o máximo depende do modo -->
-                <div class="hub-options hub-options-count" id="humans-options">
-                    <button class="hub-option selected" data-humans="1"><span class="hub-option-title">1</span><span class="hub-option-desc">Você + IA</span></button>
-                    <button class="hub-option" data-humans="2"><span class="hub-option-title">2</span><span class="hub-option-desc">jogadores</span></button>
-                    <button class="hub-option" data-humans="3"><span class="hub-option-title">3</span><span class="hub-option-desc">jogadores</span></button>
-                    <button class="hub-option" data-humans="4"><span class="hub-option-title">4</span><span class="hub-option-desc">jogadores</span></button>
-                    <button class="hub-option" data-humans="5"><span class="hub-option-title">5</span><span class="hub-option-desc">jogadores</span></button>
-                    <button class="hub-option" data-humans="6"><span class="hub-option-title">6</span><span class="hub-option-desc">jogadores</span></button>
+                <div class="hub-section" id="mode-section">
+                    <h3>Modo</h3>
+                    <div class="hub-options" id="mode-options">
+                        <button class="hub-option selected" data-mode="1v1">
+                            <span class="hub-option-title">1 v 1</span>
+                            <span class="hub-option-desc">Duelo na arena menor</span>
+                        </button>
+                        <button class="hub-option" data-mode="2v2">
+                            <span class="hub-option-title">2 v 2</span>
+                            <span class="hub-option-desc">Arena com obstáculos</span>
+                        </button>
+                        <button class="hub-option" data-mode="3v3">
+                            <span class="hub-option-title">3 v 3</span>
+                            <span class="hub-option-desc">Arena com obstáculos</span>
+                        </button>
+                        <button class="hub-option" data-mode="treino">
+                            <span class="hub-option-title">🎯 Treino</span>
+                            <span class="hub-option-desc">Boneco parado, energia infinita</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div class="hub-section">
-                <h3>Arena</h3>
-                <div class="hub-options hub-options-maps" id="map-options">
-                    <button class="hub-option selected" data-map="random">
-                        <span class="hub-option-title">🎲 Sorteio</span>
-                        <span class="hub-option-desc">Uma arena diferente a cada luta</span>
-                    </button>
-                    <button class="hub-option" data-map="plaza">
-                        <span class="hub-option-title">Praça Neon</span>
-                        <span class="hub-option-desc">Árvores e caixas de papelão</span>
-                    </button>
-                    <button class="hub-option" data-map="rooftop">
-                        <span class="hub-option-title">Telhado Neon</span>
-                        <span class="hub-option-desc">Chuva, poças e letreiros em curto</span>
-                    </button>
-                    <button class="hub-option" data-map="lab">
-                        <span class="hub-option-title">Laboratório</span>
-                        <span class="hub-option-desc">Laser, fios soltos e tanques de vidro</span>
-                    </button>
-                    <button class="hub-option" data-map="garden">
-                        <span class="hub-option-title">Jardim Suspenso</span>
-                        <span class="hub-option-desc">Arbustos, plantas carnívoras e flores de cura</span>
-                    </button>
-                    <button class="hub-option" data-map="dungeon">
-                        <span class="hub-option-title">Masmorra Dupla</span>
-                        <span class="hub-option-desc">Estátuas com maça e o olhar do colosso</span>
-                    </button>
+                <div class="hub-section" id="humans-section">
+                    <h3>Jogadores</h3>
+                    <!-- Quantos humanos jogam (o resto das vagas fica com a IA); o mínimo e o máximo dependem do caminho e do modo -->
+                    <div class="hub-options hub-options-count" id="humans-options">
+                        <button class="hub-option" data-humans="1"><span class="hub-option-title">1</span><span class="hub-option-desc">Você + IA</span></button>
+                        <button class="hub-option" data-humans="2"><span class="hub-option-title">2</span><span class="hub-option-desc">jogadores</span></button>
+                        <button class="hub-option" data-humans="3"><span class="hub-option-title">3</span><span class="hub-option-desc">jogadores</span></button>
+                        <button class="hub-option" data-humans="4"><span class="hub-option-title">4</span><span class="hub-option-desc">jogadores</span></button>
+                        <button class="hub-option" data-humans="5"><span class="hub-option-title">5</span><span class="hub-option-desc">jogadores</span></button>
+                        <button class="hub-option" data-humans="6"><span class="hub-option-title">6</span><span class="hub-option-desc">jogadores</span></button>
+                    </div>
                 </div>
+                <div class="hub-section" id="inputs-section">
+                    <h3 id="inputs-title">Controles e times</h3>
+                    <!-- Uma linha por jogador humano (montadas pelo menu.js): time, teclado, controle ou celular -->
+                    <div id="input-rows"></div>
+                    <!-- Código da sala para os celulares (montado pelo phone.js): só aparece no multiplayer -->
+                    <div id="phone-room" class="phone-room"></div>
+                </div>
+                <button id="hub-start" class="hub-start">ESCOLHER LUTADORES ▶</button>
             </div>
-            <div class="hub-section">
-                <h3>Controles e times</h3>
-                <!-- Uma linha por jogador humano (montadas pelo menu.js): time, teclado, controle ou celular -->
-                <div id="input-rows"></div>
-                <!-- Código da sala para os celulares (montado pelo phone.js) -->
-                <div id="phone-room" class="phone-room"></div>
-            </div>
-            <button id="hub-start" class="hub-start">ESCOLHER LUTADORES ▶</button>
         </div>
 
         <div id="character-selection" class="overlay hidden">
             <div class="selection-header">
-                <button id="back-to-hub" class="back-button">◀ Menu</button>
+                <button id="back-to-hub" class="back-button">◀ Voltar</button>
                 <h1>ESCOLHA SEU LUTADOR</h1>
                 <p id="selection-title" class="selection-title"></p>
                 <div class="selection-chips">
@@ -261,6 +237,62 @@
                     <h2>ALEATÓRIO</h2>
                 </div>
             </div>
+        </div>
+
+        <!-- Depois dos lutadores: a arena (e, no Boss Battle, o chefe) -->
+        <div id="stage-screen" class="overlay hidden">
+            <div class="hub-setup-header">
+                <button id="back-to-selection" class="back-button">◀ Lutadores</button>
+                <h2 id="stage-title" class="hub-setup-title">ESCOLHA A ARENA</h2>
+            </div>
+            <div id="stage-picks" class="selection-picks stage-picks"></div>
+            <div class="hub-section hidden" id="boss-section">
+                <h3>Chefe</h3>
+                <div class="hub-options" id="boss-options">
+                    <button class="hub-option boss-option selected" data-boss="cerbero">
+                        <span class="hub-option-title">🐕 Cérbero-X</span>
+                        <span class="hub-option-desc">Cão-robô de três cabeças: fogo, gelo e raio</span>
+                    </button>
+                    <button class="hub-option boss-option" data-boss="matriarca">
+                        <span class="hub-option-title">🕸️ Matriarca</span>
+                        <span class="hub-option-desc">IA com torres de escudo, drones e hack</span>
+                    </button>
+                    <button class="hub-option boss-option" data-boss="random">
+                        <span class="hub-option-title">🎲 Sorteio</span>
+                        <span class="hub-option-desc">Um chefe diferente a cada luta</span>
+                    </button>
+                </div>
+            </div>
+            <div class="hub-section">
+                <h3>Arena</h3>
+                <div class="hub-options hub-options-maps" id="map-options">
+                    <button class="hub-option selected" data-map="random">
+                        <span class="hub-option-title">🎲 Sorteio</span>
+                        <span class="hub-option-desc">Uma arena diferente a cada luta</span>
+                    </button>
+                    <button class="hub-option" data-map="plaza">
+                        <span class="hub-option-title">🌃 Praça Neon</span>
+                        <span class="hub-option-desc">Árvores e caixas de papelão</span>
+                    </button>
+                    <button class="hub-option" data-map="rooftop">
+                        <span class="hub-option-title">🌧️ Telhado Neon</span>
+                        <span class="hub-option-desc">Chuva, poças e letreiros em curto</span>
+                    </button>
+                    <button class="hub-option" data-map="lab">
+                        <span class="hub-option-title">🧪 Laboratório</span>
+                        <span class="hub-option-desc">Laser, fios soltos e tanques de vidro</span>
+                    </button>
+                    <button class="hub-option" data-map="garden">
+                        <span class="hub-option-title">🌸 Jardim Suspenso</span>
+                        <span class="hub-option-desc">Arbustos, plantas carnívoras e flores de cura</span>
+                    </button>
+                    <button class="hub-option" data-map="dungeon">
+                        <span class="hub-option-title">🗿 Masmorra Dupla</span>
+                        <span class="hub-option-desc">Estátuas com maça e o olhar do colosso</span>
+                    </button>
+                </div>
+            </div>
+            <button id="stage-start" class="hub-start">LUTAR! ▶</button>
         </div>
 
         <div id="loading-screen" class="overlay hidden">

@@ -449,6 +449,7 @@ function goToMenu() {
     stopMatch();
     gameState = 'MENU';
     showScreen(hubScreen);
+    showHubPage('home');
     drawMenuBackground();
 }
 

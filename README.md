@@ -28,7 +28,7 @@ Neo-Cidade está tomada por neon, chuva e gente disposta a brigar por qualquer m
   - 🐕 **Cérbero-X:** cão-robô de três cabeças que sai rachando o chão. A cabeça da frente leva o dano; cada uma que cai deixa as outras mais fortes. Fogo em cone, círculos de gelo, raio que pula entre quem está junto, mordida, pisão e investida
   - 🕸️ **Matriarca:** IA que desce num feixe de luz e se monta no ar. Enquanto as torres de escudo estão de pé ela não sente nada: derrube as torres e ela fica exposta por 8 s. Feixes de laser, drones que explodem, pulso de glitch (controles invertidos) e, na fúria, o hack: quem ficar no círculo luta pelo lado dela por 5 s
 - 🎮 **Teclado ou controle:** suporte a controle de PS5/Xbox, inclusive para navegar nos menus
-- 📱 **Celular como controle:** abra `controle.html` no celular e digite o código que aparece no menu do jogo. O celular vira analógico + botões, vibra ao levar dano e também navega nos menus (sem instalar nada)
+- 📱 **Celular como controle:** no jogo, entre em **Multiplayer**; no celular, abra `controle.html` e digite o código que aparece ali. O celular vira analógico + botões, vibra ao levar dano e também navega nos menus (sem instalar nada)
 - 💚 **Healer obrigatório:** no 2v2 e no 3v3, todo time tem pelo menos um curandeiro
 - 🗺️ **5 arenas** com perigos próprios, escolhidas no menu ou sorteadas a cada luta
 - 🎙️ **Locutor:** "LUTEM!", "PRIMEIRO SANGUE!", "COMBO x10!", "DUPLO ABATE!", "ÚLTIMO DE PÉ!", "POR UM FIO!" e "VITÓRIA PERFEITA!" em letras grandes, com som e a voz de um locutor de verdade (em inglês: "Ready... Fight!", "Combo!", "Multi kill!", "Flawless victory!")
