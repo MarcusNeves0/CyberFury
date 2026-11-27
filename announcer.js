@@ -1,5 +1,5 @@
 // Locutor
-// Chamadas grandes na tela durante a luta ("LUTEM!", "FIRST BLOOD!", "COMBO x5!", "DUPLO ABATE!", "K.O.!"),
+// Chamadas grandes na tela durante a luta, em inglês como a voz ("FIGHT!", "FIRST BLOOD!", "COMBO x5!", "DOUBLE KILL!", "K.O.!"),
 // com um som de impacto e a voz gravada de um locutor em inglês (sounds/locutor: Voiceover Pack Fighter, de
 // Kenney.nl, licença CC0). Uma chamada por vez: as outras esperam na fila; uma mais importante passa na frente.
 
@@ -11,7 +11,7 @@ const COMBO_VOICE_COOLDOWN = 600;      // ...e no máximo uma vez a cada 10 s
 const MULTI_KILL_WINDOW = 300;     // abates do mesmo lutador a menos de 5 s um do outro
 const ANNOUNCE_QUICK = 45;         // com outras chamadas esperando, cada uma fica menos tempo (~0,75 s)
 const ANNOUNCE_STALE = 240;        // chamada que esperou mais de 4 s na fila já não faz sentido: é descartada
-const MULTI_KILL_NAMES = { 2: 'DUPLO ABATE!', 3: 'TRIPLO ABATE!', 4: 'QUÁDRUPLO ABATE!', 5: 'MASSACRE!' };
+const MULTI_KILL_NAMES = { 2: 'DOUBLE KILL!', 3: 'TRIPLE KILL!', 4: 'QUADRA KILL!', 5: 'RAMPAGE!' };
 // Falas gravadas (arquivos em sounds/locutor). Tocam por <audio>, que funciona até abrindo o index.html direto.
 const VOICE_LINES = ['ready', 'fight', 'begin', 'combo', 'multi_kill', 'sudden_death', 'flawless_victory', 'winner', 'game_over', 'tie', 'choose_your_character'];
 
@@ -94,7 +94,7 @@ const announcer = {
     // --- Eventos da luta ---
     onStart() {
         this.reset();
-        this.call(match.training ? 'TREINO!' : 'LUTEM!', { voice: match.training ? 'begin' : ['ready', 'fight'], color: '#3ff6ff', priority: 2 });
+        this.call(match.training ? 'TRAINING!' : 'FIGHT!', { voice: match.training ? 'begin' : ['ready', 'fight'], color: '#3ff6ff', priority: 2 });
     },
 
     // Golpe que causou dano: conta o combo de quem bateu e quebra o combo de quem apanhou
@@ -126,26 +126,26 @@ const announcer = {
             const name = MULTI_KILL_NAMES[Math.min(k.count, 5)];
             if (name) this.call(name, { voice: 'multi_kill', color: TEAM_COLORS[enemy.team], priority: 3, sub: enemy.name.toUpperCase() });
             // Matou com quase nada de vida
-            if (alive(enemy) && enemy.health < enemy.maxHealth * 0.15) this.call('POR UM FIO!', { color: '#ffb347', priority: 2, sub: enemy.name.toUpperCase() });
+            if (alive(enemy) && enemy.health < enemy.maxHealth * 0.15) this.call('CLOSE CALL!', { color: '#ffb347', priority: 2, sub: enemy.name.toUpperCase() });
         }
         // Time que ficou com um só lutador de pé (com o outro time ainda inteiro de mais gente)
         if (teamSizeOf(match.mode) > 1) {
             const left = fighters.filter(f => alive(f) && f.team === fighter.team);
             const others = fighters.filter(f => alive(f) && f.team !== fighter.team);
-            if (left.length === 1 && others.length > 1) this.call('ÚLTIMO DE PÉ!', { voice: 'sudden_death', color: TEAM_COLORS[fighter.team], priority: 2, sub: left[0].name.toUpperCase() });
+            if (left.length === 1 && others.length > 1) this.call('LAST ONE STANDING!', { voice: 'sudden_death', color: TEAM_COLORS[fighter.team], priority: 2, sub: left[0].name.toUpperCase() });
         }
     },
 
-    // Fim da luta: o vencedor já aparece na tela de fim; o locutor só grita (K.O.!, ou VITÓRIA PERFEITA! se o
+    // Fim da luta: o vencedor já aparece na tela de fim; o locutor só grita (K.O.!, ou FLAWLESS VICTORY! se o
     // time vencedor não perdeu ninguém e quase não apanhou). Devolve o texto, para a tela de fim mostrar junto.
     onGameOver(winningTeam) {
         this.queue = [];
         this.current = null;
-        let text = 'EMPATE!', voice = 'tie';
+        let text = 'DRAW!', voice = 'tie';
         if (winningTeam !== undefined) {
             const team = fighters.filter(f => f.team === winningTeam);
             const perfect = team.every(f => alive(f) && f.health >= f.maxHealth * 0.8);
-            text = perfect ? 'VITÓRIA PERFEITA!' : 'K.O.!';
+            text = perfect ? 'FLAWLESS VICTORY!' : 'K.O.!';
             voice = perfect ? 'flawless_victory' : ['game_over', 'winner'];
         }
         if (typeof sfx !== 'undefined') sfx.play('announce_big');

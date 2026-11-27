@@ -157,13 +157,16 @@ function checkGameOver() {
     if (match.boss) {
         const s = Math.floor(bossFightSteps / 60);
         const time = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-        winText.innerText = winningTeam === 0 ? `CÉRBERO-X DERROTADO!\n⏱ ${time}` : `O CÉRBERO-X VENCEU...\n⏱ ${time}`;
+        // O chefe que estava na luta (no "Sorteio" só dá para saber qual saiu olhando para ele)
+        const boss = bossOf();
+        const [won, lost] = boss && boss.isMatriarca ? ['MATRIARCA DERROTADA!', 'A MATRIARCA VENCEU...'] : ['CÉRBERO-X DERROTADO!', 'O CÉRBERO-X VENCEU...'];
+        winText.innerText = `${winningTeam === 0 ? won : lost}\n⏱ ${time}`;
         winText.style.color = winningTeam === 0 ? '#ffd23f' : '#ff3b3b';
         survivors.forEach(f => { f.isCelebrating = true; f.isAttacking = false; f.moveX = 0; f.moveY = 0; });
         startWinnerZoom(survivors.find(f => f.isPlayer) || survivors[0]);
         return;
     }
-    winText.innerText = (shout === 'VITÓRIA PERFEITA!' ? '⭐ PERFEITO! ' : '') + (match.mode === '1v1'
+    winText.innerText = (shout === 'FLAWLESS VICTORY!' ? '⭐ PERFEITO! ' : '') + (match.mode === '1v1'
         ? `${survivors[0].name.toUpperCase()} WINS!`
         : `${TEAM_NAMES[winningTeam]} VENCE!`);
     winText.style.color = match.mode === '1v1' ? '' : TEAM_COLORS[winningTeam];
